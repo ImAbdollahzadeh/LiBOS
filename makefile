@@ -4,21 +4,21 @@ NASMPARAMS = -f elf
 
 objects    = obj/LOADER.o          \
              obj/PRINT.o           \
-			 obj/GDT.o             \
+	     obj/GDT.o             \
              obj/PORT.o            \
              obj/IDT.o             \
              obj/EXTENDEDENTRIES.o \
              obj/TIMER.o           \
              obj/PCI.o             \
-			 obj/AHCI.o            \
-			 obj/EHCI.o            \
-			 obj/FILESYSTEM.o      \
-			 obj/VESA.o            \
-			 obj/FILE.o            \
-			 obj/KEYBOARD.o        \
-			 obj/MOUSE.o           \
-			 obj/MEMORY.o          \
-			 obj/DOSSPEC.o         \
+	     obj/AHCI.o            \
+	     obj/EHCI.o            \
+	     obj/FILESYSTEM.o      \
+	     obj/VESA.o            \
+	     obj/FILE.o            \
+	     obj/KEYBOARD.o        \
+	     obj/MOUSE.o           \
+	     obj/MEMORY.o          \
+	     obj/DOSSPEC.o         \
              obj/KERNEL.o
 
 %.o: ./src/%.c
