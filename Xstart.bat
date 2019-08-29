@@ -1,6 +1,6 @@
 @echo off
 
-set ADDR=C:/Users/Iman/Desktop/VESA/___+++___list_of_OS___+++___/IMOS
+set ADDR=C:/Users/.../IMOS
 
 copy ".\Win32makefile" ".\bin\Win32makefile.bat" >nul
 	
