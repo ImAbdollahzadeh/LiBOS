@@ -12,3 +12,13 @@ Basically it has always been and still is my primarily goal to learn and start d
 I would love to implement fast, assembly-optimized graphic applications (from kernel, driver, and graphic adapter point of view). No doubt the best resource is "zen of assembly" and "zen of graphic" by M. Abrash
 ## Contact me:
 iman_ab2013[at]yahoo.com<br/>Basically I'm always available
+## Wonderful open and close resources:
+1. Zen of assembly language<br/>
+2. Zen of Graphics Programming<br/>
+3. bkerndev: Bran's Kernel Development<br/>
+4. BrokenThorn Entertainment: Operating System Development Series<br/>
+5. Transition from Protected Mode to Real Mode: by Bob Smith<br/>
+6. Operating System Design Book Series: by Ben Lunt<br/>
+7. SAVING AND RESTORING VGA SCREENS: Dr Dobb's<br/>
+8. AHCI: in Github: thimble/ahci.c<br/>
+9. MBR/EBR Partition Tables: by Daniel B. Sedory<br/>
