@@ -1,0 +1,54 @@
+@echo off
+::-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+set NASMPARAMS=-f elf
+::-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+set GCCPARAMS=-m32 -Iinclude -nostdlib -fno-builtin -fno-exceptions -fno-leading-underscore -Wno-write-strings -fstrength-reduce -nostdinc
+::-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+set LDPARAMS=-m elf_i386 
+::-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+set ALLOBJECTFILES=./obj/LOADER.o ^
+./obj/EXTENDEDENTRIES.o           ^
+./obj/GDT.o                       ^
+./obj/IDT.o                       ^
+./obj/KERNEL.o                    ^
+./obj/TIMER.o                     ^
+./obj/PORT.o                      ^
+./obj/PCI.o                       ^
+./obj/AHCI.o                      ^
+./obj/FILESYSTEM.o                ^
+./obj/VESA.o                      ^
+./obj/FILE.o                      ^
+./obj/KEYBOARD.o                  ^
+./obj/MOUSE.o                     ^
+./obj/MEMORY.o                    ^
+./obj/DOSSPEC.o                   ^
+./obj/XHCI.o                      ^
+./obj/PRINT.o
+::-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+nasm         %NASMPARAMS% -o ./obj/LOADER.o ./src/LOADER.asm
+nasm         %NASMPARAMS% -o ./obj/EXTENDEDENTRIES.o ./src/EXTENDEDENTRIES.asm
+::-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+i586-elf-gcc %GCCPARAMS%  -o ./obj/GDT.o        -c ./src/GDT.c
+i586-elf-gcc %GCCPARAMS%  -o ./obj/IDT.o        -c ./src/IDT.c
+i586-elf-gcc %GCCPARAMS%  -o ./obj/KERNEL.o     -c ./src/KERNEL.c
+i586-elf-gcc %GCCPARAMS%  -o ./obj/PORT.o       -c ./src/PORT.c
+i586-elf-gcc %GCCPARAMS%  -o ./obj/PRINT.o      -c ./src/PRINT.c
+i586-elf-gcc %GCCPARAMS%  -o ./obj/TIMER.o      -c ./src/TIMER.c
+i586-elf-gcc %GCCPARAMS%  -o ./obj/PCI.o        -c ./src/PCI.c
+i586-elf-gcc %GCCPARAMS%  -o ./obj/AHCI.o       -c ./src/AHCI.c
+i586-elf-gcc %GCCPARAMS%  -o ./obj/FILESYSTEM.o -c ./src/FILESYSTEM.c
+i586-elf-gcc %GCCPARAMS%  -o ./obj/VESA.o       -c ./src/VESA.c
+i586-elf-gcc %GCCPARAMS%  -o ./obj/FILE.o       -c ./src/FILE.c
+i586-elf-gcc %GCCPARAMS%  -o ./obj/KEYBOARD.o   -c ./src/KEYBOARD.c
+i586-elf-gcc %GCCPARAMS%  -o ./obj/MOUSE.o      -c ./src/MOUSE.c
+i586-elf-gcc %GCCPARAMS%  -o ./obj/MEMORY.o     -c ./src/MEMORY.c
+i586-elf-gcc %GCCPARAMS%  -o ./obj/DOSSPEC.o    -c ./src/DOSSPEC.c
+i586-elf-gcc %GCCPARAMS%  -o ./obj/XHCI.o       -c ./src/XHCI.c
+::-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+i586-elf-ld  %LDPARAMS% -T ./linker.ld -o ./bin/ThirdOS.bin %ALLOBJECTFILES%
+::-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+qemu-system-i386 -device nec-usb-xhci,id=xhci -kernel ./bin/ThirdOS.bin
+::-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+del %0 >nul
+::-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+::pause
