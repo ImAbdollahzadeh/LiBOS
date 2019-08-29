@@ -35,43 +35,43 @@ unsigned int RegisterIDT(void)
 	    __irq_routines[0] = 0;
 
 
-	SetIDTEntry(0,  (unsigned long)(void*)ISR0,  0x08, 0x8E);
-    SetIDTEntry(1,  (unsigned long)(void*)ISR1,  0x08, 0x8E);
-    SetIDTEntry(2,  (unsigned long)(void*)ISR2,  0x08, 0x8E);
-    SetIDTEntry(3,  (unsigned long)(void*)ISR3,  0x08, 0x8E);
-	SetIDTEntry(4,  (unsigned long)(void*)ISR4,  0x08, 0x8E);
-    SetIDTEntry(5,  (unsigned long)(void*)ISR5,  0x08, 0x8E);
-    SetIDTEntry(6,  (unsigned long)(void*)ISR6,  0x08, 0x8E);
-    SetIDTEntry(7,  (unsigned long)(void*)ISR7,  0x08, 0x8E);
-	SetIDTEntry(8,  (unsigned long)(void*)ISR8,  0x08, 0x8E);
-    SetIDTEntry(9,  (unsigned long)(void*)ISR9,  0x08, 0x8E);
-	SetIDTEntry(10, (unsigned long)(void*)ISR10, 0x08, 0x8E);
-    SetIDTEntry(11, (unsigned long)(void*)ISR11, 0x08, 0x8E);
-    SetIDTEntry(12, (unsigned long)(void*)ISR12, 0x08, 0x8E);
-    SetIDTEntry(13, (unsigned long)(void*)ISR13, 0x08, 0x8E);
+    	SetIDTEntry(0,  (unsigned long)(void*)ISR0,  0x08, 0x8E);
+    	SetIDTEntry(1,  (unsigned long)(void*)ISR1,  0x08, 0x8E);
+    	SetIDTEntry(2,  (unsigned long)(void*)ISR2,  0x08, 0x8E);
+    	SetIDTEntry(3,  (unsigned long)(void*)ISR3,  0x08, 0x8E);
+    	SetIDTEntry(4,  (unsigned long)(void*)ISR4,  0x08, 0x8E);
+   	 SetIDTEntry(5,  (unsigned long)(void*)ISR5,  0x08, 0x8E);
+    	SetIDTEntry(6,  (unsigned long)(void*)ISR6,  0x08, 0x8E);
+    	SetIDTEntry(7,  (unsigned long)(void*)ISR7,  0x08, 0x8E);
+    	SetIDTEntry(8,  (unsigned long)(void*)ISR8,  0x08, 0x8E);
+    	SetIDTEntry(9,  (unsigned long)(void*)ISR9,  0x08, 0x8E);
+    	SetIDTEntry(10, (unsigned long)(void*)ISR10, 0x08, 0x8E);
+    	SetIDTEntry(11, (unsigned long)(void*)ISR11, 0x08, 0x8E);
+    	SetIDTEntry(12, (unsigned long)(void*)ISR12, 0x08, 0x8E);
+    	SetIDTEntry(13, (unsigned long)(void*)ISR13, 0x08, 0x8E);
 	SetIDTEntry(14, (unsigned long)(void*)ISR14, 0x08, 0x8E);
-    SetIDTEntry(15, (unsigned long)(void*)ISR15, 0x08, 0x8E);
-    SetIDTEntry(16, (unsigned long)(void*)ISR16, 0x08, 0x8E);
-    SetIDTEntry(17, (unsigned long)(void*)ISR17, 0x08, 0x8E);
+    	SetIDTEntry(15, (unsigned long)(void*)ISR15, 0x08, 0x8E);
+    	SetIDTEntry(16, (unsigned long)(void*)ISR16, 0x08, 0x8E);
+    	SetIDTEntry(17, (unsigned long)(void*)ISR17, 0x08, 0x8E);
 	SetIDTEntry(18, (unsigned long)(void*)ISR18, 0x08, 0x8E);
-    SetIDTEntry(19, (unsigned long)(void*)ISR19, 0x08, 0x8E);
+    	SetIDTEntry(19, (unsigned long)(void*)ISR19, 0x08, 0x8E);
 	SetIDTEntry(20, (unsigned long)(void*)ISR20, 0x08, 0x8E);
-    SetIDTEntry(21, (unsigned long)(void*)ISR21, 0x08, 0x8E);
-    SetIDTEntry(22, (unsigned long)(void*)ISR22, 0x08, 0x8E);
-    SetIDTEntry(23, (unsigned long)(void*)ISR23, 0x08, 0x8E);
+    	SetIDTEntry(21, (unsigned long)(void*)ISR21, 0x08, 0x8E);
+    	SetIDTEntry(22, (unsigned long)(void*)ISR22, 0x08, 0x8E);
+    	SetIDTEntry(23, (unsigned long)(void*)ISR23, 0x08, 0x8E);
 	SetIDTEntry(24, (unsigned long)(void*)ISR24, 0x08, 0x8E);
-    SetIDTEntry(25, (unsigned long)(void*)ISR25, 0x08, 0x8E);
-    SetIDTEntry(26, (unsigned long)(void*)ISR26, 0x08, 0x8E);
-    SetIDTEntry(27, (unsigned long)(void*)ISR27, 0x08, 0x8E);
+    	SetIDTEntry(25, (unsigned long)(void*)ISR25, 0x08, 0x8E);
+    	SetIDTEntry(26, (unsigned long)(void*)ISR26, 0x08, 0x8E);
+    	SetIDTEntry(27, (unsigned long)(void*)ISR27, 0x08, 0x8E);
 	SetIDTEntry(28, (unsigned long)(void*)ISR28, 0x08, 0x8E);
-    SetIDTEntry(29, (unsigned long)(void*)ISR29, 0x08, 0x8E);
+    	SetIDTEntry(29, (unsigned long)(void*)ISR29, 0x08, 0x8E);
 	SetIDTEntry(30, (unsigned long)(void*)ISR30, 0x08, 0x8E);
-    SetIDTEntry(31, (unsigned long)(void*)ISR31, 0x08, 0x8E);
+    	SetIDTEntry(31, (unsigned long)(void*)ISR31, 0x08, 0x8E);
 	
 	//printk("    In IDT: 32 ISRs registered\n");
 
 	__irq_remap();
-    SetIDTEntry(32, (unsigned long)(void*)IRQ0,  0x08, 0x8E);
+    	SetIDTEntry(32, (unsigned long)(void*)IRQ0,  0x08, 0x8E);
 	SetIDTEntry(33, (unsigned long)(void*)IRQ1,  0x08, 0x8E);
 	SetIDTEntry(34, (unsigned long)(void*)IRQ2,  0x08, 0x8E);
 	SetIDTEntry(35, (unsigned long)(void*)IRQ3,  0x08, 0x8E);
@@ -86,19 +86,19 @@ unsigned int RegisterIDT(void)
 	SetIDTEntry(44, (unsigned long)(void*)IRQ12, 0x08, 0x8E);
 	SetIDTEntry(45, (unsigned long)(void*)IRQ13, 0x08, 0x8E);
 	SetIDTEntry(46, (unsigned long)(void*)IRQ14, 0x08, 0x8E);
-    SetIDTEntry(47, (unsigned long)(void*)IRQ15, 0x08, 0x8E);
+    	SetIDTEntry(47, (unsigned long)(void*)IRQ15, 0x08, 0x8E);
 	
 	//printk("    In IDT: 16 IRQs registered\n");
 
 	idt_pointer.size = (sizeof(GATEDESCRIPTOR) * 256) - 1;
-    idt_pointer.base = (unsigned int)((void*)(&idt[0]));
+    	idt_pointer.base = (unsigned int)((void*)(&idt[0]));
 	if(!idt_pointer.size || !idt_pointer.base)
 	{
 		panic("IDT pointer Failed\n");
 		return 0;
 	}
 	
-    status = IDTLoad();
+   	 status = IDTLoad();
 	if (!status)
 	{
 		panic("IDT pointer loading Failed\n");
@@ -116,9 +116,9 @@ unsigned int RegisterIDT(void)
 
 char* __exception_messages[32] = 
 {
-    "Division By Zero",
-    "Debug",
-    "Non Maskable Interrupt",
+    	"Division By Zero",
+    	"Debug",
+    	"Non Maskable Interrupt",
 	"Breakpoint",
 	"Into Detected Overflow",
 	"Out of Bounds",
@@ -136,7 +136,7 @@ char* __exception_messages[32] =
 	"Alignment Check",
 	"Machine Check",
 	"Reserved",	
-    "Reserved",	
+    	"Reserved",	
 	"Reserved",	
 	"Reserved",	
 	"Reserved",	
@@ -146,8 +146,8 @@ char* __exception_messages[32] =
 	"Reserved",	
 	"Reserved",	
 	"Reserved",	
-    "Reserved",
-    "Reserved"
+    	"Reserved",
+    	"Reserved"
 };
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -163,10 +163,10 @@ char* __exception_messages[32] =
 
 static unsigned short __pic_get_irq_reg(int ocw3)
 {
-    PORT_8 p;
+    	PORT_8 p;
 	Port_8_Register(&p);	
-    p.Write(PIC2_CMD, ocw3);
-    return (p.Read(PIC2_CMD) << 8);
+    	p.Write(PIC2_CMD, ocw3);
+    	return (p.Read(PIC2_CMD) << 8);
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -199,13 +199,13 @@ void FAULT_HANDLER(PREGS r)
 unsigned int irq11_counter = 0;
 void IRQ_HANDLER(PREGS r)
 {
-    void (*handler)(PREGS r);
+    	void (*handler)(PREGS r);
 	PORT_8 p;
 	Port_8_Register(&p);
 	
-    handler = __irq_routines[r->int_no - 32];
-    if (handler)
-    	handler(r);
+    	handler = __irq_routines[r->int_no - 32];
+    	if (handler)
+    		handler(r);
 	
 	//if (r->int_no == 43 && irq11_counter == 0)
 	//{
@@ -215,11 +215,11 @@ void IRQ_HANDLER(PREGS r)
 	//}
 	
 	/* IRQ8 - 15: need to send an EOI to the slave PIC */
-    if (r->int_no >= 40)
-    	p.Write(0xA0, 0x20);
+    	if (r->int_no >= 40)
+    		p.Write(0xA0, 0x20);
 	
-    /* In either case: the EOI to the master PIC */
-    p.Write(0x20, 0x20);
+   	 /* In either case: the EOI to the master PIC */
+    	p.Write(0x20, 0x20);
 	
 	//// this is before critical irq11
 	//if (r->int_no == 43)
@@ -232,46 +232,46 @@ void IRQ_HANDLER(PREGS r)
 
 void IRQ_set_mask(unsigned char IRQline) 
 {
-    unsigned short port;
-    unsigned char  value;
+    	unsigned short port;
+    	unsigned char  value;
  
 	PORT_8 p;
 	Port_8_Register(&p);
 	
-    if(IRQline < 8) 
-        port = PIC1_DATA;
+    	if(IRQline < 8) 
+        	port = PIC1_DATA;
 	
 	else 
 	{
-        port     = PIC2_DATA;
-        IRQline -= 8;
-    }
+        	port     = PIC2_DATA;
+        	IRQline -= 8;
+    	}
 	
-    value = p.Read(port) | (1 << IRQline);
-    p.Write(port, value);        
+    	value = p.Read(port) | (1 << IRQline);
+   	 p.Write(port, value);        
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 void IRQ_clear_mask(unsigned char IRQline) 
 {
-    unsigned short port;
-    unsigned char  value;
+    	unsigned short port;
+    	unsigned char  value;
  
 	PORT_8 p;
 	Port_8_Register(&p);
  
-    if(IRQline < 8) 
-        port = PIC1_DATA;
+    	if(IRQline < 8) 
+        	port = PIC1_DATA;
 	
 	else 
 	{
-        port     = PIC2_DATA;
-        IRQline -= 8;
-    }
+        	port     = PIC2_DATA;
+        	IRQline -= 8;
+    	}
 	
-    value = p.Read(port) & ~(1 << IRQline);
-    p.Write(port, value);        
+    	value = p.Read(port) & ~(1 << IRQline);
+   	p.Write(port, value);        
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -322,19 +322,19 @@ void __irq_uninstall_handler(int irq)
 
 void __irq_remap(void)
 {
-    PORT_8 p;	
+    	PORT_8 p;	
 	Port_8_Register(&p);
 	
 	p.Write(0x20, 0x11);
-    p.Write(0xA0, 0x11);
-    p.Write(0x21, 0x20);
-    p.Write(0xA1, 0x28);
-    p.Write(0x21, 0x04);
-    p.Write(0xA1, 0x02);
-    p.Write(0x21, 0x01);
-    p.Write(0xA1, 0x01);
-    p.Write(0x21, 0x00);
-    p.Write(0xA1, 0x00);
+    	p.Write(0xA0, 0x11);
+    	p.Write(0x21, 0x20);
+    	p.Write(0xA1, 0x28);
+    	p.Write(0x21, 0x04);
+    	p.Write(0xA1, 0x02);
+   	p.Write(0x21, 0x01);
+    	p.Write(0xA1, 0x01);
+    	p.Write(0x21, 0x00);
+   	p.Write(0xA1, 0x00);
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -354,14 +354,14 @@ void __go_to_reset(void)
 		vid[i+1] = 0;
 	}
 	
-    panic("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+-+-+\n");
+    	panic("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+-+-+\n");
 	panic("                         REBOOT                        \n");
 	panic("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-++-+-+-+-+-+-+-+-+\n");
 	WaitSecond(1);
 	_CLI();
 	idt_pointer.size = 0;
-    idt_pointer.base = 0;	
-    IDTLoad();
+    	idt_pointer.base = 0;	
+   	 IDTLoad();
 	_STI();
 }
 
