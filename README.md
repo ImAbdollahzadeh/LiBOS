@@ -22,3 +22,7 @@ iman_ab2013[at]yahoo.com<br/>Basically I'm always available
 7. SAVING AND RESTORING VGA SCREENS: Dr Dobb's<br/>
 8. AHCI: in Github: thimble/ahci.c<br/>
 9. MBR/EBR Partition Tables: by Daniel B. Sedory<br/>
+10. eXtensible Host Controller Interface for Universal Serial Bus (xHCI) spec: by Intel<br/>
+11. Universal Serial Bus 2.0 Specification: by Intel<br/>
+12. Universal Serial Bus 3.0 Specification: by Intel<br/>
+13. Intel® 7 Series / C216 Chipset Family Platform Controller Hub (PCH) Datasheet: by Intel<br/>
