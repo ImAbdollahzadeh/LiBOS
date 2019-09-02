@@ -26,3 +26,4 @@ iman_ab2013[at]yahoo.com<br/>Basically I'm always available
 11. Universal Serial Bus 2.0 Specification: by Intel<br/>
 12. Universal Serial Bus 3.0 Specification: by Intel<br/>
 13. Intel® 7 Series / C216 Chipset Family Platform Controller Hub (PCH) Datasheet: by Intel<br/>
+14. USB Made Simple: A Series of Articles on USB: Copyright © 2006-2008 MQP Electronics Ltd<br/>
