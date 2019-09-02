@@ -1133,3 +1133,19 @@ bit8u xhci_get_critical_event(void)
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+/*
+ * Copyright (c) 2019-2019 The ImOS Project. All rights reserved.
+ * Implemented by Iman Abdollahzadeh.
+ * Redistribution and use of source and binary forms, with or without modification,
+ * are permitted if the MIT license conditions are met.
+ * 
+ * THIS OPERATING SYSTEM IMPLEMENTATION HAVE BEEN REVIEWED BY IMAN ABDOLLAHZADEH
+ * SEVERAL TIMES. IT WORKS PERFECTLY ON THE IMLEMENTER'S PHYSICAL MACHINE, BUT
+ * ANY PROBABLE SYSTEM CRASHES, DAMAGES, OR ERRORS IS THE USER (DISTRIBUTOR) RESPONSIBILITY
+ * AND THERE IS NO WARRANTY THAT IT WOULD WORK FLAWLESSLY ON THE USER'S MACHINE:
+ * THE SOURCE CODE HAVE ALREADY INFLUENCED TO A GREAT EXTEND BY THE FYSOS AND PRETTYOS
+ * IMPLEMENTATIONS. ANY COMMING BUGS AND/OR ERRORS MIGHT HAD BEEN CONTRIBUTED FROM THEIR SOURCE
+ * SOURCE CODE. IN THIS CASE, THE ERRORS (BUGS) IS REPORTED TO IMAN ABDOLLAHZADEH AND HE WILL,
+ * AFTER EVALUATION, FORWARD IT TO THE ORIGINAL REFERENCE.
+ */
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
