@@ -1,50 +1,52 @@
 #ifndef _PORT_H__
 #define _PORT_H__
 
+#include "IMOS_CORE.h"
+
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-static inline unsigned char __Read8(unsigned short port)
+static inline UINT_8 __Read8(UINT_16 port)
 {
-    unsigned char result;
+    UINT_8 result;
     __asm__ volatile("inb %1, %0" : "=a" (result) : "Nd" (port));
     return result;
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-static inline void __Write8(unsigned short port, unsigned char data)
+static inline void __Write8(UINT_16 port, UINT_8 data)
 {
     __asm__ volatile("outb %0, %1" : : "a" (data), "Nd" (port));
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-static inline unsigned short __Read16(unsigned short port)
+static inline UINT_16 __Read16(UINT_16 port)
 {
-    unsigned short result;
+    UINT_16 result;
     __asm__ volatile("inw %1, %0" : "=a" (result) : "Nd" (port));
     return result;
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-static inline void __Write16(unsigned short port, unsigned short data)
+static inline void __Write16(UINT_16 port, UINT_16 data)
 {
     __asm__ volatile("outw %0, %1" : : "a" (data), "Nd" (port));
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-static inline unsigned int __Read32(unsigned short port)
+static inline UINT_32 __Read32(UINT_16 port)
 {
-    unsigned int result;
+    UINT_32 result;
     __asm__ volatile("inl %1, %0" : "=a" (result) : "Nd" (port));
     return result;
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-static inline void __Write32(unsigned short port, unsigned int data)
+static inline void __Write32(UINT_16 port, UINT_32 data)
 {
     __asm__ volatile("outl %0, %1" : : "a" (data), "Nd" (port));
 }
@@ -52,22 +54,19 @@ static inline void __Write32(unsigned short port, unsigned int data)
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 typedef struct _PORT_8 {
-	unsigned char(*Read)(unsigned short port);
-	void(*Write)(unsigned short port, unsigned char data);
-} __attribute__ ((packed))
-PORT_8;
+	UINT_8(*Read)(UINT_16 port);
+	void(*Write)(UINT_16 port, UINT_8 data);
+} __attribute__ ((packed)) PORT_8;
 
 typedef struct _PORT_16 {
-	unsigned short(*Read)(unsigned short port);
-	void(*Write)(unsigned short port, unsigned short data);
-} __attribute__ ((packed))
-PORT_16;
+	UINT_16(*Read)(UINT_16 port);
+	void(*Write)(UINT_16 port, UINT_16 data);
+} __attribute__ ((packed)) PORT_16;
 
 typedef struct _PORT_32 {
-	unsigned int(*Read)(unsigned short port);
-	void(*Write)(unsigned short port, unsigned int data);
-} __attribute__ ((packed))
-PORT_32;
+	UINT_32(*Read)(UINT_16 port);
+	void(*Write)(UINT_16 port, UINT_32 data);
+} __attribute__ ((packed)) PORT_32;
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 

@@ -1,8 +1,11 @@
 #ifndef _PCI__H__
 #define _PCI__H__
-#include "../include/PORT.h"
-#include "../include/AHCI.h"
-#include "../include/XHCI.h"
+
+#include "IMOS_CORE.h"
+#include "PORT.h"
+#include "AHCI.h"
+#include "EHCI.h"
+#include "XHCI.h"
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
@@ -19,43 +22,40 @@ typedef enum _BASEADDRESSREGISTERTYPE {
 } BASEADDRESSREGISTERTYPE;
 		
 typedef struct _BASEADDRESSREGISTER {
-	unsigned int            prefetchable;
-	unsigned char*          address;
-	unsigned int            size;
+	UINT_32                 prefetchable;
+	UINT_8*                 address;
+	UINT_32                 size;
 	BASEADDRESSREGISTERTYPE type;
-} __attribute__ ((packed))
-BASEADDRESSREGISTER, *PBASEADDRESSREGISTER;
+} __attribute__ ((packed)) BASEADDRESSREGISTER;
 
 typedef struct _PCIDESCRIPTOR {
-	unsigned int   portBase;
-	unsigned int   interrupt;
-	unsigned short bus;
-	unsigned short device;
-	unsigned short function;
-	unsigned short vendor_id;
-	unsigned short device_id;
-	unsigned char  class_id;
-	unsigned char  subclass_id;
-	unsigned char  interface_id;
-	unsigned char  revision;
-} __attribute__ ((packed))
-PCIDESCRIPTOR, *PPCIDESCRIPTOR;
+	UINT_32 portBase;
+	UINT_32 interrupt;
+	UINT_16 bus;
+	UINT_16 device;
+	UINT_16 function;
+	UINT_16 vendor_id;
+	UINT_16 device_id;
+	UINT_8  class_id;
+	UINT_8  subclass_id;
+	UINT_8  interface_id;
+	UINT_8  revision;
+} __attribute__ ((packed)) PCIDESCRIPTOR;
 
 typedef struct _PCI {
 	PORT_32 DataPort;
 	PORT_32 CommandPort;
-} __attribute__ ((packed))
-PCI, *PPCI;
+} __attribute__ ((packed)) PCI;
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-unsigned int        RegisterPCI           (PPCI pci, PSATA sata, XHCI* x);
-unsigned int        Read                  (PPCI pci, unsigned short bus, unsigned short device, unsigned short function, unsigned int registeroffset);
-void                Write                 (PPCI pci, unsigned short bus, unsigned short device, unsigned short function, unsigned int registeroffset, unsigned int value);
-unsigned int        DeviceHasFunctions    (PPCI pci, unsigned short bus, unsigned short device);
-BASEADDRESSREGISTER GetBASEADDRESSREGISTER(PPCI pci, unsigned short bus, unsigned short device, unsigned short function, unsigned short bar);
-PCIDESCRIPTOR       GetPCIDESCRIPTOR      (PPCI pci, unsigned short bus, unsigned short device, unsigned short function);
-void                SetBusMaster          (PPCI pci, unsigned short bus, unsigned short device, unsigned short function);
+UINT_32             RegisterPCI           (PCI* pci, SATA* sata, EHCI* ehci, XHCI* x);
+UINT_32             Read                  (PCI* pci, UINT_16 bus, UINT_16 device, UINT_16 function, UINT_32 registeroffset);
+void                Write                 (PCI* pci, UINT_16 bus, UINT_16 device, UINT_16 function, UINT_32 registeroffset, UINT_32 value);
+UINT_32             DeviceHasFunctions    (PCI* pci, UINT_16 bus, UINT_16 device);
+BASEADDRESSREGISTER GetBASEADDRESSREGISTER(PCI* pci, UINT_16 bus, UINT_16 device, UINT_16 function, UINT_16 bar);
+PCIDESCRIPTOR       GetPCIDESCRIPTOR      (PCI* pci, UINT_16 bus, UINT_16 device, UINT_16 function);
+void                SetBusMaster          (PCI* pci, UINT_16 bus, UINT_16 device, UINT_16 function);
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 			

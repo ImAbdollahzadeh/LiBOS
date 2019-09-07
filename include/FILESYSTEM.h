@@ -1,125 +1,118 @@
 #ifndef _FILESYSTEM__H__
 #define _FILESYSTEM__H__
 
-#include "../include/AHCI.h"
-#include "../include/PCI.h"
-#include "../include/TIMER.h"
+#include "IMOS_CORE.h"
+#include "AHCI.h"
+#include "PCI.h"
+#include "TIMER.h"
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 typedef struct _PARTITION {
-	unsigned char  bootable;
-	unsigned char  start_head;
-	unsigned char  start_sector   : 6;
-	unsigned short start_cylinder : 10;
-	unsigned char  partition_id;
-	unsigned char  end_head;
-	unsigned char  end_sector     : 6;
-	unsigned short end_cylinder   : 10;
-	unsigned int   start_lba;
-	unsigned int   length;
-} __attribute__ ((packed)) 
-PARTITION, *PPARTITION; // 16 bytes
+	UINT_8  bootable;
+	UINT_8  start_head;
+	UINT_8  start_sector   : 6;
+	UINT_16 start_cylinder : 10;
+	UINT_8  partition_id;
+	UINT_8  end_head;
+	UINT_8  end_sector     : 6;
+	UINT_16 end_cylinder   : 10;
+	UINT_32 start_lba;
+	UINT_32 length;
+} __attribute__ ((packed))  PARTITION; // 16 bytes
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 typedef struct _EXTENDEDBOOTRECORD {
-	unsigned char  bootloader[446];              // must be zero
+	UINT_8  bootloader[446];              // must be zero
 	PARTITION      extendedPartitions[2];        // <-- main needed entries
 	PARTITION      unusedExtendedPartitions[2];  // must be zero
-	unsigned short magicNumber;                  // must be 0xAA55
-} __attribute__ ((packed)) 
-EXTENDEDBOOTRECORD, *PEXTENDEDBOOTRECORD;
+	UINT_16 magicNumber;                  // must be 0xAA55
+} __attribute__ ((packed)) EXTENDEDBOOTRECORD;
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 typedef struct _MASTERBOOTRECORD {
-	unsigned char  bootloader[440];
-	unsigned int   signature;
-	unsigned short unused;
+	UINT_8  bootloader[440];
+	UINT_32   signature;
+	UINT_16 unused;
 	PARTITION      primaryPartitions[4];
-	unsigned short magicNumber; 
-} __attribute__ ((packed)) 
-MASTERBOOTRECORD, *PMASTERBOOTRECORD;
+	UINT_16 magicNumber; 
+} __attribute__ ((packed)) MASTERBOOTRECORD;
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 typedef struct _BIOSPARAMETERBLOCK {
-	unsigned char  jump[3];
-	unsigned char  softName[8];
-	unsigned short bytesPerSector;
-	unsigned char  sectorPerCluster;
-	unsigned short reservedSectors;
-	unsigned char  fatCopies;
-	unsigned short rootDirEntries;
-	unsigned short totalSectors;
-	unsigned char  mediaType;
-        unsigned short fatSectorsCount;
-	unsigned short sectorsPerTrack;
-	unsigned short headCount;
-	unsigned int   hiddenSectors;
-	unsigned int   totalSectorCount;
-	unsigned int   tableSize;
-	unsigned short extFLags;
-	unsigned short fatVersion;
-	unsigned int   rootCluster;
-	unsigned short fatInfo;
-	unsigned short backupSector;
-	unsigned char  reserved0[12];
-	unsigned char  driveNumber;
-	unsigned char  reserved;
-	unsigned char  bootSignature;
-	unsigned int   volumeId;
-	unsigned char  volumeLabel[11];
-	unsigned char  fatTypeLabel[8];
-	unsigned char  ImanOSReserved[422];
-} __attribute__ ((packed)) 
-BIOSPARAMETERBLOCK, *PBIOSPARAMETERBLOCK;
+	UINT_8  jump[3];
+	UINT_8  softName[8];
+	UINT_16 bytesPerSector;
+	UINT_8  sectorPerCluster;
+	UINT_16 reservedSectors;
+	UINT_8  fatCopies;
+	UINT_16 rootDirEntries;
+	UINT_16 totalSectors;
+	UINT_8  mediaType;
+    UINT_16 fatSectorsCount;
+	UINT_16 sectorsPerTrack;
+	UINT_16 headCount;
+	UINT_32   hiddenSectors;
+	UINT_32   totalSectorCount;
+	UINT_32   tableSize;
+	UINT_16 extFLags;
+	UINT_16 fatVersion;
+	UINT_32   rootCluster;
+	UINT_16 fatInfo;
+	UINT_16 backupSector;
+	UINT_8  reserved0[12];
+	UINT_8  driveNumber;
+	UINT_8  reserved;
+	UINT_8  bootSignature;
+	UINT_32   volumeId;
+	UINT_8  volumeLabel[11];
+	UINT_8  fatTypeLabel[8];
+	UINT_8  ImanOSReserved[422];
+} __attribute__ ((packed)) BIOSPARAMETERBLOCK;
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 typedef struct _DIRECTORYENTRY {
-	unsigned char  name[8];
-	unsigned char  ext[3];
-	unsigned char  attributes;
-	unsigned char  reserved;
-	unsigned char  cTimeTenth;
-	unsigned short cTime;
-	unsigned short cDate;
-	unsigned short aTime;
-	unsigned short firstClusterHigh;
-	unsigned short wTime;
-	unsigned short wDate;
-	unsigned short firstClusterLow;
-	unsigned int   size;
-} __attribute__ ((packed)) 
-DIRECTORYENTRY, *PDIRECTORYENTRY; // 32 bytes
+	UINT_8  name[8];
+	UINT_8  ext[3];
+	UINT_8  attributes;
+	UINT_8  reserved;
+	UINT_8  cTimeTenth;
+	UINT_16 cTime;
+	UINT_16 cDate;
+	UINT_16 aTime;
+	UINT_16 firstClusterHigh;
+	UINT_16 wTime;
+	UINT_16 wDate;
+	UINT_16 firstClusterLow;
+	UINT_32   size;
+} __attribute__ ((packed)) DIRECTORYENTRY; // 32 bytes
 
 typedef struct _FILESYSTEM {
-	PSATA           sata;
-	unsigned int    reserved[3];
-} __attribute__ ((packed)) 
-FILESYSTEM, *PFILESYSTEM;
+	SATA*           sata;
+	UINT_32    reserved[3];
+} __attribute__ ((packed)) FILESYSTEM;
 
 typedef struct _HDPARAMS {
-	PSATA           sata;
-	unsigned int    root;
-	unsigned int    data;
-	unsigned int    sectorsPerCluster;
-} __attribute__ ((packed)) 
-HDPARAMS, *PHDPARAMS;
+	SATA*      sata;
+	UINT_32    root;
+	UINT_32    data;
+	UINT_32    sectorsPerCluster;
+} __attribute__ ((packed)) HDPARAMS;
 
 typedef struct _DESCRIPTOR {
-	unsigned int       validity;
-	unsigned long long tree;
-} __attribute__ ((packed)) 
-DESCRIPTOR, *PDESCRIPTOR;
+	UINT_32       validity;
+	UINT_64 tree;
+} __attribute__ ((packed)) DESCRIPTOR;
 
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-unsigned int RegisterFilesystem( PFILESYSTEM filesystem, PSATA sata );
-HDPARAMS     DriveEntry(void);
+UINT_32  RegisterFilesystem( FILESYSTEM* filesystem, SATA* sata );
+HDPARAMS DriveEntry(void);
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 

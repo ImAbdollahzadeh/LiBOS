@@ -1,15 +1,9 @@
 #ifndef _XHCI__H__
 #define _XHCI__H__
 
-typedef unsigned char      bit8u;
-typedef unsigned short     bit16u;
-typedef unsigned int       bit32u;
-typedef unsigned long long bit64u;
-typedef unsigned int       bool;
+#include "./IMOS_CORE.h"
 
-#define TRUE             0x01
-#define FALSE            0x00
-#define CMND_RING_TRBS   128  // not more than 4096
+#define CMND_RING_TRBS   256  // not more than 4096
 #define TRBS_PER_RING    256
 
 #define BIT(X) (1<<(X))
@@ -157,19 +151,19 @@ typedef unsigned int       bool;
 #define xHC_xECP_LEGACY_OWNED_MASK  (xHC_xECP_LEGACY_BIOS_OWNED | xHC_xECP_LEGACY_OS_OWNED)
 	
 typedef struct _xHCI_xECP_LEGACY {
-	bit32u volatile id_next_owner_flags;
-	bit32u volatile cntrl_status;
+	UINT_32 volatile id_next_owner_flags;
+	UINT_32 volatile cntrl_status;
 } __attribute__ ((packed)) xHC_xECP_LEGACY;
 
 typedef struct _xHCI_xECP_PROTO {
-	bit8u  id;
-	bit8u  next;
-	bit8u  minor;
-	bit8u  major;
-	bit32u name;
-	bit8u  offset;
-	bit8u  count;
-	bit16u flags;
+	UINT_8  id;
+	UINT_8  next;
+	UINT_8  minor;
+	UINT_8  major;
+	UINT_32 name;
+	UINT_8  offset;
+	UINT_8  count;
+	UINT_16 flags;
 } __attribute__ ((packed)) xHC_xECP_PROTO;
 
 #define MAX_CONTEXT_SIZE   64                               // Max Context size in bytes
@@ -182,20 +176,16 @@ typedef struct _xHCI_xECP_PROTO {
 #define SLOT_STATE_CONFIGURED        3
 
 typedef struct _xHCI_SLOT_CONTEXT {
-	unsigned int entries;
-	bit8u        hub;
-	bit8u        mtt;
-	unsigned int speed;
-	bit32u       route_string;
-	unsigned int num_ports;
-	unsigned int rh_port_num;
-	unsigned int max_exit_latency;
-	unsigned int int_target;
-	unsigned int ttt;
-	unsigned int tt_port_num;
-	unsigned int tt_hub_slot_id;
-	unsigned int slot_state;
-	unsigned int device_address;
+	volatile UINT_32 DWORD0;
+	volatile UINT_16 max_exit_latency;
+	volatile UINT_8  root_hub_port_number;
+	volatile UINT_8  number_of_ports;
+	volatile UINT_8  TT_hub_slot_id;
+	volatile UINT_8  TT_port_number;
+	volatile UINT_16 WORD2;
+	volatile UINT_8  usb_device_address;
+	volatile UINT_8  WORD_BYTE3[3];
+	volatile UINT_32 reserved[4];
 } __attribute__ ((packed)) xHCI_SLOT_CONTEXT;
 
 // EP State
@@ -206,33 +196,30 @@ typedef struct _xHCI_SLOT_CONTEXT {
 #define EP_STATE_ERROR    4
 
 typedef struct _xHCI_EP_CONTEXT {
-	unsigned int interval;
-	bit8u        lsa;
-	unsigned int max_pstreams;
-	unsigned int mult;
-	unsigned int ep_state;
-	unsigned int max_packet_size;
-	unsigned int max_burst_size;
-	bit8u        hid;
-	unsigned int ep_type;
-	unsigned int cerr;
-	bit64u       tr_dequeue_pointer;
-	bit8u        dcs;
-	unsigned int max_esit_payload;
-	unsigned int average_trb_len;
+	volatile UINT_16 WORD0;
+	volatile UINT_8  interval;
+	volatile UINT_8  max_esit_payload_hi;
+	volatile UINT_8  BYTE1;
+	volatile UINT_8  max_burst_size;
+	volatile UINT_16 max_packet_size;
+	volatile UINT_32 DWORD2;
+	volatile UINT_32 TR_dequeue_pointer_hi;
+	volatile UINT_16 average_trb_length;
+	volatile UINT_16 max_esit_payload_lo;
+	volatile UINT_32 reserved[3];
 } __attribute__ ((packed)) xHCI_EP_CONTEXT;
 
 typedef struct _xHCI_TRB {
-	bit64u param;
-	bit32u status;
-	bit32u command;
+	UINT_64 param;
+	UINT_32 status;
+	UINT_32 command;
 } __attribute__ ((packed)) xHCI_TRB;
 
 // event ring specification
 typedef struct _xHCI_EVENT_SEG_TABLE {
-	bit64u addr;
-	bit32u size;
-	bit32u resv;
+	UINT_64 addr;
+	UINT_32 size;
+	UINT_32 resv;
 } __attribute__ ((packed)) xHCI_EVENT_SEG_TABLE;
 
 #define XHCI_DIR_EP_OUT   0
@@ -278,6 +265,32 @@ typedef struct _xHCI_EVENT_SEG_TABLE {
 #define TRB_LINK_CMND         (TRB_SET_TYPE(xLINK) | TRB_IOC_OFF | TRB_CHAIN_OFF | TRB_TOGGLE_CYCLE_OFF | TRB_CYCLE_ON)
 
 #define XHCI_IRQ_DONE         BIT(31)
+
+// setup packets
+#define DEV_TO_HOST     0x80
+#define HOST_TO_DEV     0x00
+#define REQ_TYPE_STNDRD 0x00
+#define REQ_TYPE_CLASS  0x20
+#define REQ_TYPE_VENDOR 0x40
+#define REQ_TYPE_RESV   0x60
+#define RECPT_DEVICE    0x00
+#define RECPT_INTERFACE 0x01
+#define RECPT_ENDPOINT  0x02
+#define RECPT_OTHER     0x03
+#define STDRD_GET_REQUEST   (DEV_TO_HOST | REQ_TYPE_STNDRD | RECPT_DEVICE)
+#define STDRD_SET_REQUEST   (HOST_TO_DEV | REQ_TYPE_STNDRD | RECPT_DEVICE)
+#define STDRD_SET_INTERFACE (HOST_TO_DEV | REQ_TYPE_STNDRD | RECPT_INTERFACE)
+
+// device requests
+enum { GET_STATUS=0, CLEAR_FEATURE, SET_FEATURE=3, SET_ADDRESS=5, GET_DESCRIPTOR=6, SET_DESCRIPTOR,
+        GET_CONFIGURATION, SET_CONFIGURATION,
+// interface requests
+        GET_INTERFACE, SET_INTERFACE,
+// standard endpoint requests
+        SYNCH_FRAME,
+// Device specific
+        GET_MAX_LUNS = 0xFE, BULK_ONLY_RESET
+};
 
 // Common TRB types
 enum { 
@@ -357,92 +370,179 @@ enum {
     /* 224 - 225 vendor defined info */
 };
 
+// Descriptor types
+enum { 
+  DEVICE=1, 
+  CONFIG, 
+  STRING, 
+  INTERFACE, 
+  ENDPOINT, 
+  DEVICE_QUALIFIER,
+  OTHER_SPEED_CONFIG, 
+  INTERFACE_POWER, 
+  OTG, 
+  DEBUG, 
+  INTERFACE_ASSOSIATION,
+  
+  HID=0x21,
+  HID_REPORT, 
+  HID_PHYSICAL, 
+  
+  INTERFACE_FUNCTION = 0x24,
+  ENDPOINT_FUNCTION,
+  
+  HUB=0x29
+};
+
 enum { xCONTROL_EP=0, xISOCHRONOUS_EP, xBULK_EP, xINTERRUPT_EP };
 typedef struct _xHCI_CAPABILITY {
-	volatile bit8u  caplength; //0
-	volatile bit8u  reserved1; //1
-	volatile bit16u hciversion;//2
-	volatile bit32u hcsparam1; //4
-	volatile bit32u hcsparam2; //8
-	volatile bit32u hcsparam3; //12
-	volatile bit32u hccparam1; //16
-	volatile bit32u dboff;     //20
-	volatile bit32u rtsoff;    //24
-	volatile bit32u hccparam2; //28
-} __attribute__ ((packed)) xHCI_CAPABILITY, *PxHCI_CAPABILITY;
+	volatile UINT_8  caplength; //0
+	volatile UINT_8  reserved1; //1
+	volatile UINT_16 hciversion;//2
+	volatile UINT_32 hcsparams1; //4
+	volatile UINT_32 hcsparams2; //8
+	volatile UINT_32 hcsparams3; //12
+	volatile UINT_32 hccparams1; //16
+	volatile UINT_32 dboff;      //20
+	volatile UINT_32 rtsoff;     //24
+	volatile UINT_32 hccparams2; //28
+} __attribute__ ((packed)) xHCI_CAPABILITY;
 
 typedef struct _xHCI_OPERATION {
-	volatile bit32u usbcmd;          //0x00
-	volatile bit32u usbsts;          //0x04
-	volatile bit32u pagesize;        //0x08
-	volatile bit8u  reserved1[8];    //0x0C
-	volatile bit32u dnctrl;          //0x14
-	volatile bit64u crcr;            //0x18
-	volatile bit8u  reserved2[16];   //0x20
-	volatile bit64u dcbaap;          //0x30
-	volatile bit32u config;          //0x38
-	volatile bit8u  reserved3[964];
-	volatile bit8u  port[255 * 16];  // room for maximum 255 x 16-byte port register set
-} __attribute__ ((packed)) xHCI_OPERATION, *PxHCI_OPERATION;
+	volatile UINT_32 usbcmd;          //0x00
+	volatile UINT_32 usbsts;          //0x04
+	volatile UINT_32 pagesize;        //0x08
+	volatile UINT_8  reserved1[8];    //0x0C
+	volatile UINT_32 dnctrl;          //0x14
+	volatile UINT_64 crcr;            //0x18
+	volatile UINT_8  reserved2[16];   //0x20
+	volatile UINT_64 dcbaap;          //0x30
+	volatile UINT_32 config;          //0x38
+	volatile UINT_8  reserved3[964];
+	volatile UINT_8  port[255 * 16];  // room for maximum 255 x 16-byte port register set
+} __attribute__ ((packed)) xHCI_OPERATION;
 
 typedef volatile struct _xHCI_PORT_REGISTER_SET {
-	volatile bit32u portsc;    // port status and control
-	volatile bit32u portpmsc;  // port power management status and control
-	volatile bit32u portli;    // port port link info
-	volatile bit32u porthlpmc; // port hardware LPM control (only version 1.1. on version 1.0 is reserved)
-} __attribute__ ((packed)) xHCI_PORT_REGISTER_SET, *PxHCI_PORT_REGISTER_SET;
+	volatile UINT_32 portsc;    // port status and control
+	volatile UINT_32 portpmsc;  // port power management status and control
+	volatile UINT_32 portli;    // port port link info
+	volatile UINT_32 porthlpmc; // port hardware LPM control (only version 1.1. on version 1.0 is reserved)
+} __attribute__ ((packed)) xHCI_PORT_REGISTER_SET;
 
 typedef volatile struct _xHCI_EXTENDED_CAPABILITY {
-	volatile bit32u DWORD0;
-	volatile bit32u DWORD1;
-	volatile bit32u DWORD2;
-	volatile bit32u DWORD3;
-} __attribute__ ((packed)) xHCI_EXTENDED_CAPABILITY, *PxHCI_EXTENDED_CAPABILITY;
+	volatile UINT_32 DWORD0;
+	volatile UINT_32 DWORD1;
+	volatile UINT_32 DWORD2;
+	volatile UINT_32 DWORD3;
+} __attribute__ ((packed)) xHCI_EXTENDED_CAPABILITY;
 
 typedef volatile struct _xHCI_PORT_INFO {
-	volatile bit8u  flags;                // port_info flags below
-	volatile bit8u  other_port_num;       // zero based offset to other speed port
-	volatile bit8u  offset;               // offset of this port within this protocol
-	volatile bit8u  reserved;
+	volatile UINT_8  flags;                // port_info flags below
+	volatile UINT_8  other_port_num;       // zero based offset to other speed port
+	volatile UINT_8  offset;               // offset of this port within this protocol
+	volatile UINT_8  reserved;
 } __attribute__ ((packed)) xHCI_PORT_INFO;
 
+
+typedef struct _USB_DEVICE_CONNECTION {
+	volatile BOOL   connected;           // 1: connected; 0: disconnected
+	volatile UINT_8 port;
+	volatile UINT_8 speed; 
+	volatile BOOL   slot_configuration_command;   
+	volatile BOOL   slot_configuration;
+	volatile BOOL   slot_set_address;
+	volatile BOOL   setup_data_status_stages;
+	volatile BOOL   setup_data_status_stages_command;
+	volatile BOOL   setup_stage;
+	volatile BOOL   data_stage;
+	volatile BOOL   status_stage;
+	volatile UINT_8 slot_id;
+	volatile void*  slot_address;
+	volatile void*  ep0_address;
+} __attribute__((packed)) USB_DEVICE_CONNECTION;
+
 typedef volatile struct _XHCI {
-	volatile void*                     base_address_lo;
-	volatile void*                     base_address_hi;
-	volatile void*                     pci;
-	volatile bit16u                    bus;
-	volatile bit16u                    device;
-	volatile bit16u                    function;
-	volatile bit8u                     irq_number;
-	volatile PxHCI_CAPABILITY          cap;
-	volatile PxHCI_OPERATION           oper;
-	volatile PxHCI_PORT_REGISTER_SET   port_reg_set;
-	volatile PxHCI_EXTENDED_CAPABILITY ext_cap;
+	volatile UINT_32                   base_address_lo;
+	volatile UINT_32                   base_address_hi;
+	volatile UINT_8                    irq_number;
+	volatile xHCI_CAPABILITY*          cap;
+	volatile xHCI_OPERATION*           oper;
+	volatile xHCI_PORT_REGISTER_SET*   port_reg;
+	volatile xHCI_EXTENDED_CAPABILITY* ex_cap;
+	
+	volatile UINT_32                   context_size;
+	volatile UINT_32                   page_size;
+	volatile UINT_32                   max_intr;
+	volatile UINT_32                   driver_crcr;
+	volatile UINT_32                   command_ring_Enqueue;
+	volatile UINT_32                   command_ring_PCS;
+	volatile UINT_32                   current_event_ring_address;
+	volatile UINT_32                   current_event_ring_cycle;
+	void*                              ers;
+	void*                              erst;
+	void*                              pci;
+	UINT_16                            bus;
+	UINT_16                            device;
+	UINT_16                            function;
+	USB_DEVICE_CONNECTION*             usb_device;
 } __attribute__ ((packed)) XHCI;
 
 typedef struct _DEVICE_DESC {
-	volatile bit8u  len;
-	volatile bit8u  type;
-	volatile bit16u usb_ver;
-	volatile bit8u  _class;
-	volatile bit8u  subclass;
-	volatile bit8u  protocol;
-	volatile bit8u  max_packet_size;
-	volatile bit16u vendorid;
-	volatile bit16u productid;
-	volatile bit16u device_rel;
-	volatile bit8u  manuf_indx;   // index value
-	volatile bit8u  prod_indx;    // index value
-	volatile bit8u  serial_indx;  // index value
-	volatile bit8u  configs;      // Number of configurations
+	volatile UINT_8  len;
+	volatile UINT_8  type;
+	volatile UINT_16 usb_ver;
+	volatile UINT_8  _class;
+	volatile UINT_8  subclass;
+	volatile UINT_8  protocol;
+	volatile UINT_8  max_packet_size;
+	volatile UINT_16 vendorid;
+	volatile UINT_16 productid;
+	volatile UINT_16 device_rel;
+	volatile UINT_8  manuf_indx;   // index value
+	volatile UINT_8  prod_indx;    // index value
+	volatile UINT_8  serial_indx;  // index value
+	volatile UINT_8  configs;      // Number of configurations
 } __attribute__ ((packed)) DEVICE_DESC;
 
-void   xhci_print_on_screen  (XHCI* x);
-bool   start_xhci_controller (XHCI* x);
-void*  xhci_alloc_memory     (bit32u byte, bit32u alignment, bit32u page_boundary);
-void   xhci_free_memory      (void* pointer);
-//void   xhci_write_oper_reg   (const bit32u base, bit32u offset, bit32u value);
-//bit32u xhci_read_oper_reg    (const bit32u base, bit32u offset);
+typedef struct _TRB_TYPES {
+	UINT_32 id_number;
+	INT_8*  message_type;
+} __attribute__ ((packed)) TRB_TYPES;
 
-void ___test_NO_OP_TRB___(XHCI*);
+typedef struct _REQUEST_PACKET {
+	UINT_8  request_type;
+	UINT_8  request;
+	UINT_16 value;
+	UINT_16 index;
+	UINT_16 length;
+} __attribute__ ((packed)) REQUEST_PACKET;
+
+typedef enum _XHCI_ROOT_HUB_PORT_NUMBERS {
+	PORT_0 = 0x03,
+	PORT_1 = 0x0C,
+	PORT_2 = 0x30,
+	PORT_3 = 0xC0	
+} XHCI_ROOT_HUB_PORT_NUMBERS;
+
+typedef enum _XHCI_ROOT_HUB_PORT_CONNECTION_STATUS {
+	USB2_CONNECTION_PORT_DISCONNECT = 0x00,
+	USB2_CONNECTION_PORT_CONNECT_01 = 0x01,
+	USB2_CONNECTION_PORT_CONNECT_02 = 0x02,
+	USB2_CONNECTION_PORT_INVALID    = 0x03,	
+	USB3_CONNECTION_PORT_DISCONNECT = 0x00,
+	USB3_CONNECTION_PORT_CONNECT_01 = 0x01,
+	USB3_CONNECTION_PORT_CONNECT_02 = 0x02,
+	USB3_CONNECTION_PORT_INVALID    = 0x03,
+} XHCI_ROOT_HUB_PORT_CONNECTION_STATUS;
+
+BOOL   start_xhci_controller        (XHCI* x);
+void*  xhci_alloc_memory            (UINT_32 byte, UINT_32 alignment, UINT_32 page_boundary);
+void   xhci_free_memory             (void* pointer);
+void   xhci_slot_configuration      (XHCI* x, UINT_32 port, UINT_32 speed);
+void   xhci_slot_release            (XHCI* x, UINT_32 port, UINT_32 speed);
+XHCI*  xhci_instance_to_idt         (void);
+UINT_8 xhci_get_critical_event      (void);
+void   xhci_slot_set_address        (XHCI* x, BOOL BSR);
+void   xhci_setup_data_status_stages(XHCI* x, void* target, UINT_32 length, UINT_32 max_packet, BOOL first_or_second);
+
 #endif

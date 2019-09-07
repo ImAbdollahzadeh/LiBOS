@@ -1,36 +1,38 @@
 #ifndef _GDT__H__
 #define _GDT__H__
 
+#include "IMOS_CORE.h"
+
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-typedef struct _SEGMEN_TDESCRIPTOR {
-	unsigned short limit_low;
-	unsigned short base_low;
-	unsigned char  base_middle;
-	unsigned char  access;
-	unsigned char  granularity;
-	unsigned char  base_high;
-} __attribute__ ((packed)) SEGMENT_DESCRIPTOR;
+typedef struct _SEGMENTDESCRIPTOR {
+	UINT_16 limit_low;
+	UINT_16 base_low;
+	UINT_8  base_middle;
+	UINT_8  access;
+	UINT_8  granularity;
+	UINT_8  base_high;
+} __attribute__ ((packed)) SEGMENTDESCRIPTOR;
 
 typedef struct _GDT {
-	SEGMENT_DESCRIPTOR null_segment_selector;
-	SEGMENT_DESCRIPTOR code_segment_selector;
-	SEGMENT_DESCRIPTOR data_segment_selector;
+	SEGMENTDESCRIPTOR NullSegmentSelector;
+	SEGMENTDESCRIPTOR CodeSegmentSelector;
+	SEGMENTDESCRIPTOR DataSegmentSelector;
 } __attribute__ ((packed)) GDT;
 
-typedef struct _GDT_POINTER {
-    unsigned short size;
-    unsigned int   base;
-} __attribute__((packed)) GDT_POINTER;
+typedef struct _GDTPOINTER {
+    UINT_16 size;
+    UINT_32 base;
+} __attribute__((packed)) GDTPOINTER;
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-extern unsigned int Gdt_load                 (void);
-unsigned int        Segment_descriptor_base  (SEGMENT_DESCRIPTOR* segment_descriptor);
-unsigned int        Segment_descriptor_limit (SEGMENT_DESCRIPTOR* segment_descriptor);
-unsigned int        Register_gdt             (GDT* gdt);
-unsigned short      Gdt_code_segment_selector(GDT* gdt);
-unsigned short      Gdt_data_segment_selector(GDT* gdt);
+extern UINT_32 GDTLoad               (void);
+       UINT_32 SegmentDescriptorBase (SEGMENTDESCRIPTOR* segmentdescriptor);
+       UINT_32 SegmentDescriptorLimit(SEGMENTDESCRIPTOR* segmentdescriptor);
+       UINT_32 RegisterGDT           (GDT* gdt);
+       UINT_16 GDTCodeSegmentSelector(GDT* gdt);
+       UINT_16 GDTDataSegmentSelector(GDT* gdt);
     
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 	

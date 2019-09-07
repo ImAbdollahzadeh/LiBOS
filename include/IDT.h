@@ -1,44 +1,43 @@
 #ifndef _IDT__H__
 #define _IDT__H__
 
+#include "IMOS_CORE.h"
+
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 typedef struct _REGS {
-    unsigned int gs, fs, es, ds;                          /* pushed the segs last */
-    unsigned int edi, esi, ebp, esp, ebx, edx, ecx, eax;  /* pushed by 'pusha' */
-    unsigned int int_no, err_code;                        /* our 'push byte #' and ecodes do this */
-    unsigned int eip, cs, eflags, useresp, ss;            /* pushed by the processor automatically */ 
-} __attribute__((packed))
-REGS, *PREGS;
+    UINT_32 gs, fs, es, ds;                          /* pushed the segs last */
+    UINT_32 edi, esi, ebp, esp, ebx, edx, ecx, eax;  /* pushed by 'pusha' */
+    UINT_32 int_no, err_code;                        /* our 'push byte #' and ecodes do this */
+    UINT_32 eip, cs, eflags, useresp, ss;            /* pushed by the processor automatically */ 
+} __attribute__((packed)) REGS;
 
 typedef struct _GATEDESCRIPTOR {
-    unsigned short handlerAddressLowBits;
-    unsigned short gdt_codeSegmentSelector;
-    unsigned char  reserved;
-    unsigned char  access;
-    unsigned short handlerAddressHighBits;
-} __attribute__((packed))
-GATEDESCRIPTOR, *PGATEDESCRIPTOR;
+    UINT_16 handlerAddressLowBits;
+    UINT_16 gdt_codeSegmentSelector;
+    UINT_8  reserved;
+    UINT_8  access;
+    UINT_16 handlerAddressHighBits;
+} __attribute__((packed)) GATEDESCRIPTOR;
 
 GATEDESCRIPTOR idt[256];
 
 typedef struct _IDTPOINTER {
-    unsigned short size;
-    unsigned int   base;
-} __attribute__((packed))
-IDTPOINTER;
+    UINT_16 size;
+    UINT_32 base;
+} __attribute__((packed)) IDTPOINTER;
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 void __go_to_reset(void);
-void SetIDTEntry(unsigned char Interrupt, unsigned long HandlerAddress, unsigned short CodeSegmentSelectorOffset, unsigned char flags);
-unsigned int RegisterIDT(void);
-void FAULT_HANDLER(PREGS r);
-void IRQ_HANDLER(PREGS r);
-void __irq_install_handler(int irq, void (*handler)(PREGS r));
-void __irq_uninstall_handler(int irq);
+void SetIDTEntry(UINT_8 Interrupt, UINT_32 HandlerAddress, UINT_16 CodeSegmentSelectorOffset, UINT_8 flags);
+UINT_32 RegisterIDT(void);
+void FAULT_HANDLER(REGS* r);
+void IRQ_HANDLER(REGS* r);
+void __irq_install_handler(INT_32 irq, void (*handler)(REGS* r));
+void __irq_uninstall_handler(INT_32 irq);
 void __irq_remap(void);
-extern unsigned int IDTLoad();
+extern UINT_32 IDTLoad ();
 extern void ISR_DEFAULT();
 extern void ISR0();
 extern void ISR1();
@@ -88,10 +87,19 @@ extern void IRQ12();
 extern void IRQ13();
 extern void IRQ14();
 extern void IRQ15();
+extern void IRQ16();
+extern void IRQ100();
 
 extern void _CLI();
 extern void _STI();
-void set_lapic_to_idt(unsigned int*);
+extern void WM();
+extern void idt_xhci_spurious(UINT_32 execution_flag, UINT_32* ret_value);
+extern void modify_op_base(UINT_32 val);
+extern void get_op_base(UINT_32* ptr);
+extern void set_xhci_pointer(UINT_32);
+extern void get_xhci_pointer(UINT_32*);
+void set_lapic_to_idt(UINT_32*);
+
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 #endif //! _IDT__H__

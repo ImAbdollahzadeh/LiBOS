@@ -1,6 +1,8 @@
 #ifndef _TIMER__H__
 #define _TIMER__H__
-#include "../include/IDT.h"
+
+#include "IMOS_CORE.h"
+#include "IDT.h"
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
@@ -18,20 +20,18 @@
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 typedef struct _TIMER {
-	unsigned int clock_Hz;
+	UINT_32 clock_Hz;
 	void (*CurrentTime)(void);
 	void (*CurrentDate)(void);
-
-} __attribute__ ((packed))
-TIMER, *PTIMER;
+} __attribute__ ((packed)) TIMER;
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-void timer_handler(PREGS r);
-unsigned int RegisterTimer(PTIMER timer, unsigned int Hz);
-void WaitMicroSecond(unsigned int usec);  
-void WaitMiliSecond(unsigned int msec);  
-void WaitSecond(unsigned int sec);   
+void    timer_handler  (REGS* r);
+UINT_32 RegisterTimer  (TIMER* timer, UINT_32 Hz);
+void    WaitMicroSecond(UINT_32 usec);  
+void    WaitMiliSecond (UINT_32 msec);  
+void    WaitSecond     (UINT_32 sec);   
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 

@@ -1,6 +1,8 @@
 #ifndef _PRINT__H__
 #define _PRINT__H__
 
+#include "IMOS_CORE.h"
+
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 /* There are only 'TWO' formatted printk.
@@ -10,10 +12,12 @@
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-extern void printk       ( char* fmt, ... );
-       void clear_screen ( void );
-       void panic        ( char* id );
-       unsigned char* Disps(void);
+extern void    printk       ( INT_8* fmt, ... );
+       void    clear_screen ( void );
+       void    panic        ( INT_8* id );
+       UINT_8* Disps        (void);
+       void __IMOS_HexDump  (void* pointer_to_buffer, UINT_32 bytes, INT_8* begin_message);
+
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 #endif //! _PRINT__H__

@@ -1,8 +1,9 @@
 #ifndef _KEYBOARD__H__
 #define _KEYBOARD__H__
 
-#include "../include/IDT.h"
-#include "../include/PORT.h"
+#include "IMOS_CORE.h"
+#include "IDT.h"
+#include "PORT.h"
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
@@ -14,18 +15,17 @@ typedef enum _DIRECTION_KEYS {
 } DIRECTION_KEYS;
 
 typedef struct _KEYBOARD {
-	PORT_8        KBD_STATUS_PORT;
-	PORT_8        KBD_DATA_PORT;
-	unsigned char last_registered_key;
-	unsigned char arrow_keys;	
-} __attribute__((packed))
-KEYBOARD, *PKEYBOARD;
+	PORT_8 KBD_STATUS_PORT;
+	PORT_8 KBD_DATA_PORT;
+	UINT_8 last_registered_key;
+	UINT_8 arrow_keys;	
+} __attribute__((packed)) KEYBOARD;
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-unsigned int RegisterKeyboard(PKEYBOARD keyboard);
-void         keyboard_handler(PREGS r);
-void         getch(unsigned char keycode_to_break);
+unsigned int RegisterKeyboard(KEYBOARD* keyboard);
+void         keyboard_handler(REGS* r);
+void         getch           (UINT_8 keycode_to_break);
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
