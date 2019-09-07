@@ -5,15 +5,15 @@
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ GLOBAL AND STATIC VARIABLES
 
-TIMER               global_OS_timer;                  /* This is the main OS's timer */
-unsigned int        __ProgramTimer(unsigned int Hz);  /* Forward declaration of internal function */
-static unsigned int timer_ticks = 0;                  /* This is the main OS timer tick counter */
+       TIMER   global_OS_timer;                  /* This is the main OS's timer */
+       UINT_32 __ProgramTimer(UINT_32 Hz);  /* Forward declaration of internal function */
+static UINT_32 timer_ticks = 0;                  /* This is the main OS timer tick counter */
 void __CurrentTimeReporter(void);
 void __CurrentDateReporter(void);
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-void timer_handler(PREGS r)
+void timer_handler(REGS* r)
 {
 	/* we don't want to bother with the minimum timer_handler 
 	   requirement for the OS. All other stuff related to the timer would be 
@@ -23,9 +23,9 @@ void timer_handler(PREGS r)
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-unsigned int RegisterTimer(PTIMER timer, unsigned int Hz)
+UINT_32 RegisterTimer(TIMER* timer, UINT_32 Hz)
 {
-	unsigned int status = 0;
+	UINT_32 status = 0;
 	
 	if(!timer)
 		return 0;
@@ -44,18 +44,18 @@ unsigned int RegisterTimer(PTIMER timer, unsigned int Hz)
 	global_OS_timer    = *timer;
 	
 	__irq_install_handler(0, &timer_handler);
-	printk( "        >>> Timer registered successfully <<<\n");
+	//.printk( "        >>> Timer registered successfully <<<\n");
 	
 	return 1;
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-unsigned int __ProgramTimer(unsigned int Hz)
+UINT_32 __ProgramTimer(UINT_32 Hz)
 {
 	PORT_8 CHANNEL0;
 	PORT_8 COMMAND;
-	unsigned int divisor;
+	UINT_32 divisor;
 	
 	if(!Hz)
 		return 0;
@@ -73,10 +73,10 @@ unsigned int __ProgramTimer(unsigned int Hz)
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-void WaitMiliSecond(unsigned int msec)
+void WaitMiliSecond(UINT_32 msec)
 {
-	unsigned int msec_reference = global_OS_timer.clock_Hz / 1000;
-	unsigned int elapsed        = msec * msec_reference;
+	UINT_32 msec_reference = global_OS_timer.clock_Hz / 1000;
+	UINT_32 elapsed        = msec * msec_reference;
 	
 	if(!msec)
 		return;
@@ -90,9 +90,9 @@ void WaitMiliSecond(unsigned int msec)
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-void WaitSecond(unsigned int sec)
+void WaitSecond(UINT_32 sec)
 {
-	unsigned int elapsed = sec * global_OS_timer.clock_Hz;
+	UINT_32 elapsed = sec * global_OS_timer.clock_Hz;
 	
 	if(!sec)
 		return;
@@ -102,14 +102,15 @@ void WaitSecond(unsigned int sec)
 	_STI();
 	
 	while(timer_ticks < elapsed);
+	_CLI();
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-void WaitMicroSecond(unsigned int usec)
+void WaitMicroSecond(UINT_32 usec)
 {
-	unsigned int status = 0;
-	unsigned int elapsed;
+	UINT_32 status = 0;
+	UINT_32 elapsed;
 	
 	if(!usec)
 		return;

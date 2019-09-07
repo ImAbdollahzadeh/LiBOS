@@ -4,7 +4,7 @@
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ GLOBAL AND STATIC VARIABLES
 
-char ForbiddenAsciiCharactersForAddressing[] =
+INT_8 ForbiddenAsciiCharactersForAddressing[] =
 {
 	' ',';',',',':','|','\\',
 	'"','%','&','(',')','=',
@@ -12,14 +12,14 @@ char ForbiddenAsciiCharactersForAddressing[] =
 	'<','>','$','#'
 };
 
-char return_string_to_kernel[192]; //maximum 12 bytes
+INT_8 return_string_to_kernel[192]; //maximum 12 bytes
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-unsigned int DosStringToDosNamePackage(char* DosPath, PDOSNAME dosNamePackage)
+UINT_32 DosStringToDosNamePackage(INT_8* DosPath, DOSNAME* dosNamePackage)
 {
-	unsigned int i = 0;
-	PDOSNAME     tmp = dosNamePackage;
+	UINT_32  i   = 0;
+	DOSNAME* tmp = dosNamePackage;
 	tmp->next = 0;
 	
 	if(!DosPath)
@@ -44,7 +44,7 @@ unsigned int DosStringToDosNamePackage(char* DosPath, PDOSNAME dosNamePackage)
 		else
 		{
 			tmp->name[i] = '\0';
-			tmp->next = (PDOSNAME)Alloc(sizeof(DOSNAME), 1, 1);
+			tmp->next = (PDOSNAME)Alloc(sizeof(DOSNAME));
 			tmp->next->next = 0;
 			tmp = tmp->next;
 			i = 0;
@@ -57,9 +57,9 @@ unsigned int DosStringToDosNamePackage(char* DosPath, PDOSNAME dosNamePackage)
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-unsigned int IsInForbiddenList(char* CStringAddress)
+UINT_32 IsInForbiddenList(INT_8* CStringAddress)
 {
-	int i;
+	INT_32 i;
 	while (*CStringAddress)
 	{
 		for (i = 0; i<sizeof(ForbiddenAsciiCharactersForAddressing); i++)
@@ -74,9 +74,9 @@ unsigned int IsInForbiddenList(char* CStringAddress)
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-unsigned int HowManyPackes(char* CStringAddress)
+UINT_32 HowManyPackes(INT_8* CStringAddress)
 {
-	unsigned int i = 0;
+	UINT_32 i = 0;
 	while (*CStringAddress)
 	{
 		if (*CStringAddress == '/')
@@ -88,9 +88,9 @@ unsigned int HowManyPackes(char* CStringAddress)
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-unsigned int ExtractCStringPathToPacks(char* CStringAddress, char* trg, unsigned int which_pack)
+UINT_32 ExtractCStringPathToPacks(char* CStringAddress, char* trg, UINT_32 which_pack)
 {
-	unsigned int j = 0, i;
+	UINT_32 j = 0, i;
 
 	while (1)
 	{
@@ -126,11 +126,11 @@ unsigned int ExtractCStringPathToPacks(char* CStringAddress, char* trg, unsigned
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-void GetDosName(char* cstr, char* dostr)
+void GetDosName(INT_8* cstr, INT_8* dostr)
 {
-	char*        tmp = cstr;
-	unsigned int before_dot = 0;
-	unsigned int dot = 0, i;
+	INT_8*  tmp        = cstr;
+	UINT_32 before_dot = 0;
+	UINT_32 dot        = 0, i;
 
 	while (*tmp)
 	{
@@ -191,30 +191,30 @@ void GetDosName(char* cstr, char* dostr)
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-char* CStringAddressToDosString(char* CStringAddress)
+INT_8* CStringAddressToDosString(INT_8* CStringAddress)
 {
 	CSTRING_32_LIMIT   cstrs[16];
 	DOSSTRING_11_LIMIT dosstrs[16];
-	unsigned int status;
-	unsigned int packs;
-	unsigned int i;
-	unsigned int j;
-	char* tmp  = 0;
-	char* dos  = 0;
-	char* cstr = 0;
+	UINT_32 status;
+	UINT_32 packs;
+	UINT_32 i;
+	UINT_32 j;
+	INT_8* tmp  = 0;
+	INT_8* dos  = 0;
+	INT_8* cstr = 0;
 
 	status = IsInForbiddenList(CStringAddress);
 	if (status)
 	{
 		printk("given address contains forbiden characters\n");
-		return (char*)0;
+		return (INT_8*)0;
 	}
 
 	packs = HowManyPackes(CStringAddress);
 	if (packs > 16)
 	{
 		printk("given address is directories exceeded 16 limitation\n");
-		return (char*)0;
+		return (INT_8*)0;
 	}
 
 	for (i = 0; i<packs + 1; i++)
@@ -224,7 +224,7 @@ char* CStringAddressToDosString(char* CStringAddress)
 		if (!status)
 		{
 			printk("given address contains longer than 32 bytes characters in\n");
-			return (char*)0;
+			return (INT_8*)0;
 		}
 	}
 
@@ -255,30 +255,30 @@ char* CStringAddressToDosString(char* CStringAddress)
 	if (return_string_to_kernel[j] = '$')
 		return_string_to_kernel[j-1] = '\0';
 
-	return (char*)return_string_to_kernel;
+	return (INT_8*)return_string_to_kernel;
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-void DosPrint(PDOSNAME dos)
+void DosPrint(DOSNAME* dos)
 {
 	PDOSNAME tmp = dos;
 	while (tmp->next != 0)
 	{
-		printk((char*)(tmp->name));
+		printk((INT_8*)(tmp->name));
 		printk("\n");
 		tmp = tmp->next;
 	}
 	
-	printk((char*)(tmp->name));
+	printk((INT_8*)(tmp->name));
 	printk("\n");
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-unsigned int DosStrcmp(char* src, char* trg, unsigned int length)
+UINT_32 DosStrcmp(INT_8* src, INT_8* trg, UINT_32 length)
 {
-	unsigned int status = 1, i;
+	UINT_32 status = 1, i;
 
 	for(i=0;i<length;i++)
 		if(src[i] != trg[i])
@@ -289,10 +289,10 @@ unsigned int DosStrcmp(char* src, char* trg, unsigned int length)
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-unsigned int ReleaseDosPackage(PDOSNAME dosNamePackage)
+UINT_32 ReleaseDosPackage(DOSNAME* dosNamePackage)
 {
-	PDOSNAME     tmp    = dosNamePackage;
-	unsigned int status = 0;
+	DOSNAME* tmp    = dosNamePackage;
+	UINT_32  status = 0;
 	
 	if(!dosNamePackage)
 	{
@@ -302,7 +302,12 @@ unsigned int ReleaseDosPackage(PDOSNAME dosNamePackage)
 	
 	if(tmp->next)
 	{
-		Free(tmp->next);
+		status = Free(tmp->next);
+		if(!status)
+		{
+			panic("Releasing allocated memory failed\n");
+			return 0;
+		}
 	}
 	
 	tmp = tmp->next;

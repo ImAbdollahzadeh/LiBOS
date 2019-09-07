@@ -2,19 +2,19 @@
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ GLOBAL AND STATIC VARIABLES
 
-unsigned int counter = 0;
-unsigned int line = 1;
-int          ARGS_LIST[64];
-int*         PARGS_LIST = ARGS_LIST;
-void print_char( char id, unsigned char print_color );
-void print_number( unsigned int n );
-void print_hex_number( unsigned int n );
-unsigned char displays[160*25*4];
+UINT_32 counter    = 0;
+UINT_32 line       = 1;
+INT_32  ARGS_LIST[64];
+INT_32* PARGS_LIST = ARGS_LIST;
+void print_char      ( INT_8 id, UINT_8 print_color );
+void print_number    ( UINT_32 n );
+void print_hex_number( UINT_32 n );
+UINT_8 displays[160*25*4];
 
-void __IMSO_Blit(unsigned char* src) 
+void __IMSO_Blit(UINT_8* src) 
 {
 	int i;
-	unsigned char* vid = (unsigned char*)0xb8000;
+	UINT_8* vid = (UINT_8*)0xb8000;
 	for(i=0;i<160*25;i++)
 		vid[i]=src[i];
 }
@@ -23,7 +23,7 @@ void __IMSO_Blit(unsigned char* src)
 
 void clear_screen( void )
 {
-	unsigned char* vid = ( unsigned char* )0xb8000;
+	UINT_8* vid = ( UINT_8* )0xb8000;
 	int i;
 	for(i=0; i<160*50; i+=2) {
 		vid[i]   = ' ';
@@ -35,7 +35,7 @@ void clear_screen( void )
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-void printk_impl(char* fmt, unsigned int color)
+void printk_impl(INT_8* fmt, UINT_32 color)
 {
     int ccounter = 1;
     while (*fmt)
@@ -51,24 +51,24 @@ void printk_impl(char* fmt, unsigned int color)
             ccounter++;
         }
         else
-            print_char((char)*fmt, color);
+            print_char((INT_8)*fmt, color);
         fmt++;
     }
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-void panic( char* id )
+void panic( INT_8* id )
 {
-	unsigned char panic_color = 4;
+	UINT_8 panic_color = 4;
 	printk_impl(id, panic_color);
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-void print_char( char id, unsigned char print_color )
+void print_char( INT_8 id, UINT_8 print_color )
 {
-	unsigned char* vid = (unsigned char*)displays;
+	UINT_8* vid = (UINT_8*)displays;
 	if ( id == '\n' )
 	{
 		counter += ( line * 160 - counter );
@@ -87,11 +87,11 @@ void print_char( char id, unsigned char print_color )
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-void print_number( unsigned int n )
+void print_number( UINT_32 n )
 {
-    unsigned int  m, i=1, nn = n, bk_i;
-    unsigned char lut[0x0A] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
-    unsigned char buf[0x20];
+    UINT_32  m, i=1, nn = n, bk_i;
+    UINT_8 lut[0x0A] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
+    UINT_8 buf[0x20];
     
     /* get size */
     while(nn >= 10)
@@ -117,11 +117,11 @@ void print_number( unsigned int n )
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-void print_hex_number( unsigned int n )
+void print_hex_number( UINT_32 n )
 {
-    unsigned int  m, i=1, nn = n, bk_i;
-    unsigned char lut[0x10] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
-    unsigned char buf[0x20];
+    UINT_32  m, i=1, nn = n, bk_i;
+    UINT_8 lut[0x10] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+    UINT_8 buf[0x20];
     
     /* get size */
     while(nn >= 16)
@@ -151,9 +151,47 @@ void print_hex_number( unsigned int n )
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-unsigned char* Disps(void)
+UINT_8* Disps(void)
 {
 	return displays;
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+void __IMOS_HexDump(void* pointer_to_buffer, UINT_32 bytes, INT_8* begin_message)
+{
+	if (!pointer_to_buffer)
+		return;
+
+	if (!bytes)
+		return;
+		
+	if (begin_message)
+	{
+		printk(begin_message);
+		printk(" hex dump:\n");
+	}
+
+	UINT_32 i;
+	UINT_32 word_counter = 0;
+	UINT_8* ptr          = (UINT_8*)pointer_to_buffer;
+
+	for (i = 0; i < bytes; i++)
+	{
+		if (word_counter < 40)
+		{
+			printk("^ ", (UINT_32)ptr[i]);
+			word_counter++;
+		}
+		else
+		{
+			printk("\n");
+			word_counter = 0;
+			printk("^ ", (UINT_32)ptr[i]);
+		}
+	}
+	
+	printk("\n");
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

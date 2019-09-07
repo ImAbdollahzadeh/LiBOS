@@ -4,12 +4,12 @@
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ GLOBAL AND STATIC VARIABLES
 
-DESCRIPTOR   OpenOperation(HDPARAMS DriveVolume, char* DosPath);
-unsigned int ReadOperation(HDPARAMS DriveVolume, PDESCRIPTOR descriptor, unsigned char* Buffer, unsigned int Bytes);
+DESCRIPTOR OpenOperation(HDPARAMS DriveVolume, INT_8* DosPath);
+UINT_32    ReadOperation(HDPARAMS DriveVolume, DESCRIPTOR* descriptor, UINT_8* Buffer, UINT_32 Bytes);
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-BINPAPER PaperOpen(char* name_address)
+BINPAPER PaperOpen(INT_8* name_address)
 {
 	BINPAPER paper = {
 		.name            = 0,
@@ -23,7 +23,7 @@ BINPAPER PaperOpen(char* name_address)
 		.paperDescriptor = 0
 	};
 	DESCRIPTOR desc;
-	char* convertedCStringToDosString = 0;
+	INT_8* convertedCStringToDosString = 0;
 	HDPARAMS Drive = DriveEntry();
 	
 	convertedCStringToDosString = CStringAddressToDosString( name_address );
@@ -34,10 +34,10 @@ BINPAPER PaperOpen(char* name_address)
 	}
 	
 	desc = OpenOperation(Drive, convertedCStringToDosString);
-	unsigned long long tree = desc.tree;
-	unsigned char descriptor_tree_count = (unsigned char)(tree >> 56);
-	unsigned char must_be_zero = 0x00;
-	unsigned int  constructed_validity_descriptor = ((unsigned int)(0xE1) << 24) | ((unsigned int)(must_be_zero) << 16) | ((unsigned int)(descriptor_tree_count) << 8) | (0x88);
+	UINT_64 tree = desc.tree;
+	UINT_8 descriptor_tree_count = (UINT_8)(tree >> 56);
+	UINT_8 must_be_zero = 0x00;
+	UINT_32  constructed_validity_descriptor = ((UINT_32)(0xE1) << 24) | ((UINT_32)(must_be_zero) << 16) | ((UINT_32)(descriptor_tree_count) << 8) | (0x88);
 	
 	if(desc.validity != constructed_validity_descriptor)
 	{
@@ -53,7 +53,7 @@ BINPAPER PaperOpen(char* name_address)
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-unsigned int PaperClose(PBINPAPER paper)
+UINT_32 PaperClose(BINPAPER* paper)
 {
 	if (!paper)
 	{
@@ -66,9 +66,9 @@ unsigned int PaperClose(PBINPAPER paper)
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-unsigned int PaperRead(PBINPAPER paper, unsigned char* Buffer, unsigned int Bytes)
+UINT_32 PaperRead(BINPAPER* paper, UINT_8* Buffer, UINT_32 Bytes)
 {
-	unsigned int status = 0;
+	UINT_32 status = 0;
 	HDPARAMS Drive;
 	
 	if (!paper)

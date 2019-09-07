@@ -3,13 +3,13 @@
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ GLOBAL AND STATIC VARIABLES
 
-GDT_POINTER gdt_pointer;
+GDTPOINTER gdt_pointer;
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-static SEGMENT_DESCRIPTOR Register_segment_descriptor(unsigned int base, unsigned int limit, unsigned char access, unsigned char gran)
+SEGMENTDESCRIPTOR __RegisterSegmentDescriptor(UINT_32 base, UINT_32 limit, UINT_8 access, UINT_8 gran)
 {
-	SEGMENT_DESCRIPTOR seg_desc;
+	SEGMENTDESCRIPTOR seg_desc;
 	seg_desc.base_low     = (base & 0xFFFF);
 	seg_desc.base_middle  = (base >> 16) & 0xFF;
 	seg_desc.base_high    = (base >> 24) & 0xFF;
@@ -22,64 +22,64 @@ static SEGMENT_DESCRIPTOR Register_segment_descriptor(unsigned int base, unsigne
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-unsigned int Register_gdt(GDT* gdt)
+UINT_32 RegisterGDT(GDT* gdt)
 {
-	unsigned int status = 0;	
+	UINT_32 status = 0;	
 	
 	if(!gdt)
 		return 0;
-	gdt->null_segment_selector = Register_segment_descriptor(0, 0, 0, 0);
-    gdt->code_segment_selector = Register_segment_descriptor(0, 0xFFFFFFFF, 0x9A, 0xCF);
-    gdt->data_segment_selector = Register_segment_descriptor(0, 0xFFFFFFFF, 0x92, 0xCF);
+	gdt->NullSegmentSelector = __RegisterSegmentDescriptor(0, 0, 0, 0);
+    gdt->CodeSegmentSelector = __RegisterSegmentDescriptor(0, 0xFFFFFFFF, 0x9A, 0xCF);
+    gdt->DataSegmentSelector = __RegisterSegmentDescriptor(0, 0xFFFFFFFF, 0x92, 0xCF);
 	
-	//printk( "    In GDT: NullSegmentSelector created\n");
-	//printk( "    In GDT: CodeSegmentSelector created\n");
-	//printk( "    In GDT: DataSegmentSelector created\n");
+	//.printk( "    In GDT: NullSegmentSelector created\n");
+	//.printk( "    In GDT: CodeSegmentSelector created\n");
+	//.printk( "    In GDT: DataSegmentSelector created\n");
 	
-    gdt_pointer.size = (sizeof(SEGMENT_DESCRIPTOR)*3) - 1;
-    gdt_pointer.base = (unsigned int)((void*)gdt);
+    gdt_pointer.size = (sizeof(SEGMENTDESCRIPTOR)*3) - 1;
+    gdt_pointer.base = (UINT_32)((void*)gdt);
 	if(!gdt_pointer.size || !gdt_pointer.base)
 	{
 		panic("GDT pointer Failed\n");
 		return 0;
 	}
 	
-	status = Gdt_load();
+	status = GDTLoad();
 	if (!status)
 	{
 		panic("GDT pointer loading Failed\n");
 		return 0;
 	}
 	
-	//printk( "        >>> GDT registered successfully <<<\n");
+	//.printk( "        >>> GDT registered successfully <<<\n");
 	
 	return 1;
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-unsigned short Gdt_code_segment_selector(GDT* gdt)
+UINT_16 GDTCodeSegmentSelector(GDT* gdt)
 {
 	if(!gdt)
 		return 0;
-	return (unsigned char*)&gdt->code_segment_selector - (unsigned char*)gdt;
+	return (UINT_8*)&gdt->CodeSegmentSelector - (UINT_8*)gdt;
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-unsigned short Gdt_data_segment_selector(GDT* gdt)
+UINT_16 GDTDataSegmentSelector(GDT* gdt)
 {
 	if(!gdt)
 		return 0;
-	return (unsigned char*)&gdt->data_segment_selector - (unsigned char*)gdt;
+	return (UINT_8*)&gdt->DataSegmentSelector - (UINT_8*)gdt;
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-unsigned int Segment_descriptor_base(SEGMENT_DESCRIPTOR* segment_descriptor)
+UINT_32 SegmentDescriptorBase(SEGMENTDESCRIPTOR* segmentdescriptor)
 {
-	unsigned char* target = (unsigned char*)segment_descriptor;
-    unsigned int result = target[7];
+	UINT_8* target = (UINT_8*)segmentdescriptor;
+    UINT_32 result = target[7];
     result = (result << 8) + target[4];
     result = (result << 8) + target[3];
     result = (result << 8) + target[2];
@@ -88,10 +88,10 @@ unsigned int Segment_descriptor_base(SEGMENT_DESCRIPTOR* segment_descriptor)
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-unsigned int Segment_descriptor_limit(SEGMENT_DESCRIPTOR* segment_descriptor)
+UINT_32 SegmentDescriptorLimit(SEGMENTDESCRIPTOR* segmentdescriptor)
 {
-	unsigned char* target = (unsigned char*)segment_descriptor;
-    unsigned int result = target[6] & 0xF;
+	UINT_8* target = (UINT_8*)segmentdescriptor;
+    UINT_32 result = target[6] & 0xF;
     result = (result << 8) + target[1];
     result = (result << 8) + target[0];
     if((target[6] & 0xC0) == 0xC0)

@@ -3,31 +3,28 @@
 ;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 section .data
-	LENGTH_OF_ARGS       DD  0
-	ENDC                 equ '\0'
-	DECIMALSYMB          equ '%'
-	HEXADECIMALSYMB      equ '^'
-	CONSOLE_OUTPUT_COLOR equ 0x02
-	XHCI_PENDING_STATUS  DB  0
-	
+	LENGTH_OF_ARGS          DD  0
+	ENDC                    equ '\0'
+	DECIMALSYMB             equ '%'
+	HEXADECIMALSYMB         equ '^'
+	CONSOLE_OUTPUT_COLOR    equ 0x02
+	XHCI_SPURIOUS_SEMAPHORE DD  0
+	XHCI_POINTER            DD  0
+
 ;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 section .text
 	extern PARGS_LIST
 	extern printk_impl
+	global printk
+	global IDTLoad
+	global GDTLoad
+	global set_xhci_pointer
+	global get_xhci_pointer
 	extern idt_pointer
 	extern gdt_pointer
 	extern FAULT_HANDLER
 	extern IRQ_HANDLER
-	extern CRITICAL_XHCI_HANDLER
-
-	global xhci_set_pending_status
-	global xhci_clear_pending_status
-	
-	global printk
-	global IDTLoad
-	global Gdt_load
-	global CHECK_DS
 	global _CLI
 	global _STI
 	global ISR_DEFAULT
@@ -79,6 +76,15 @@ section .text
 	global IRQ13
 	global IRQ14
 	global IRQ15
+	global IRQ16
+	global IRQ100
+	
+	global CHECK_DS
+	global CHECK_GS
+	global CHECK_ES
+	global CHECK_FS
+	global WM
+	global idt_xhci_spurious
 
 ;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
@@ -90,163 +96,171 @@ ISR_DEFAULT:
 ;0: Divide By Zero Exception
 ISR0:
     cli
-    push byte 0    ; A normal ISR stub that pops a dummy error code to keep a uniform stack frame
-    push byte 0
+    push dword 0    ; A normal ISR stub that pops a dummy error code to keep a uniform stack frame
+    push dword 0
     jmp isr_common_stub
 ;1: Debug Exception
 ISR1:
     cli
-    push byte 0
-    push byte 1
+    push dword 0
+    push dword 1
     jmp isr_common_stub
 ISR2:
     cli
-    push byte 0
-    push byte 2
+    push dword 0
+    push dword 2
     jmp isr_common_stub
 ISR3:
     cli
-    push byte 0
-    push byte 3
+    push dword 0
+    push dword 3
     jmp isr_common_stub
 ISR4:
     cli
-    push byte 0
-    push byte 4
+    push dword 0
+    push dword 4
     jmp isr_common_stub
 ISR5:
     cli
-    push byte 0
-    push byte 5
+    push dword 0
+    push dword 5
     jmp isr_common_stub
 ISR6:
     cli
-    push byte 0
-    push byte 6
+    push dword 0
+    push dword 6
     jmp isr_common_stub
 ISR7:
     cli
-    push byte 0
-    push byte 7
+    push dword 0
+    push dword 7
     jmp isr_common_stub
 ; 8: Double Fault Exception (With Error Code!)
 ISR8:
     cli
-    push byte 8    ;Note that we DON'T push a value on the stack in this one, It pushes one already!
+    push dword 8    ;Note that we DON'T push a value on the stack in this one!
+                   ;It pushes one already! Use this type of stub for exceptions that pop error codes (http://www.osdever.net/bkerndev/Docs/isrs.htm)
     jmp isr_common_stub
 ISR9:
     cli
-    push byte 0
-    push byte 9
+    push dword 0
+    push dword 9
     jmp isr_common_stub
 ISR10:
     cli
-    push byte 10
+    push dword 10
     jmp isr_common_stub
 ISR11:
     cli
-    push byte 11
+    push dword 11
     jmp isr_common_stub
 ISR12:
     cli
-    push byte 12
+    push dword 12
     jmp isr_common_stub
 ISR13:
     cli
-    push byte 13
+    push dword 13
     jmp isr_common_stub
 ISR14:
     cli
-    push byte 14
+    push dword 14
     jmp isr_common_stub
 ISR15:
     cli
-    push byte 0
-    push byte 15
+    push dword 0
+    push dword 15
     jmp isr_common_stub
 ISR16:
     cli
-    push byte 0
-    push byte 16
+    push dword 0
+    push dword 16
     jmp isr_common_stub
 ISR17:
     cli
-    push byte 0
-    push byte 17
+    push dword 0
+    push dword 17
     jmp isr_common_stub
 ISR18:
     cli
-    push byte 0
-    push byte 18
+    push dword 0
+    push dword 18
     jmp isr_common_stub
 ISR19:
     cli
-    push byte 0
-    push byte 19
+    push dword 0
+    push dword 19
     jmp isr_common_stub
 ISR20:
     cli
-    push byte 0
-    push byte 20
+    push dword 0
+    push dword 20
     jmp isr_common_stub
 ISR21:
     cli
-    push byte 0
-    push byte 21
+    push dword 0
+    push dword 21
     jmp isr_common_stub
 ISR22:
     cli
-    push byte 0
-    push byte 22
+    push dword 0
+    push dword 22
     jmp isr_common_stub
 ISR23:
     cli
-    push byte 0
-    push byte 23
+    push dword 0
+    push dword 23
     jmp isr_common_stub
 ISR24:
     cli
-    push byte 0
-    push byte 24
+    push dword 0
+    push dword 24
     jmp isr_common_stub
 ISR25:
     cli
-    push byte 0
-    push byte 25
+    push dword 0
+    push dword 25
     jmp isr_common_stub
 ISR26:
     cli
-    push byte 0
-    push byte 26
+    push dword 0
+    push dword 26
     jmp isr_common_stub
 ISR27:
     cli
-    push byte 0
-    push byte 27
+    push dword 0
+    push dword 27
     jmp isr_common_stub
 ISR28:
     cli
-    push byte 0
-    push byte 28
+    push dword 0
+    push dword 28
     jmp isr_common_stub
 ISR29:
     cli
-    push byte 0
-    push byte 29
+    push dword 0
+    push dword 29
     jmp isr_common_stub
 ISR30:
     cli
-    push byte 0
-    push byte 30
+    push dword 0
+    push dword 30
     jmp isr_common_stub
 ISR31:
     cli
-    push byte 0
-    push byte 31
+    push dword 0
+    push dword 31
     jmp isr_common_stub
 	
 isr_common_stub:
-    pusha
+    push  eax
+    push  ecx
+    push  edx
+    push  ebx
+    push  esp
+    push  ebp
+    push  esi
+    push  edi
     push  ds
     push  es
     push  fs
@@ -257,13 +271,20 @@ isr_common_stub:
     mov   fs, ax
     mov   gs, ax
     push  esp
-    call  FAULT_HANDLER 
+    call  FAULT_HANDLER        ; A special call, preserves the 'eip' register
     pop   esp
     pop   gs
     pop   fs
     pop   es
     pop   ds
-    popa
+    pop   edi
+    pop   esi
+    pop   ebp
+    pop   esp
+    pop   ebx
+    pop   edx
+    pop   ecx
+    pop   eax
     add   esp, 8     ; Cleans up the pushed error code and pushed ISR number
     iret             ; pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP!
 
@@ -271,87 +292,105 @@ isr_common_stub:
 
 IRQ0:
     cli
-    push byte 0  
-    push byte 32
+    push dword 0    ;Note that these don't push an error code on the stack: We need to push a dummy error code
+    push dword 32
     jmp irq_common_stub
 IRQ1:
     cli
-    push byte 0   
-    push byte 33
+    push dword 0   
+    push dword 33
     jmp irq_common_stub
 IRQ2:
     cli
-    push byte 0
-    push byte 34
+    push dword 0
+    push dword 34
     jmp irq_common_stub
 IRQ3:
     cli
-    push byte 0    
-    push byte 35
+    push dword 0    
+    push dword 35
     jmp irq_common_stub
 IRQ4:
     cli
-    push byte 0 
-    push byte 36
+    push dword 0 
+    push dword 36
     jmp irq_common_stub
 IRQ5:
     cli
-    push byte 0
-    push byte 37
+    push dword 0
+    push dword 37
     jmp irq_common_stub
 IRQ6:
     cli
-    push byte 0 
-    push byte 38
+    push dword 0 
+    push dword 38
     jmp irq_common_stub
 IRQ7:
     cli
-    push byte 0   
-    push byte 39
+    push dword 0   
+    push dword 39
     jmp irq_common_stub
 IRQ8:
     cli
-    push byte 0   
-    push byte 40
+    push dword 0   
+    push dword 40
     jmp irq_common_stub
 IRQ9:
     cli
-    push byte 0    
-    push byte 41
+    push dword 0    
+    push dword 41
     jmp irq_common_stub
 IRQ10:
     cli
-    push byte 0    
-    push byte 42
+    push dword 0    
+    push dword 42
     jmp irq_common_stub
 IRQ11:
     cli
-    push byte 0   
-    push byte 43
+    push dword 0   
+    push dword 43
     jmp irq_common_stub
 IRQ12:
     cli
-    push byte 0
-    push byte 44
+    push dword 0
+    push dword 44
     jmp irq_common_stub
 IRQ13:
     cli
-    push byte 0   
-    push byte 45
+    push dword 0   
+    push dword 45
     jmp irq_common_stub
 IRQ14:
     cli
-    push byte 0   
-    push byte 46
+    push dword 0   
+    push dword 46
     jmp irq_common_stub
 IRQ15:
     cli
-    push byte 0   
-    push byte 47
+    push dword 0   
+    push dword 47
+    jmp irq_common_stub
+IRQ16:
+    cli
+    push dword 0   
+    push dword 48
+    jmp irq_common_stub
+
+IRQ100:
+    cli
+    push dword 0   
+    push dword 132
     jmp irq_common_stub
 
 irq_common_stub:
-    pusha
+    push  eax
+    push  ecx
+    push  edx
+    push  ebx
+    push  esp
+    push  ebp
+    push  esi
+    push  edi
     push  ds
     push  es
     push  fs
@@ -361,32 +400,24 @@ irq_common_stub:
     mov   es, ax
     mov   fs, ax
     mov   gs, ax
-    mov   eax, esp
     push  esp
     call  IRQ_HANDLER
-	;mov cl, BYTE [XHCI_PENDING_STATUS]
-	;cmp cl, 0
-	;jne @@XHCI_PENDING_CRITICAL_HANDLER
-	;@irq_common_stub_ending:
     pop   esp
     pop   gs
     pop   fs
     pop   es
     pop   ds
-    popa
+    pop   edi
+    pop   esi
+    pop   ebp
+    pop   esp
+    pop   ebx
+    pop   edx
+    pop   ecx
+    pop   eax
     add   esp, 8
     iret
 
-;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-;@@XHCI_PENDING_CRITICAL_HANDLER:
-;	push ebp
-;    mov  ebp, esp
-;    call  CRITICAL_XHCI_HANDLER
-;	mov  esp, ebp
-;    pop  ebp
-;	jmp @irq_common_stub_ending
-	
 ;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 IDTLoad:
@@ -400,7 +431,7 @@ IDTLoad:
 
 ;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-Gdt_load:
+GDTLoad:
 	push ebp
     mov  ebp, esp
     lgdt [gdt_pointer]
@@ -410,8 +441,8 @@ Gdt_load:
 	mov  fs, ax
 	mov  gs, ax
 	mov  ss, ax
-	jmp  0x08:@GDTLoad_end
-@GDTLoad_end:
+	jmp  0x08:@end
+@end:
     mov  eax, dword [ebp + 4]
 	mov  esp, ebp
     pop  ebp
@@ -484,42 +515,141 @@ printk:
 
 CHECK_DS:
 	push ebp
-    mov  ebp, esp
+    	mov  ebp, esp
 	mov  cx,  0x10
 	mov  eax, [ebp + 8]
 	mov  bx,  ds
 	cmp  bx,  cx
-	jne  @CHECK_DS_FAILURE
-@CHECK_DS_RIGHT:
+	jne  CHECK_DS_FAILURE
+CHECK_DS_RIGHT:
 	mov DWORD [eax], 0x00000010
-	jmp @END_OF_CHECK_DS
-@CHECK_DS_FAILURE:
+	jmp END_OF_CHECK_DS
+CHECK_DS_FAILURE:
 	mov DWORD [eax], 0x00
-@END_OF_CHECK_DS:
+END_OF_CHECK_DS:
 	mov  esp, ebp
-    pop  ebp
-    ret
+    	pop  ebp
+    	ret
 
 ;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-xhci_set_pending_status:
+CHECK_GS:
 	push ebp
-    mov  ebp, esp
-	mov  cl,  1
-	mov  BYTE [XHCI_PENDING_STATUS], cl
+    	mov  ebp, esp
+	mov  cx,  0x10
+	mov  eax, [ebp + 8]
+	mov  bx,  gs
+	cmp  bx,  cx
+	jne  CHECK_GS_FAILURE
+CHECK_GS_RIGHT:
+	mov DWORD [eax], 0x00000010
+	jmp END_OF_CHECK_GS
+CHECK_GS_FAILURE:
+	mov DWORD [eax], 0x00
+END_OF_CHECK_GS:
 	mov  esp, ebp
-    pop  ebp
-    ret
-	
+    	pop  ebp
+    	ret
+
 ;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-xhci_clear_pending_status:
+CHECK_FS:
 	push ebp
-    mov  ebp, esp
-	mov  cl,  0
-	mov  BYTE [XHCI_PENDING_STATUS], cl
+    	mov  ebp, esp
+	mov  cx,  0x10
+	mov  eax, [ebp + 8]
+	mov  bx,  fs
+	cmp  bx,  cx
+	jne  CHECK_FS_FAILURE
+CHECK_FS_RIGHT:
+	mov DWORD [eax], 0x00000010
+	jmp END_OF_CHECK_FS
+CHECK_FS_FAILURE:
+	mov DWORD [eax], 0x00
+END_OF_CHECK_FS:
 	mov  esp, ebp
-    pop  ebp
-    ret
-	
+    	pop  ebp
+    	ret
+
 ;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+CHECK_ES:
+	push ebp
+    	mov  ebp, esp
+	mov  cx,  0x10
+	mov  eax, [ebp + 8]
+	mov  bx,  es
+	cmp  bx,  cx
+	jne  CHECK_ES_FAILURE
+CHECK_ES_RIGHT:
+	mov DWORD [eax], 0x00000010
+	jmp END_OF_CHECK_ES
+CHECK_ES_FAILURE:
+	mov DWORD [eax], 0x00
+END_OF_CHECK_ES:
+	mov  esp, ebp
+    	pop  ebp
+    	ret
+
+;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+WM:
+	WBINVD
+
+;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+;; idt_xhci_spurious(unsigned int execution_flag, unsignet int* ret_value);
+	;; execution_flag = 0 -> clear the semaphore
+	;; execution_flag = 1 -> set the semaphore
+	;; execution_flag = 2 -> report the semaphore
+
+idt_xhci_spurious:
+	push ebp
+    	mov  ebp, esp
+	
+	mov eax, [ebp + 8]
+	cmp eax, 0
+	jne NEXT1
+	mov DWORD[XHCI_SPURIOUS_SEMAPHORE], 0x00000000 
+	mov ebx, [ebp + 12]
+	mov DWORD [ebx], 0x00000000 
+	jmp FINISH_IDT_XHCI
+NEXT1:
+	cmp eax, 1
+	jne NEXT2
+	mov DWORD[XHCI_SPURIOUS_SEMAPHORE], 0x0000001
+	mov ebx, [ebp + 12]
+	mov DWORD [ebx], 0x00000001 
+	jmp FINISH_IDT_XHCI
+NEXT2:
+	cmp eax, 2
+	jne FINISH_IDT_XHCI
+	mov eax, DWORD[XHCI_SPURIOUS_SEMAPHORE]
+	mov ebx, [ebp + 12]
+	mov DWORD [ebx], eax 
+	jmp FINISH_IDT_XHCI
+
+FINISH_IDT_XHCI:
+	mov  esp, ebp
+    	pop  ebp
+    	ret
+
+;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+set_xhci_pointer:
+	push ebp
+    	mov  ebp, esp
+	mov  eax, [ebp + 8]
+	mov DWORD[XHCI_POINTER], eax
+	mov  esp, ebp
+    	pop  ebp
+    	ret
+
+get_xhci_pointer:
+	push ebp
+    	mov  ebp, esp
+	mov  eax, [ebp + 8]
+	mov  ebx, DWORD[XHCI_POINTER]
+	mov  [eax], ebx
+	mov  esp, ebp
+    	pop  ebp
+    	ret

@@ -1,3 +1,4 @@
+#include "../include/IMOS_CORE.h"
 #include "../include/GDT.h"
 #include "../include/PORT.h"
 #include "../include/IDT.h"
@@ -5,6 +6,7 @@
 #include "../include/PRINT.h"
 #include "../include/PCI.h"
 #include "../include/AHCI.h"
+#include "../include/EHCI.h"
 #include "../include/XHCI.h"
 #include "../include/FILESYSTEM.h"
 #include "../include/FILE.h"
@@ -14,22 +16,22 @@
 #include "../include/VESA.h"
 #include "../include/DOSSPEC.h"
 
-void Imos_kernel_entry(void)
+void KERNEL_MAIN_ENTRY(void)
 {
-	unsigned int status; 
+	UINT_32 status; 
 	clear_screen();
-	//printk("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
-	//printk("                      Welcome to IMAN ABDOLLAHZADEH OS                        \n");
-	//printk("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
+	//printk("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
+	//printk("    Welcome to IMAN ABDOLLAHZADEH OS        \n");
+	//printk("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
 	
 	GDT gdt;
-	status = Register_gdt(&gdt);
+	status = RegisterGDT(&gdt);
 	if(!status)
 	{
 		panic( "GDT registration failed\n" );
 		return;
 	}
-	//printk("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
+	//printk("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
 	
 	status = RegisterIDT();
 	if(!status)
@@ -37,7 +39,7 @@ void Imos_kernel_entry(void)
 		panic( "IDT registration failed\n" );
 		return;
 	}
-	//printk("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
+	//printk("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
 	
 	TIMER timer;
 	status = RegisterTimer(&timer, OS_DEFAULT_TIMER_TICK);
@@ -46,18 +48,7 @@ void Imos_kernel_entry(void)
 		panic( "TIMER registration failed\n" );
 		return;
 	}
-	//printk("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
-
-	PCI  pci;
-	SATA sata;
-	XHCI x;
-	status = RegisterPCI(&pci, &sata, &x);
-	if(!status)
-	{
-		panic( "PCI registration failed\n" );
-		return;
-	}
-	//printk("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
+	//printk("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
 	
 	KEYBOARD keyboard;
 	status = RegisterKeyboard(&keyboard);
@@ -66,8 +57,18 @@ void Imos_kernel_entry(void)
 		panic( "KEYBOARD registration failed\n" );
 		return;
 	}
-	//printk("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
 	
+	PCI  pci;
+	SATA sata;
+	EHCI ehci;
+	XHCI x;
+	status = RegisterPCI(&pci, &sata, &ehci, &x);
+	if(!status)
+	{
+		panic( "PCI registration failed\n" );
+		return;
+	}
+
 	_STI();
 	while(1);
 }

@@ -6,39 +6,26 @@
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ GLOBAL AND STATIC VARIABLES
 
-unsigned int sata_in_use = 0;
-unsigned int RootStartAsDriveEntry = 0; // visible only to FILE.c
-unsigned int RootData = 0; 
-unsigned int RootSectorsPerCluster = 0; 
-PSATA        RootSata = 0;
+UINT_32 sata_in_use = 0;
+UINT_32 RootStartAsDriveEntry = 0; // visible only to FILE.c
+UINT_32 RootData = 0; 
+UINT_32 RootSectorsPerCluster = 0; 
+SATA*   RootSata = 0;
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-void Filesystem_MemZero(void* mem, unsigned int bytes)
-{
-    unsigned int        blocks = bytes >> 3;
-    unsigned char       remain = bytes &  7;
-    unsigned long long* dst    = (unsigned long long*)mem; 
-    unsigned char*      ddst   = 0; 
-    while(blocks--) { *dst++ = 0ULL; }
-    ddst = (unsigned char*)dst;
-    while(remain--) { *ddst++ = 0; } 
-}
-
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-unsigned int ReadBiosBlock( PSATA hd, unsigned int partitionOffset )
+UINT_32 ReadBiosBlock( SATA* hd, UINT_32 partitionOffset )
 {
 	BIOSPARAMETERBLOCK bpb;
-	unsigned int       status;
-	unsigned int       fatStart  = 0;
-	unsigned int       fatSize   = 0;
-	unsigned int       fatCopies = 0;
-	unsigned int       dataStart = 0;
-	unsigned int       rootStart = 0;
+	UINT_32            status;
+	UINT_32            fatStart  = 0;
+	UINT_32            fatSize   = 0;
+	UINT_32            fatCopies = 0;
+	UINT_32            dataStart = 0;
+	UINT_32            rootStart = 0;
 	DIRECTORYENTRY     dirent[16];
     
-	status = read(&hd->abar->ports[hd->sata_port_number], partitionOffset, 0, 1 /*sizeof(BIOSPARAMETERBLOCK)*/, (unsigned char*)&bpb);
+	status = read(&hd->abar->ports[hd->sata_port_number], partitionOffset, 0, 1 /*sizeof(BIOSPARAMETERBLOCK)*/, (UINT_8*)&bpb);
 	if (!status)
 	{
 		panic("Reading harddrive BIOSPARAMETERBLOCK failed\n");
@@ -47,11 +34,11 @@ unsigned int ReadBiosBlock( PSATA hd, unsigned int partitionOffset )
 	
 	fatStart  = partitionOffset + bpb.reservedSectors;
 	fatSize   = bpb.tableSize;
-	fatCopies = (unsigned int)bpb.fatCopies;
+	fatCopies = (UINT_32)bpb.fatCopies;
 	dataStart = fatStart  + fatSize * bpb.fatCopies;
 	rootStart = dataStart + bpb.sectorPerCluster * (bpb.rootCluster - 2);
 
-	status = read(&hd->abar->ports[hd->sata_port_number], rootStart, 0, 1 /* that's exactly 1 sector of 512 bytes */, (unsigned char*)&dirent[0]);
+	status = read(&hd->abar->ports[hd->sata_port_number], rootStart, 0, 1 /* that's exactly 1 sector of 512 bytes */, (UINT_8*)&dirent[0]);
 	if (!status)
 	{
 		panic("Reading harddrive Directory failed\n");
@@ -74,23 +61,23 @@ unsigned int ReadBiosBlock( PSATA hd, unsigned int partitionOffset )
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-unsigned int ReadOperation( HDPARAMS DriveVolume, PDESCRIPTOR descriptor, unsigned char* Buffer, unsigned int Bytes )
+UINT_32 ReadOperation( HDPARAMS DriveVolume, DESCRIPTOR* descriptor, UINT_8* Buffer, UINT_32 Bytes )
 {
-	unsigned int   status;
-	unsigned int   paperCluster  = 0; 
-    unsigned int   paperSector   = 0;
+	UINT_32        status;
+	UINT_32        paperCluster  = 0; 
+    UINT_32        paperSector   = 0;
 	DIRECTORYENTRY dirent[16];
-	unsigned int   root          = DriveVolume.root;
-	PSATA          hd            = DriveVolume.sata;
-	unsigned int   data          = DriveVolume.data;
-	unsigned int   secpclus      = DriveVolume.sectorsPerCluster;
-	unsigned char  which_dirent;
+	UINT_32        root          = DriveVolume.root;
+	SATA*          hd            = DriveVolume.sata;
+	UINT_32        data          = DriveVolume.data;
+	UINT_32        secpclus      = DriveVolume.sectorsPerCluster;
+	UINT_8         which_dirent;
 	int            i             = 0;
 	
 	/* sanity check */
-	unsigned long long tree                  = descriptor->tree;
-	unsigned char      descriptor_tree_count = (unsigned char)(tree >> 56);
-	unsigned char      validity_descriptor   = (descriptor->validity & 0x0000FF00) >> 8;
+	UINT_64 tree                  = descriptor->tree;
+	UINT_8  descriptor_tree_count = (UINT_8)(tree >> 56);
+	UINT_8  validity_descriptor   = (descriptor->validity & 0x0000FF00) >> 8;
     
 	if(descriptor_tree_count != validity_descriptor)
 	{
@@ -98,7 +85,7 @@ unsigned int ReadOperation( HDPARAMS DriveVolume, PDESCRIPTOR descriptor, unsign
 		return 0;
 	}
 	
-	status = read(&hd->abar->ports[hd->sata_port_number], root, 0, 1, (unsigned char*)&dirent[0]);
+	status = read(&hd->abar->ports[hd->sata_port_number], root, 0, 1, (UINT_8*)&dirent[0]);
 	if (!status)
 	{
 		panic("Reading DriveRoot failed\n");
@@ -107,11 +94,11 @@ unsigned int ReadOperation( HDPARAMS DriveVolume, PDESCRIPTOR descriptor, unsign
 	
 	while(descriptor_tree_count)
 	{
-		which_dirent = (tree & ((unsigned long long)(0x0F) << i)) >> i;
-		paperCluster  = (((unsigned int)(dirent[which_dirent].firstClusterHigh) << 16)) | (((unsigned int)dirent[which_dirent].firstClusterLow));
+		which_dirent = (tree & ((UINT_64)(0x0F) << i)) >> i;
+		paperCluster  = (((UINT_32)(dirent[which_dirent].firstClusterHigh) << 16)) | (((UINT_32)dirent[which_dirent].firstClusterLow));
 		paperSector   = data + secpclus * (paperCluster - 2);
 		status       = (descriptor_tree_count==1) ? read(&hd->abar->ports[hd->sata_port_number], paperSector, 0, 1, Buffer)
-			                                      : read(&hd->abar->ports[hd->sata_port_number], paperSector, 0, 1, (unsigned char*)&dirent[0]);
+			                                      : read(&hd->abar->ports[hd->sata_port_number], paperSector, 0, 1, (UINT_8*)&dirent[0]);
 		if (!status)
 		{
 			panic("Reading 'PORT & PAPERS' failed\n");
@@ -131,22 +118,22 @@ unsigned int ReadOperation( HDPARAMS DriveVolume, PDESCRIPTOR descriptor, unsign
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-DESCRIPTOR OpenOperation( HDPARAMS DriveVolume, char* DosPath )
+DESCRIPTOR OpenOperation( HDPARAMS DriveVolume, IN_8* DosPath )
 {
 	DESCRIPTOR      desc                            = { .validity = 0x00000000, .tree = 0ULL };
-	unsigned char   IMOS_OPEN                      = 0xE1;
-	unsigned char   IMOS_TREE_NIBBLE_COUNT         = 0x00;
-	unsigned char   IMOS_NOTHING_FLAG              = 0x00;
-	unsigned char   IMOS_RESERVED                  = 0x88;	
-	unsigned int    status, j, k, _offs, offs, directory_children = 0;
+	UINT_8          IMOS_OPEN                      = 0xE1;
+	UINT_8          IMOS_TREE_NIBBLE_COUNT         = 0x00;
+	UINT_8          IMOS_NOTHING_FLAG              = 0x00;
+	UINT_8          IMOS_RESERVED                  = 0x88;	
+	UINT_32         status, j, k, _offs, offs, directory_children = 0;
 	DIRECTORYENTRY  dirent[16];            
-	unsigned int    root                           = DriveVolume.root;
+	UINT_32         root                           = DriveVolume.root;
 	PSATA           hd                             = DriveVolume.sata;
-	unsigned int    data                           = DriveVolume.data;
-	unsigned int    secpclus                       = DriveVolume.sectorsPerCluster;
+	UINT_32         data                           = DriveVolume.data;
+	UINT_32         secpclus                       = DriveVolume.sectorsPerCluster;
 	DOSNAME         dosNamePackage                 = { .next = 0 };
-	PDOSNAME        pointer_to_dos_name            = 0;
-	status = read(&hd->abar->ports[hd->sata_port_number], root, 0, 1, (unsigned char*)&dirent[0]);
+	DOSNAME*        pointer_to_dos_name            = 0;
+	status = read(&hd->abar->ports[hd->sata_port_number], root, 0, 1, (UINT_8*)&dirent[0]);
 	if (!status)
 	{
 		panic("Reading DriveRoot failed\n");
@@ -162,7 +149,7 @@ DESCRIPTOR OpenOperation( HDPARAMS DriveVolume, char* DosPath )
 	}
     
 	pointer_to_dos_name = &dosNamePackage;
-	char* thisPath = (char*)(pointer_to_dos_name->name);
+	INT_8* thisPath = (INT_8*)(pointer_to_dos_name->name);
 	
 	while(pointer_to_dos_name != 0)
 	{
@@ -173,7 +160,7 @@ DESCRIPTOR OpenOperation( HDPARAMS DriveVolume, char* DosPath )
 			if (dirent[j].name[0] == 0xE5)
 				continue;
 			
-			char tmp[15];
+			INT_8 tmp[15];
 		    for(k=0;k<11;k++)
 		    	tmp[k] = dirent[j].name[k];
 		
@@ -184,13 +171,13 @@ DESCRIPTOR OpenOperation( HDPARAMS DriveVolume, char* DosPath )
 				//printk(thisPath);
 				//printk(" success with j=%\n", j);
 				
-				desc.tree |= ((unsigned long long)j << directory_children);
+				desc.tree |= ((UINT_64)j << directory_children);
 				directory_children += 4;
 				IMOS_TREE_NIBBLE_COUNT++;
 				
-			    _offs = ((unsigned int)(dirent[j].firstClusterHigh) << 16) | ((unsigned int)dirent[j].firstClusterLow);
+			    _offs = ((UINT_32)(dirent[j].firstClusterHigh) << 16) | ((UINT_32)dirent[j].firstClusterLow);
 			     offs = data + secpclus * (_offs - 2);
-				status = read(&hd->abar->ports[hd->sata_port_number], offs, 0, 1 , (unsigned char*)&dirent[0]);
+				status = read(&hd->abar->ports[hd->sata_port_number], offs, 0, 1 , (UINT_8*)&dirent[0]);
 				if (!status)
 				{
 					panic("Reading ***subDirectory failed\n");
@@ -200,10 +187,10 @@ DESCRIPTOR OpenOperation( HDPARAMS DriveVolume, char* DosPath )
 			}
 		}
 		pointer_to_dos_name = pointer_to_dos_name->next;
-		thisPath = (char*)(pointer_to_dos_name->name);
+		thisPath = (INT_8*)(pointer_to_dos_name->name);
 	}
-	desc.tree    |= ((unsigned long long)IMOS_TREE_NIBBLE_COUNT << 56);
-	desc.validity = ((unsigned int)IMOS_OPEN << 24) | ((unsigned int)IMOS_NOTHING_FLAG << 16) | ((unsigned int)IMOS_TREE_NIBBLE_COUNT << 8) | (IMOS_RESERVED);
+	desc.tree    |= ((UINT_64)IMOS_TREE_NIBBLE_COUNT << 56);
+	desc.validity = ((UINT_32)IMOS_OPEN << 24) | ((UINT_32)IMOS_NOTHING_FLAG << 16) | ((UINT_32)IMOS_TREE_NIBBLE_COUNT << 8) | (IMOS_RESERVED);
 	
     status = ReleaseDosPackage(&dosNamePackage);
     if (!status)
@@ -219,14 +206,14 @@ DESCRIPTOR OpenOperation( HDPARAMS DriveVolume, char* DosPath )
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-unsigned int ReadPartition( PSATA hd )
+UINT_32 ReadPartition( SATA* hd )
 {
-	unsigned int       status, next_pointer;
-	int                j, k, m, tmp, i;
-	MASTERBOOTRECORD   mbr;
+	UINT_32          status, next_pointer;
+	int              j, k, m, tmp, i;
+	MASTERBOOTRECORD mbr;
 	//EXTENDEDBOOTRECORD ebr[10];
 	
-	status = read(&(hd->abar->ports[hd->sata_port_number]), 0, 0, 1, (unsigned char*)&mbr);
+	status = read(&(hd->abar->ports[hd->sata_port_number]), 0, 0, 1, (UINT_8*)&mbr);
 	if (!status)
 	{
 		panic("Reading harddrive MASTERBOOTRECORD failed\n");
@@ -235,7 +222,7 @@ unsigned int ReadPartition( PSATA hd )
 	
 	//.printk("MBR: ");
 	//.for(j=0x1BE;j<=0x01FF;j++)
-	//.	printk("^ ", (int)((unsigned char*)&mbr)[j]);
+	//.	printk("^ ", (int)((UINT_8*)&mbr)[j]);
 	//.printk("\n");
 	
 	if (mbr.magicNumber != 0xAA55)
@@ -262,7 +249,7 @@ unsigned int ReadPartition( PSATA hd )
 		//	next_pointer = mbr.primaryPartitions[j].start_lba;
 		//	while(i<10)
 		//	{
-		//		status = read(&hd->abar->ports[hd->sata_port_number], next_pointer, 0, 1, (unsigned char*)&ebr[i]);
+		//		status = read(&hd->abar->ports[hd->sata_port_number], next_pointer, 0, 1, (UINT_8*)&ebr[i]);
 		//		if (!status)
 		//		{
 		//			panic("Reading harddrive 1st extended partition failed\n");
@@ -273,7 +260,7 @@ unsigned int ReadPartition( PSATA hd )
 		//		//for(k=0x1BE;k<0x1CE;k++)
 		//		//{
 		//		//	//linux_swap partition 0x82 partition_id or linux 0x83
-		//		//	tmp = (int)( ((unsigned char*)&ebr[i])[k] );
+		//		//	tmp = (int)( ((UINT_8*)&ebr[i])[k] );
 		//		//	printk("^ ", tmp);
 		//		//}
 		//		//printk("\n");
@@ -312,9 +299,9 @@ unsigned int ReadPartition( PSATA hd )
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-unsigned int RegisterFilesystem( PFILESYSTEM filesystem, PSATA sata )
+UINT_32 RegisterFilesystem( FILESYSTEM* filesystem, SATA* sata )
 {
-	unsigned int status;	
+	UINT_32 status;	
 	if(!sata)
 	{
 		panic("Invalid SATA object\n");

@@ -13,27 +13,14 @@
 #define ATA_CMD_READ_DMA_EX     0x25
 #define HBA_PxIS_TFES           (1 << 30)  /* TFES - Task File Error Status */
 
-       PHBA_MEM       abar;
+       HBA_MEM*       abar;
 static HBA_CMD_HEADER cmdlist[32] __attribute__((aligned(1024)));
 static HBA_FIS        fisstorage  __attribute__((aligned(256)));
 static HBA_CMD_TBL    cmdtbls[32] __attribute__((aligned(128)));
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-void AHCI_MemZero(void* mem, unsigned int bytes)
-{
-    unsigned int        blocks = bytes >> 3;
-    unsigned char       remain = bytes &  7;
-    unsigned long long* dst    = (unsigned long long*)mem; 
-    unsigned char*      ddst   = 0; 
-    while(blocks--) { *dst++ = 0ULL; }
-    ddst = (unsigned char*)dst;
-    while(remain--) { *ddst++ = 0; } 
-}
-
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-void PortRebase(PHBA_PORT port, PHBA_CMD_HEADER cl, PHBA_CMD_TBL ctlist, PHBA_FIS fisbase)
+void PortRebase(HBA_PORT* port, HBA_CMD_HEADER* cl, HBA_CMD_TBL* ctlist, HBA_FIS* fisbase)
 {
     int i;
 	
@@ -48,22 +35,22 @@ void PortRebase(PHBA_PORT port, PHBA_CMD_HEADER cl, PHBA_CMD_TBL ctlist, PHBA_FI
 		break;
 	}
     
-    port->clb  = (unsigned int)cl;
+    port->clb  = (UINT_32)cl;
 	port->clbu = 0;
-	AHCI_MemZero((void*)port->clb, 1024);
+	__IMOS_MemZero((void*)port->clb, 1024);
 	//.printk("port->clb: ^", (int)((void*)port->clb));
 	
-    port->fb   = (unsigned int)fisbase;
+    port->fb   = (UINT_32)fisbase;
 	port->fbu  = 0;
-    AHCI_MemZero((void*)port->fb, 256);
+    __IMOS_MemZero((void*)port->fb, 256);
     //.printk(", port->fb: ^", (int)((void*)port->fb));
     
     for (i=0; i<32; i++)
     {
         cl[i].prdtl = 8; 
-        cl[i].ctba  = (unsigned int)ctlist;
+        cl[i].ctba  = (UINT_32)ctlist;
         cl[i].ctbau = 0;
-        AHCI_MemZero((void*)cl[i].ctba, 256);
+        __IMOS_MemZero((void*)cl[i].ctba, 256);
     }
     
     while (port->cmd & HBA_PxCMD_CR);
@@ -75,11 +62,11 @@ void PortRebase(PHBA_PORT port, PHBA_CMD_HEADER cl, PHBA_CMD_TBL ctlist, PHBA_FI
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-static int CheckType(PHBA_PORT port)
+static int CheckType(HBA_PORT* port)
 {
-	unsigned int  ssts = port->ssts;
-	unsigned char ipm  = (ssts >> 8) & 0x0F;
-	unsigned char det  = ssts & 0x0F;
+	UINT_32  ssts = port->ssts;
+	UINT_8 ipm  = (ssts >> 8) & 0x0F;
+	UINT_8 det  = ssts & 0x0F;
  
 	if (det != HBA_PORT_DET_PRESENT)
 		return AHCI_DEV_NULL;
@@ -101,12 +88,12 @@ static int CheckType(PHBA_PORT port)
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-int FindCmdSlot(PHBA_PORT port)
+int FindCmdSlot(HBA_PORT* port)
 {
 	int i;
 	
 	// If not set in SACT and CI, the slot is free
-	unsigned int slots        = (port->sact | port->ci);
+	UINT_32 slots        = (port->sact | port->ci);
 	int          num_of_slots = (abar->cap & 0x0f00)>>8;
 	for (i=0; i<num_of_slots; i++)
 	{
@@ -119,11 +106,11 @@ int FindCmdSlot(PHBA_PORT port)
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-int read(PHBA_PORT port, unsigned int startl, unsigned int starth, unsigned int count, unsigned char* buf)
+int read(HBA_PORT* port, UINT_32 startl, UINT_32 starth, UINT_32 count, UINT_8* buf)
 {
 	int i, spin = 0; 
 	
-	port->is = (unsigned int) -1;
+	port->is = (UINT_32) -1;
 	int slot = FindCmdSlot(port);
 	if (slot == -1)
 	{
@@ -131,44 +118,44 @@ int read(PHBA_PORT port, unsigned int startl, unsigned int starth, unsigned int 
 		return 0;
 	}		
  
-	PHBA_CMD_HEADER cmdheader = (PHBA_CMD_HEADER)port->clb;
+	HBA_CMD_HEADER* cmdheader = (HBA_CMD_HEADER*)port->clb;
 	cmdheader += slot;
-	cmdheader->cfl = sizeof(FIS_REG_H2D)/sizeof(unsigned int);	// Command FIS size
+	cmdheader->cfl = sizeof(FIS_REG_H2D)/sizeof(UINT_32);	// Command FIS size
 	cmdheader->w = 0;		                                    // Read from device
-	cmdheader->prdtl = (unsigned short)((count-1)>>4) + 1;	    // PRDT entries count
+	cmdheader->prdtl = (UINT_16)((count-1)>>4) + 1;	    // PRDT entries count
  
-	PHBA_CMD_TBL cmdtbl = (PHBA_CMD_TBL)(cmdheader->ctba);
-	AHCI_MemZero(cmdtbl, sizeof(HBA_CMD_TBL) + (cmdheader->prdtl-1)*sizeof(HBA_PRDT_ENTRY));
+	HBA_CMD_TBL* cmdtbl = (HBA_CMD_TBL*)(cmdheader->ctba);
+	__IMOS_MemZero(cmdtbl, sizeof(HBA_CMD_TBL) + (cmdheader->prdtl-1)*sizeof(HBA_PRDT_ENTRY));
  
 	// 8K bytes (16 sectors) per PRDT
 	for (i=0; i<cmdheader->prdtl-1; i++)
 	{
-		cmdtbl->prdt_entry[i].dba = (unsigned int) buf;
+		cmdtbl->prdt_entry[i].dba = (UINT_32) buf;
 		cmdtbl->prdt_entry[i].dbc = 8*1024-1;	// 8K bytes (this value should always be set to 1 less than the actual value)
 		cmdtbl->prdt_entry[i].i = 1;
 		buf += 4*1024;	// 4K words
 		count -= 16;	// 16 sectors
 	}
 	// Last entry
-	cmdtbl->prdt_entry[cmdheader->prdtl-1].dba = (unsigned int) buf;
+	cmdtbl->prdt_entry[cmdheader->prdtl-1].dba = (UINT_32) buf;
 	cmdtbl->prdt_entry[cmdheader->prdtl-1].dbc = (count<<9)-1;	// 512 bytes per sector
 	cmdtbl->prdt_entry[cmdheader->prdtl-1].i = 1;
  
 	// Setup command
-	PFIS_REG_H2D cmdfis = (PFIS_REG_H2D)(&cmdtbl->cfis);
+	FIS_REG_H2D* cmdfis = (FIS_REG_H2D*)(&cmdtbl->cfis);
  
 	cmdfis->fis_type = FIS_TYPE_REG_H2D;
 	cmdfis->c = 1;	// Command
 	cmdfis->command = ATA_CMD_READ_DMA_EX;
  
-	cmdfis->lba0 = (unsigned char)startl;
-	cmdfis->lba1 = (unsigned char)(startl>>8);
-	cmdfis->lba2 = (unsigned char)(startl>>16);
+	cmdfis->lba0 = (UINT_8)startl;
+	cmdfis->lba1 = (UINT_8)(startl>>8);
+	cmdfis->lba2 = (UINT_8)(startl>>16);
 	cmdfis->device = 1<<6;	// LBA mode
  
-	cmdfis->lba3 = (unsigned char)(startl>>24);
-	cmdfis->lba4 = (unsigned char)starth;
-	cmdfis->lba5 = (unsigned char)(starth>>8);
+	cmdfis->lba3 = (UINT_8)(startl>>24);
+	cmdfis->lba4 = (UINT_8)starth;
+	cmdfis->lba5 = (UINT_8)(starth>>8);
  
 	cmdfis->countl = count & 0xFF;
 	cmdfis->counth = (count >> 8) & 0xFF;
@@ -210,13 +197,13 @@ int read(PHBA_PORT port, unsigned int startl, unsigned int starth, unsigned int 
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-void ProbePort(PHBA_MEM abar, int* which_port)
+void ProbePort(HBA_MEM* abar, int* which_port)
 {
-	unsigned int pi = abar->pi;
+	UINT_32 pi = abar->pi;
 	int i=0, j=0;
-	unsigned char main_buffer[40000];
+	UINT_8 main_buffer[40000];
 	int status = 0;
-	AHCI_MemZero(main_buffer, 40000);
+	__IMOS_MemZero(main_buffer, 40000);
 	while (i<32)
 	{
 		if (pi&1)
@@ -254,7 +241,7 @@ void ProbePort(PHBA_MEM abar, int* which_port)
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-void AhciBegin( PSATA hd )
+void AhciBegin( SATA* hd )
 {
 	void* bar5 = hd->bar5;
 	int harddisk_port;
@@ -265,8 +252,8 @@ void AhciBegin( PSATA hd )
 		return;
 	}
 	
-	hd->abar             = (PHBA_MEM)bar5;
-	abar                 = (PHBA_MEM)hd->abar;
+	hd->abar             = (HBA_MEM*)bar5;
+	abar                 = (HBA_MEM*)hd->abar;
 	ProbePort(abar, &harddisk_port);
 	hd->sata_port_number = harddisk_port;	
 }

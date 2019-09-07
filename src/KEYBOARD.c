@@ -3,12 +3,12 @@
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ GLOBAL AND STATIC VARIABLES
 
-KEYBOARD      global_OS_keyboard;
-unsigned int  SHIFT_PRESSED           = 0;
-unsigned int  ALT_PRESSED             = 0;
-unsigned int  CTRL_PRESSED            = 0;
-unsigned char DisplayMovedDown        = 0;
-unsigned char KEYBOARD_SCANCODES[128] =
+KEYBOARD global_OS_keyboard;
+UINT_32  SHIFT_PRESSED           = 0;
+UINT_32  ALT_PRESSED             = 0;
+UINT_32  CTRL_PRESSED            = 0;
+UINT_8   DisplayMovedDown        = 0;
+UINT_8   KEYBOARD_SCANCODES[128] =
 {
     0,  27, '1', '2', '3', '4', '5', '6', '7', '8',		/* 9 */
   	'9', '0', '-', '=', '\b',							/* Backspace */
@@ -52,9 +52,9 @@ unsigned char KEYBOARD_SCANCODES[128] =
 
 static void __IMOS_EvaluateArrowKeys(void)
 {
-	unsigned int i;
-	unsigned char* vid = ( unsigned char* )0xb8000;
-	unsigned char* displays = Disps();
+	UINT_32 i;
+	UINT_8* vid = ( UINT_8* )0xb8000;
+	UINT_8* displays = Disps();
 	if(!global_OS_keyboard.arrow_keys)
 		return;
 	if(global_OS_keyboard.arrow_keys == ARROW_DOWN)
@@ -73,7 +73,7 @@ static void __IMOS_EvaluateArrowKeys(void)
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-unsigned int RegisterKeyboard(PKEYBOARD keyboard)
+UINT_32 RegisterKeyboard(KEYBOARD* keyboard)
 {
 	if(!keyboard)
 	{
@@ -97,9 +97,9 @@ unsigned int RegisterKeyboard(PKEYBOARD keyboard)
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-void keyboard_handler(PREGS r)
+void keyboard_handler(REGS* r)
 {
-    unsigned char scancode, status;
+    UINT_8 scancode, status;
 
 	/* write EOI */
 	global_OS_keyboard.KBD_STATUS_PORT.Write(0x20, 0x20);
@@ -160,7 +160,7 @@ void keyboard_handler(PREGS r)
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-void getch(unsigned char keycode_to_break)
+void getch(UINT_8 keycode_to_break)
 {
 	_STI();
 	while(1)

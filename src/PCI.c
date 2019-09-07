@@ -20,20 +20,9 @@ fnc
  
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-void __IMOS_PCI_MemZero(void* mem, unsigned int bytes)
+UINT_32 RegisterPCI(PCI* pci, SATA* sata, EHCI* ehci, XHCI* x)
 {
-    unsigned int        blocks = bytes >> 3;
-    unsigned char       remain = bytes &  7;
-    unsigned long long* dst    = (unsigned long long*)mem; 
-    unsigned char*      ddst   = 0; 
-    while(blocks--) { *dst++ = 0ULL; }
-    ddst = (unsigned char*)dst;
-    while(remain--) { *ddst++ = 0; } 
-}
-
-unsigned int RegisterPCI(PPCI pci, PSATA sata, XHCI* x)
-{
-	unsigned short bus, device, function, barNum;
+	UINT_16 bus, device, function, barNum;
 	
 	if(!pci)
 		return 0;
@@ -55,61 +44,93 @@ unsigned int RegisterPCI(PPCI pci, PSATA sata, XHCI* x)
                 {
                     BASEADDRESSREGISTER bar = GetBASEADDRESSREGISTER(pci, bus, device, function, barNum);
                     if(bar.address && (bar.type == INPUTOUTPUT))
-                        dev.portBase = (unsigned int)bar.address;
+                        dev.portBase = (UINT_32)bar.address;
                 }            
-				
+
 				if(dev.class_id == 0x01 && dev.subclass_id == 0x06)
 				{
+                    //.UINT_32 BAR5 = Read(pci, bus, device, function, FNC_BAR_5);
+					//.printk("    In PCI: AHCI SATA with Bar 5 = ^ found\n", BAR5);
+					//.
+					//.sata->valid            = 1;
+                    //.sata->bus              = bus;
+                    //.sata->device           = device;
+                    //.sata->bar5             = (void*)BAR5;
+                    //.sata->abar             = 0;
+                    //.sata->sata_port_number = 0;
+					//.
+                	//.AhciBegin( sata );
             	}
 				if(dev.class_id == 0x0C && dev.subclass_id == 0x03 && dev.interface_id == 0x20)
 				{
+                	//.UINT_32 BAR0 = Read(pci, bus, device, function, FNC_BAR_0);
+					//.printk("    In PCI: EHCI USB with Bar 0 = ^ found\n", BAR0);
+
+                    if(
+                        ((Read(pci, bus, device, function, 0) & 0xFFFF) == 0x8086) &&
+                        ((Read(pci, bus, device, function, 2) & 0xFFFF) == 0x1E31) &&
+                        ((Read(pci, bus, device, function, 8) & 0xFF)   == 4)
+                    )
+                    {
+                        if(pciDEBUG)
+                            printk("Panther Point controller detected !!\n");
+                        Write(pci, bus, device, function, 0xD8, 0xFFFFFFFF);
+                        Write(pci, bus, device, function, 0xD0, 0xFFFFFFFF);
+                    }
+                    //. SetBusMaster(pci, bus, device, function);                    
+					//.ehci->bus         = bus;
+                    //.ehci->device      = device;
+                    //.ehci->function    = function;
+                    //.ehci->bar0        = (void*)BAR0;
+                    //.ehci->pci_pointer = (void*)pci;
+					//.process_ehci( ehci );
             	}
                 if(dev.class_id == 0x0C && dev.subclass_id == 0x03 && dev.interface_id == 0x30)
 				{
-                    __IMOS_PCI_MemZero((void*)x, sizeof(XHCI));
-                    unsigned int bar0 = (Read(pci, bus, device, function, FNC_BAR_0) & 0xFFFFFFF0);
-                    unsigned int bar1 =  Read(pci, bus, device, function, FNC_BAR_1);
-                    x->base_address_lo = (void*)bar0;
-	                x->base_address_hi = (void*)bar1;
+                    __IMOS_MemZero((void*)x, sizeof(XHCI));
                     
-                    unsigned int headertype = (Read(pci, bus, device, function, 0x0C) & 0x00FF0000) >> 16;
-                    //printk("HeaderType=%\n", headertype);
+                    UINT_32 bar0 = (Read(pci, bus, device, function, FNC_BAR_0) & 0xFFFFFFF0);
+                    UINT_32 bar1 =  Read(pci, bus, device, function, FNC_BAR_1);
+                    x->base_address_lo = bar0;
+	                x->base_address_hi = bar1;
+                    
+                    UINT_32 headertype = (Read(pci, bus, device, function, 0x0C) & 0x00FF0000) >> 16;
+                    if(pciDEBUG)
+                        printk("xhci_HeaderType=%\n", headertype);
                     
                     x->bus      = bus;
                     x->device   = device;
                     x->function = function;
-                    x->pci      = (void*)pci;
-                                                        
-                    x->cap          = (PxHCI_CAPABILITY)                           x->base_address_lo; 
-                    x->oper         = (PxHCI_OPERATION)           ((void*)((bit32u)x->base_address_lo + (bit32u)x->cap->caplength)); 
-                    x->port_reg_set = (PxHCI_PORT_REGISTER_SET)   ((void*)((bit32u)x->oper + 0x0400));
-                    x->ext_cap      = 0;                    
-
-                    // set bus master
-                    bit32u pciCommandRegister = Read(pci, bus, device, function, 0x04);
-                    pciCommandRegister &= ~(BIT(2) | BIT(4) );
-                    pciCommandRegister |=  (BIT(2) | BIT(4));
-                    Write(pci, bus, device, function, 0x04, pciCommandRegister);                    
-
-                    x->irq_number = (unsigned char)(Read(pci, bus, device, function, 0x3C));
+                    x->pci      = (void*)pci;                                                        
+                    x->cap      = (xHCI_CAPABILITY*)                   x->base_address_lo; 
+                    x->oper     = (xHCI_OPERATION*)           ((void*)(x->base_address_lo + (UINT_32)x->cap->caplength)); 
+                    x->port_reg = (xHCI_PORT_REGISTER_SET*)   ((void*)((UINT_32)((void*)x->oper) + 0x0400));
+                    x->ex_cap   = 0;                    
                     
-					start_xhci_controller(x);
+                    // set bus master
+                    UINT_32 pciCommandRegister = Read(pci, bus, device, function, 0x04);
+                    pciCommandRegister &= ~(BIT(2) | BIT(4));
+                    pciCommandRegister |=  (BIT(2) | BIT(4));
+                    Write(pci, bus, device, function, 0x04, pciCommandRegister);  
+
+                    x->irq_number   = (UINT_8)(Read(pci, bus, device, function, 0x3C) & 0xFF);
+                    
+                    start_xhci_controller(x);
                 }
-                
-				//printk("    In PCI: bus %, device(slot) %, function % = vendor %\n", (bus & 0xFF), (device & 0xFF), (function & 0xFF), ((dev.vendor_id & 0xFF00) >> 8));
+                //printk("    In PCI: bus %, device(slot) %, function % = vendor %\n", (bus & 0xFF), (device & 0xFF), (function & 0xFF), ((dev.vendor_id & 0xFF00) >> 8));
             }
         }
     }
-	//printk( "        >>> PCI registered successfully <<<\n");
+	//.printk( "        >>> PCI registered successfully <<<\n");
 	
 	return 1;
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-unsigned int Read(PPCI pci, unsigned short bus, unsigned short device, unsigned short function, unsigned int registeroffset)
+UINT_32 Read(PCI* pci, UINT_16 bus, UINT_16 device, UINT_16 function, UINT_32 registeroffset)
 {
-	unsigned int id = 0x1 << 31 | ((bus & 0xFF) << 16) | ((device & 0x1F) << 11) | ((function & 0x07) << 8) | (registeroffset & 0xFC);
+	UINT_32 id = 0x1 << 31 | ((bus & 0xFF) << 16) | ((device & 0x1F) << 11) | ((function & 0x07) << 8) | (registeroffset & 0xFC);
 	
 	if(!pci)
 	{
@@ -118,15 +139,15 @@ unsigned int Read(PPCI pci, unsigned short bus, unsigned short device, unsigned 
 	}
 	
     pci->CommandPort.Write( COMMANDPORTVALUE, id );
-    unsigned int result = pci->DataPort.Read( DATAPORTVALUE );
+    UINT_32 result = pci->DataPort.Read( DATAPORTVALUE );
     return result >> (8 * (registeroffset % 4));
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-void Write(PPCI pci, unsigned short bus,unsigned short device, unsigned short function, unsigned int registeroffset, unsigned int value)
+void Write(PCI* pci, UINT_16 bus,UINT_16 device, UINT_16 function, UINT_32 registeroffset, UINT_32 value)
 {
-	unsigned int id = 0x1 << 31 | ((bus & 0xFF) << 16) | ((device & 0x1F) << 11) | ((function & 0x07) << 8) | (registeroffset & 0xFC);
+	UINT_32 id = 0x1 << 31 | ((bus & 0xFF) << 16) | ((device & 0x1F) << 11) | ((function & 0x07) << 8) | (registeroffset & 0xFC);
 	
 	if(!pci)
 	{
@@ -140,7 +161,7 @@ void Write(PPCI pci, unsigned short bus,unsigned short device, unsigned short fu
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-unsigned int DeviceHasFunctions(PPCI pci, unsigned short bus, unsigned short device)
+UINT_32 DeviceHasFunctions(PCI* pci, UINT_16 bus, UINT_16 device)
 {
 	if(!pci)
 	{
@@ -152,7 +173,7 @@ unsigned int DeviceHasFunctions(PPCI pci, unsigned short bus, unsigned short dev
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-BASEADDRESSREGISTER GetBASEADDRESSREGISTER(PPCI pci, unsigned short bus,unsigned short device, unsigned short function, unsigned short bar)
+BASEADDRESSREGISTER GetBASEADDRESSREGISTER(PCI* pci, UINT_16 bus,UINT_16 device, UINT_16 function, UINT_16 bar)
 {
 	BASEADDRESSREGISTER baseaddressregister;
     
@@ -162,12 +183,12 @@ BASEADDRESSREGISTER GetBASEADDRESSREGISTER(PPCI pci, unsigned short bus,unsigned
 		return baseaddressregister;
 	} 
 	
-    unsigned int headertype = Read(pci, bus, device, function, 0x0E) & 0x7F;
+    UINT_32 headertype = Read(pci, bus, device, function, 0x0E) & 0x7F;
     int maxBARs = 6 - (4 * headertype);
     if(bar >= maxBARs)
         return baseaddressregister;    
     
-    unsigned int bar_value = Read(pci, bus, device, function, 0x10 + 4*bar);
+    UINT_32 bar_value = Read(pci, bus, device, function, 0x10 + 4*bar);
     baseaddressregister.type = (bar_value & 0x1) ? INPUTOUTPUT : MEMORYMAPPED;
     
     if(baseaddressregister.type == MEMORYMAPPED)
@@ -182,7 +203,7 @@ BASEADDRESSREGISTER GetBASEADDRESSREGISTER(PPCI pci, unsigned short bus,unsigned
     }
     else // INPUTOUTPUT
     {
-        baseaddressregister.address = (unsigned char*)(bar_value & ~0x3);
+        baseaddressregister.address = (UINT_8*)(bar_value & ~0x3);
         baseaddressregister.prefetchable = 0;
     }
 	return baseaddressregister;
@@ -190,7 +211,7 @@ BASEADDRESSREGISTER GetBASEADDRESSREGISTER(PPCI pci, unsigned short bus,unsigned
 	
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-PCIDESCRIPTOR GetPCIDESCRIPTOR(PPCI pci, unsigned short bus, unsigned short device, unsigned short function)
+PCIDESCRIPTOR GetPCIDESCRIPTOR(PCI* pci, UINT_16 bus, UINT_16 device, UINT_16 function)
 {
 	PCIDESCRIPTOR result;
 	
@@ -225,7 +246,7 @@ PCIDESCRIPTOR GetPCIDESCRIPTOR(PPCI pci, unsigned short bus, unsigned short devi
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-void SetBusMaster(PPCI pci, unsigned short bus, unsigned short device, unsigned short function)
+void SetBusMaster(PCI* pci, UINT_16 bus, UINT_16 device, UINT_16 function)
 {
     Write(pci, bus, device, function, 0x04, 0x06);
 }
