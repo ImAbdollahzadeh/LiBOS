@@ -19,29 +19,35 @@ extern void CHECK_DS                        (UINT_32* ds);
 static UINT_8 usb2_connection_ports = 0x00;
 static UINT_8 usb3_connection_ports = 0x00;
 
+// global slot, endpont_0, and transfer ring of ep_0
+static UINT_32           cur_ep_ring_ptr   = 0;
+static UINT_32           cur_ep_ring_cycle = 0;
+static xHCI_SLOT_CONTEXT gslot;
+static xHCI_EP_CONTEXT   gep;
+
 // IRQ signals
-volatile UINT_32 signal_from_noop_to_irq                     = 0;
-volatile UINT_32 signal_from_irq_to_noop                     = 0;
-volatile UINT_32 signal_from_irq_to_slot_configuration       = 0;
-volatile UINT_32 signal_from_slot_configuration_to_irq       = 0;
-volatile UINT_32 signal_from_slot_set_address_to_irq         = 0;
-volatile UINT_32 signal_from_irq_to_slot_set_address         = 0;
-volatile UINT_32 signal_from_setup_data_status_stages_to_irq = 0;
-volatile UINT_32 signal_from_irq_to_setup_data_status_stages = 0;
-volatile UINT_32 signal_from_irq_to_string_descriptor        = 0;
-volatile UINT_32 signal_from_string_descriptor_to_irq        = 0;
+volatile BOOL signal_from_noop_to_irq                     = FALSE;
+volatile BOOL signal_from_irq_to_noop                     = FALSE;
+volatile BOOL signal_from_irq_to_slot_configuration       = FALSE;
+volatile BOOL signal_from_slot_configuration_to_irq       = FALSE;
+volatile BOOL signal_from_slot_set_address_to_irq         = FALSE;
+volatile BOOL signal_from_irq_to_slot_set_address         = FALSE;
+volatile BOOL signal_from_setup_data_status_stages_to_irq = FALSE;
+volatile BOOL signal_from_irq_to_setup_data_status_stages = FALSE;
+volatile BOOL signal_from_irq_to_string_descriptor        = FALSE;
+volatile BOOL signal_from_string_descriptor_to_irq        = FALSE;
 
 // tmp
 UINT_8 tmp_disconnection = TRUE;
 
 // instance of the XHCI object
-XHCI*  xx             = 0x00;
+XHCI*  xx                = 0x00;
 
 // entering critical event in IRQ_HANDLER
-UINT_8 critical_event = 0x00;
+UINT_8 critical_event    = 0x00;
 
 // All TRB types
-static TRB_TYPES trb_types[64] =  {
+static TRB_TYPES trb_types[64] = {
 	{0, "Reserved"},
 	{1, "Normal"}, 
     {2, "Setup Stage"},
@@ -470,8 +476,8 @@ void read_extended_capabilities(XHCI* x)
 void xhci_get_trb(xHCI_TRB* trb, UINT_32 address) 
 {
 	trb->param   = (UINT_64)(mread(address, 0x00));
-	trb->status  =          mread(address, 0x08);
-	trb->command =          mread(address, 0x0C);
+	trb->status  =           mread(address, 0x08);
+	trb->command =           mread(address, 0x0C);
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -511,16 +517,16 @@ void NO_OP_test(XHCI* x)
 		x->command_ring_PCS ^= 1;
 	}
     
-	signal_from_noop_to_irq = 1;
+	signal_from_noop_to_irq = TRUE;
 	xhci_write_doorbell(x, 0, 0);
 	
 	UINT_32 timer = 5000;
 	while (timer) 
 	{
-		if(signal_from_irq_to_noop == 1)
+		if(signal_from_irq_to_noop == TRUE)
 		{
-			signal_from_irq_to_noop = 0;
-			signal_from_noop_to_irq = 0;
+			signal_from_irq_to_noop = FALSE;
+			signal_from_noop_to_irq = FALSE;
 			break;
 		}
 		WaitMiliSecond(1);
@@ -920,35 +926,34 @@ void xhci_interrupt_handler(REGS* r)
     }
 	else if((driver_status & xSTS_EINT))
 	{
-		if(signal_from_slot_configuration_to_irq == 1)
+		if(signal_from_slot_configuration_to_irq == TRUE)
 		{
-			signal_from_irq_to_slot_configuration = 1;
+			signal_from_irq_to_slot_configuration = TRUE;
 			xx->usb_device->slot_id = (UINT_8)(trb.command >> 24);
-			critical_event = 0; // keep it for slot_set_address set
-		}
-		
-		else if(signal_from_slot_set_address_to_irq == 1)
-		{
-			signal_from_irq_to_slot_set_address = 1;
 			critical_event = 0;
 		}
 		
-		else if(signal_from_noop_to_irq == 1)
+		else if(signal_from_slot_set_address_to_irq == TRUE)
 		{
-			signal_from_irq_to_noop = 1;
+			signal_from_irq_to_slot_set_address = TRUE;
 			critical_event = 0;
 		}
 		
-		else if(signal_from_setup_data_status_stages_to_irq == 1)
+		else if(signal_from_noop_to_irq == TRUE)
 		{
-			signal_from_irq_to_setup_data_status_stages = 1;
+			signal_from_irq_to_noop = TRUE;
 			critical_event = 0;
 		}
 		
-		else if(signal_from_string_descriptor_to_irq == 1)
+		else if(signal_from_setup_data_status_stages_to_irq == TRUE)
 		{
-			this_TRB_to_print = TRUE;
-			signal_from_irq_to_string_descriptor = 1;
+			signal_from_irq_to_setup_data_status_stages = TRUE;
+			critical_event = 0;
+		}
+		
+		else if(signal_from_string_descriptor_to_irq == TRUE)
+		{
+			signal_from_irq_to_string_descriptor = TRUE;
 			critical_event = 0;
 		}
 		
@@ -964,9 +969,7 @@ void xhci_interrupt_handler(REGS* r)
 		mwrite(interrupter0, xHC_INTERRUPTER_ERDP + 4, 0); 
 	}
 	else
-	{
 		printk("another interrupt: ^\n", driver_status);
-	}
 	
 XHCI_INTERRUPT_HANDLER_END:
 	if(xINTERRUPT_HANDLER_DEBUG) 
@@ -991,11 +994,6 @@ void handle_device_attachment_to_port(XHCI* x, UINT_32 port)
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-UINT_32 cur_ep_ring_ptr   = 0;
-UINT_32 cur_ep_ring_cycle = 0;
-xHCI_SLOT_CONTEXT gslot;
-xHCI_EP_CONTEXT   gep;
-
 void xhci_slot_configuration(XHCI* x, UINT_32 port, UINT_32 speed)
 {
 	UINT_8 i;
@@ -1016,16 +1014,16 @@ void xhci_slot_configuration(XHCI* x, UINT_32 port, UINT_32 speed)
 		x->command_ring_PCS ^= 1;
 	}
     
-    signal_from_slot_configuration_to_irq = 1;
+    signal_from_slot_configuration_to_irq = TRUE;
 	xhci_write_doorbell(x, 0, 0);
     UINT_32 timing = 2000;
     while(timing)
     {
-        volatile UINT_32 tmp = signal_from_irq_to_slot_configuration;
-        if(tmp == 1)
+        volatile BOOL tmp = signal_from_irq_to_slot_configuration;
+        if(tmp == TRUE)
         {
-            signal_from_irq_to_slot_configuration = 0;
-            signal_from_slot_configuration_to_irq = 0;
+            signal_from_irq_to_slot_configuration = FALSE;
+            signal_from_slot_configuration_to_irq = FALSE;
             break;
         }
         WaitMiliSecond(1);
@@ -1033,7 +1031,7 @@ void xhci_slot_configuration(XHCI* x, UINT_32 port, UINT_32 speed)
         if(timing == 0)
         {
             printk("SLOT_CONFIG timed out\n");
-			signal_from_slot_configuration_to_irq = 0;
+			signal_from_slot_configuration_to_irq = FALSE;
             break;
         }
     }
@@ -1086,25 +1084,25 @@ void xhci_slot_configuration(XHCI* x, UINT_32 port, UINT_32 speed)
 	x->usb_device->slot_address = (void*)slot;
 	x->usb_device->ep0_address  = (void*)ep;
 	
-	gslot.DWORD0 = slot->DWORD0;
+	gslot.DWORD0               = slot->DWORD0;
     gslot.root_hub_port_number = slot->root_hub_port_number;
-	gslot.max_exit_latency = slot->max_exit_latency;
-	gslot.number_of_ports = slot->number_of_ports;
-	gslot.TT_hub_slot_id = slot->TT_hub_slot_id;
-	gslot.TT_port_number = slot->TT_port_number;
-    gslot.WORD2         = slot->WORD2;
-    gslot.WORD_BYTE3[1] = slot->WORD_BYTE3[1];
-	gslot.WORD_BYTE3[2]      = slot->WORD_BYTE3[2] ;    
-	gslot.WORD_BYTE3[3]      = slot->WORD_BYTE3[3];     
-    gslot.usb_device_address = slot->usb_device_address;
-  	gep.DWORD2 = ep->DWORD2;
-	gep.TR_dequeue_pointer_hi = ep->TR_dequeue_pointer_hi;
-  	gep.WORD0 = ep->WORD0;
-  	gep.BYTE1 = ep->BYTE1;
-  	gep.average_trb_length = ep->average_trb_length;
-  	gep.max_burst_size = ep->max_burst_size;
-	gep.max_packet_size = ep->max_packet_size;
-  	gep.interval = ep->interval;
+	gslot.max_exit_latency     = slot->max_exit_latency;
+	gslot.number_of_ports      = slot->number_of_ports;
+	gslot.TT_hub_slot_id       = slot->TT_hub_slot_id;
+	gslot.TT_port_number       = slot->TT_port_number;
+    gslot.WORD2                = slot->WORD2;
+    gslot.WORD_BYTE3[1]        = slot->WORD_BYTE3[1];
+	gslot.WORD_BYTE3[2]        = slot->WORD_BYTE3[2] ;    
+	gslot.WORD_BYTE3[3]        = slot->WORD_BYTE3[3];     
+    gslot.usb_device_address   = slot->usb_device_address;
+  	gep.DWORD2                 = ep->DWORD2;
+	gep.TR_dequeue_pointer_hi  = ep->TR_dequeue_pointer_hi;
+  	gep.WORD0                  = ep->WORD0;
+  	gep.BYTE1                  = ep->BYTE1;
+  	gep.average_trb_length     = ep->average_trb_length;
+  	gep.max_burst_size         = ep->max_burst_size;
+	gep.max_packet_size        = ep->max_packet_size;
+  	gep.interval               = ep->interval;
     //if(xINTERRUPT_HANDLER_DEBUG) printk("slot address for configuration:^\n", (UINT_32)x->usb_device->slot_address);
     //if(xINTERRUPT_HANDLER_DEBUG) printk("ep   address for configuration:^\n", (UINT_32)x->usb_device->ep0_address);	
 
@@ -1129,6 +1127,8 @@ void xhci_slot_release(XHCI* x, UINT_32 port, UINT_32 speed)
 	critical_event = 0;
 }
 
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
 void xhci_configure_endpoint(XHCI* x, UINT_32 inp)
 {
 	xHCI_TRB trb = { .param = (UINT_64)inp, .status = 0, .command = (((x->usb_device->slot_id) << 24) | (12 << 10))};
@@ -1141,6 +1141,8 @@ void xhci_configure_endpoint(XHCI* x, UINT_32 inp)
 	WaitSecond(1);
 }
 
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
 void xhci_soft_reset_endpoint(XHCI* x)
 {
 	xHCI_TRB trb = { .param = 0ULL, .status = 0, .command = ((1 << 24) | (1 << 16) | (14 << 10) | (1 << 9))};
@@ -1152,6 +1154,7 @@ void xhci_soft_reset_endpoint(XHCI* x)
 	xhci_write_doorbell(x, 0, 0);
 	WaitSecond(1);
 }
+
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 void xhci_setup_stage(XHCI* x, REQUEST_PACKET* request, UINT_8 dir) 
@@ -1194,8 +1197,8 @@ void xhci_status_stage(XHCI* x, UINT_8 dir, UINT_32 status_addr)
 
 void xhci_setup_data_status_stages(XHCI* x, void* target, UINT_32 length, UINT_32 max_packet, BOOL first_or_second) 
 {
-	UINT_32 status_addr = (UINT_32)(xhci_alloc_memory(4, 16, 16));    // we need a dword status buffer with a physical address
-	UINT_32 buffer_addr = (UINT_32)(xhci_alloc_memory(18, 64, 65536));   // get a physical address buffer and then copy from it later
+	UINT_32 status_addr = (UINT_32)(xhci_alloc_memory(4, 16, 16));     // we need a dword status buffer with a physical address
+	UINT_32 buffer_addr = (UINT_32)(xhci_alloc_memory(18, 64, 65536)); // get a physical address buffer and then copy from it later
 	__IMOS_MemZero((void*)status_addr, 4);
 	__IMOS_MemZero((void*)buffer_addr, 18);
 
@@ -1205,17 +1208,17 @@ void xhci_setup_data_status_stages(XHCI* x, void* target, UINT_32 length, UINT_3
 	xhci_data_stage  (x, buffer_addr, xDATA_STAGE, length, xHCI_DIR_IN_B, max_packet, status_addr);
 	xhci_status_stage(x, (xHCI_DIR_IN_B ^ 1), status_addr);
 
-	signal_from_setup_data_status_stages_to_irq = 1;
+	signal_from_setup_data_status_stages_to_irq = TRUE;
 	xhci_write_doorbell(x, x->usb_device->slot_id, 1);
 	
 	UINT_32 timing = 2000;
 	while(timing)
     {
-        volatile UINT_32 tmp = signal_from_irq_to_setup_data_status_stages;
-        if(tmp == 1)
+        volatile BOOL tmp = signal_from_irq_to_setup_data_status_stages;
+        if(tmp == TRUE)
         {
-            signal_from_irq_to_setup_data_status_stages = 0;
-            signal_from_setup_data_status_stages_to_irq = 0;
+            signal_from_irq_to_setup_data_status_stages = FALSE;
+            signal_from_setup_data_status_stages_to_irq = FALSE;
             break;
         }
         WaitMiliSecond(1);
@@ -1223,7 +1226,7 @@ void xhci_setup_data_status_stages(XHCI* x, void* target, UINT_32 length, UINT_3
         if(timing == 0)
         {
             printk("SETUP_DATA_STAUS_STAGES timed out\n");
-			signal_from_setup_data_status_stages_to_irq = 0;
+			signal_from_setup_data_status_stages_to_irq = FALSE;
             break;
         }
     }
@@ -1241,7 +1244,9 @@ void xhci_setup_data_status_stages(XHCI* x, void* target, UINT_32 length, UINT_3
 void xhci_string_descriptor(XHCI* x, UINT_8 max_packet, UINT_8 level) 
 {
 	UINT_8  length_of_the_descriptor = 0;
+	UINT_16 lang_id                  = 0;
 	UINT_32 buffer_addr              = 0;
+	UINT_32 timing                   = 0;
 	switch(level)
 	{
 		case 0:
@@ -1262,17 +1267,17 @@ DEFAULT_STRING_DESCRIPTOR:
 	xhci_data_stage  (x, buffer_addr, xDATA_STAGE, 255, xHCI_DIR_IN_B, max_packet, 0);
 	xhci_status_stage(x, (xHCI_DIR_IN_B ^ 1), 0);
 
-	signal_from_string_descriptor_to_irq = 1;
+	signal_from_string_descriptor_to_irq = TRUE;
 	xhci_write_doorbell(x, x->usb_device->slot_id, 1);
 	
-	UINT_32 timing = 2000;
+	timing = 2000;
 	while(timing)
     {
-        volatile UINT_32 tmp = signal_from_irq_to_string_descriptor;
-        if(tmp == 1)
+        volatile BOOL tmp = signal_from_irq_to_string_descriptor;
+        if(tmp == TRUE)
         {
-            signal_from_irq_to_string_descriptor = 0;
-            signal_from_string_descriptor_to_irq = 0;
+            signal_from_irq_to_string_descriptor = FALSE;
+            signal_from_string_descriptor_to_irq = FALSE;
             break;
         }
         WaitMiliSecond(1);
@@ -1280,20 +1285,89 @@ DEFAULT_STRING_DESCRIPTOR:
         if(timing == 0)
         {
             printk("STRING DESCRIPTOR timed out\n");
-			signal_from_string_descriptor_to_irq = 0;
+			signal_from_string_descriptor_to_irq = FALSE;
             break;
         }
     }
 	
 	length_of_the_descriptor = *(UINT_8*)((void*)buffer_addr);
 	__IMOS_HexDump((void*)buffer_addr, length_of_the_descriptor, "xhci_string_Descriptor");
+	lang_id = ((*(UINT_32*)((void*)buffer_addr)) & 0xFF00) >> 8;
 	goto SUCCESS_STRING_DESCRIPTOR;
 	
 MANUFACTURER_STRING_DESCRIPTOR:
-	return;
+	buffer_addr = (UINT_32)(xhci_alloc_memory(255, 64, 65536));
+	__IMOS_MemZero((void*)buffer_addr, 255);
+
+	REQUEST_PACKET prod_desc_packet = { STDRD_GET_REQUEST, GET_DESCRIPTOR, ((STRING << 8) | /* must be general */0x01), lang_id, 255 };
+	
+	xhci_setup_stage (x, &prod_desc_packet, xHCI_DIR_IN);
+	xhci_data_stage  (x, buffer_addr, xDATA_STAGE, 255, xHCI_DIR_IN_B, max_packet, 0);
+	xhci_status_stage(x, (xHCI_DIR_IN_B ^ 1), 0);
+
+	signal_from_string_descriptor_to_irq = TRUE;
+	xhci_write_doorbell(x, x->usb_device->slot_id, 1);
+	
+	timing = 2000;
+	while(timing)
+    {
+        volatile BOOL tmp = signal_from_irq_to_string_descriptor;
+        if(tmp == TRUE)
+        {
+            signal_from_irq_to_string_descriptor = FALSE;
+            signal_from_string_descriptor_to_irq = FALSE;
+            break;
+        }
+        WaitMiliSecond(1);
+        timing--;
+        if(timing == 0)
+        {
+            printk("STRING DESCRIPTOR MANUFACTURER DESCRIPTOR timed out\n");
+			signal_from_string_descriptor_to_irq = FALSE;
+            break;
+        }
+    }
+	
+	length_of_the_descriptor = *(UINT_8*)((void*)buffer_addr);
+	__IMOS_HexDump((void*)buffer_addr, length_of_the_descriptor, "xhci_string_manufacturer_descriptor"); // for my mouse: "Logitech"
+	goto SUCCESS_STRING_DESCRIPTOR;
 
 PRODUCT_STRING_DESCRIPTOR:
-	return;
+	buffer_addr = (UINT_32)(xhci_alloc_memory(255, 64, 65536));
+	__IMOS_MemZero((void*)buffer_addr, 255);
+
+	REQUEST_PACKET mauf_desc_packet = { STDRD_GET_REQUEST, GET_DESCRIPTOR, ((STRING << 8) | /* must be general */0x02), lang_id, 255 };
+	
+	xhci_setup_stage (x, &mauf_desc_packet, xHCI_DIR_IN);
+	xhci_data_stage  (x, buffer_addr, xDATA_STAGE, 255, xHCI_DIR_IN_B, max_packet, 0);
+	xhci_status_stage(x, (xHCI_DIR_IN_B ^ 1), 0);
+
+	signal_from_string_descriptor_to_irq = TRUE;
+	xhci_write_doorbell(x, x->usb_device->slot_id, 1);
+	
+	timing = 2000;
+	while(timing)
+    {
+        volatile BOOL tmp = signal_from_irq_to_string_descriptor;
+        if(tmp == TRUE)
+        {
+            signal_from_irq_to_string_descriptor = FALSE;
+            signal_from_string_descriptor_to_irq = FALSE;
+            break;
+        }
+        WaitMiliSecond(1);
+        timing--;
+        if(timing == 0)
+        {
+            printk("STRING DESCRIPTOR PRODUCT DESCRIPTOR timed out\n");
+			signal_from_string_descriptor_to_irq = FALSE;
+            break;
+        }
+    }
+	
+	length_of_the_descriptor = *(UINT_8*)((void*)buffer_addr);
+	__IMOS_HexDump((void*)buffer_addr, length_of_the_descriptor, "xhci_string_product_descriptor"); // for my mouse: "usb optical mouse"
+	goto SUCCESS_STRING_DESCRIPTOR;
 	
 SUCCESS_STRING_DESCRIPTOR:
 	return;
@@ -1333,16 +1407,16 @@ void xhci_slot_set_address(XHCI* x, BOOL BSR)
 		x->command_ring_PCS ^= 1;
 	}
     
-    signal_from_slot_set_address_to_irq = 1;
+    signal_from_slot_set_address_to_irq = TRUE;
 	xhci_write_doorbell(x, 0, 0);
     UINT_32 timing = 2000;
     while(timing)
     {
-        volatile UINT_32 tmp = signal_from_irq_to_slot_set_address;
-        if(tmp == 1)
+        volatile BOOL tmp = signal_from_irq_to_slot_set_address;
+        if(tmp == TRUE)
         {
-            signal_from_irq_to_slot_set_address = 0;
-            signal_from_slot_set_address_to_irq = 0;
+            signal_from_irq_to_slot_set_address = FALSE;
+            signal_from_slot_set_address_to_irq = FALSE;
             break;
         }
         WaitMiliSecond(1);
@@ -1350,7 +1424,7 @@ void xhci_slot_set_address(XHCI* x, BOOL BSR)
         if(timing == 0)
         {
             printk("SLOT_SET_ADDRESS timed out\n");
-			signal_from_slot_set_address_to_irq = 0;
+			signal_from_slot_set_address_to_irq = FALSE;
             break;
         }
     }
@@ -1369,6 +1443,9 @@ void xhci_slot_set_address(XHCI* x, BOOL BSR)
 	{
 		xhci_setup_data_status_stages(x, (void*)(&dev_desc), 18, ep->max_packet_size, FALSE);
 		xhci_string_descriptor(x, ep->max_packet_size, 0);
+		this_TRB_to_print = TRUE;
+		xhci_string_descriptor(x, ep->max_packet_size, 1);
+		xhci_string_descriptor(x, ep->max_packet_size, 2);
 	}
 }
 

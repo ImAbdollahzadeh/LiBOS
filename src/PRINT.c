@@ -178,7 +178,7 @@ void __IMOS_HexDump(void* pointer_to_buffer, UINT_32 bytes, INT_8* begin_message
 
 	for (i = 0; i < bytes; i++)
 	{
-		if (word_counter < 40)
+		if (word_counter < 15)
 		{
 			printk("^ ", (UINT_32)ptr[i]);
 			word_counter++;

@@ -225,16 +225,6 @@ void IRQ_HANDLER(REGS* r)
 				if(x->usb_device->slot_configuration_command)
 					xhci_slot_configuration(x, x->usb_device->port, x->usb_device->speed);
 			}
-			
-			//.x->usb_device->slot_set_address_command = TRUE;
-			//.if(x->usb_device->slot_set_address_command)
-			//.{
-			//.	slot_set_address(x);//, x->usb_device->port, x->usb_device->speed);
-			//.	x->usb_device->slot_set_address_command = FALSE;
-			//.	//slot_release(x, x->usb_device->port, x->usb_device->speed);
-			//.}
-			//.while(!(x->usb_device->slot_set_address));
-			printk("DONE!!\n");
 		}
 	}
 }
