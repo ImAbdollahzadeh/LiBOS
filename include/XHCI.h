@@ -1,7 +1,7 @@
 #ifndef _XHCI__H__
 #define _XHCI__H__
 
-#include "./IMOS_CORE.h"
+#include "IMOS_CORE.h"
 
 #define CMND_RING_TRBS   256  // not more than 4096
 #define TRBS_PER_RING    256
@@ -56,11 +56,7 @@
 #define xPORT_DR    BIT(30)
 #define xPORT_WPR   BIT(31)
 
-#define xPORT_CHANGE_BITS  (BIT(17) | BIT(18) | BIT(20) | BIT(21) | BIT(22))
-                             /// Quirk:  TI TUSB7340: sets bit 19 on USB2 ports  ??????????????
-#define xHCI_Port_PORTSC 0x00
-
-#define xHC_INTERRUPTER_PRIMARY      0
+#define xPORT_CHANGE_BITS (BIT(17) | BIT(18) | BIT(20) | BIT(21) | BIT(22)) // Quirk:  TI TUSB7340: sets bit 19 on USB2 ports
 
 #define xHC_INTERRUPTER_IMAN      0x00
 #define xHC_INTERRUPTER_IMOD      0x04
@@ -118,22 +114,6 @@
 #define xHCI_EP15_OUT    30
 #define xHCI_EP15_IN     31
 
-// Port_info flags
-#define xHCI_PROTO_INFO           BIT(0)  // bit 0 set = USB3, else USB2
-#define xHCI_PROTO_HSO            BIT(1)  // bit 1 set = is USB 2 and High Speed Only
-#define xHCI_PROTO_HAS_PAIR       BIT(2)  // bit 2 set = has a corresponding port. (i.e.: is a USB3 and has USB2 port (a must))
-                                          //     clear = does not have a corr. port (i.e.: is a USB2 port and does not have a USB3 port)
-#define xHCI_PROTO_ACTIVE         BIT(3)  // is the active port of the pair.
-
-#define xHCI_PROTO_USB2  0
-#define xHCI_PROTO_USB3  1
-
-#define xHCI_IS_USB3_PORT(x)        ((port_info[(x)].flags & xHCI_PROTO_INFO) == xHCI_PROTO_USB3)
-#define xHCI_IS_USB2_PORT(x)        ((port_info[(x)].flags & xHCI_PROTO_INFO) == xHCI_PROTO_USB2)
-#define xHCI_IS_USB2_HSO(x)         ((port_info[(x)].flags & xHCI_PROTO_HSO) == xHCI_PROTO_HSO)
-#define xHCI_HAS_PAIR(x)            ((port_info[(x)].flags & xHCI_PROTO_HAS_PAIR) == xHCI_PROTO_HAS_PAIR)
-#define xHCI_IS_ACTIVE(x)           ((port_info[(x)].flags & xHCI_PROTO_ACTIVE) == xHCI_PROTO_ACTIVE)
-
 #define xHC_TRB_ID_LINK             6
 #define xHC_TRB_ID_NOOP             8
 #define xHC_xECP_ID_NONE            0
@@ -149,83 +129,10 @@
 #define xHC_xECP_LEGACY_BIOS_OWNED  BIT(16)
 #define xHC_xECP_LEGACY_OS_OWNED    BIT(24)
 #define xHC_xECP_LEGACY_OWNED_MASK  (xHC_xECP_LEGACY_BIOS_OWNED | xHC_xECP_LEGACY_OS_OWNED)
-	
-typedef struct _xHCI_xECP_LEGACY {
-	UINT_32 volatile id_next_owner_flags;
-	UINT_32 volatile cntrl_status;
-} __attribute__ ((packed)) xHC_xECP_LEGACY;
-
-typedef struct _xHCI_xECP_PROTO {
-	UINT_8  id;
-	UINT_8  next;
-	UINT_8  minor;
-	UINT_8  major;
-	UINT_32 name;
-	UINT_8  offset;
-	UINT_8  count;
-	UINT_16 flags;
-} __attribute__ ((packed)) xHC_xECP_PROTO;
-
-#define MAX_CONTEXT_SIZE   64                               // Max Context size in bytes
-#define MAX_SLOT_SIZE      (MAX_CONTEXT_SIZE * 32)          // Max Total Slot size in bytes
-
-// Slot State
-#define SLOT_STATE_DISABLED_ENABLED  0
-#define SLOT_STATE_DEFAULT           1
-#define SLOT_STATE_ADRESSED          2
-#define SLOT_STATE_CONFIGURED        3
-
-typedef struct _xHCI_SLOT_CONTEXT {
-	volatile UINT_32 DWORD0;
-	volatile UINT_16 max_exit_latency;
-	volatile UINT_8  root_hub_port_number;
-	volatile UINT_8  number_of_ports;
-	volatile UINT_8  TT_hub_slot_id;
-	volatile UINT_8  TT_port_number;
-	volatile UINT_16 WORD2;
-	volatile UINT_8  usb_device_address;
-	volatile UINT_8  WORD_BYTE3[3];
-	volatile UINT_32 reserved[4];
-} __attribute__ ((packed)) xHCI_SLOT_CONTEXT;
-
-// EP State
-#define EP_STATE_DISABLED 0
-#define EP_STATE_RUNNING  1
-#define EP_STATE_HALTED   2
-#define EP_STATE_STOPPED  3
-#define EP_STATE_ERROR    4
-
-typedef struct _xHCI_EP_CONTEXT {
-	volatile UINT_16 WORD0;
-	volatile UINT_8  interval;
-	volatile UINT_8  max_esit_payload_hi;
-	volatile UINT_8  BYTE1;
-	volatile UINT_8  max_burst_size;
-	volatile UINT_16 max_packet_size;
-	volatile UINT_32 DWORD2;
-	volatile UINT_32 TR_dequeue_pointer_hi;
-	volatile UINT_16 average_trb_length;
-	volatile UINT_16 max_esit_payload_lo;
-	volatile UINT_32 reserved[3];
-} __attribute__ ((packed)) xHCI_EP_CONTEXT;
-
-typedef struct _xHCI_TRB {
-	UINT_64 param;
-	UINT_32 status;
-	UINT_32 command;
-} __attribute__ ((packed)) xHCI_TRB;
-
-// event ring specification
-typedef struct _xHCI_EVENT_SEG_TABLE {
-	UINT_64 addr;
-	UINT_32 size;
-	UINT_32 resv;
-} __attribute__ ((packed)) xHCI_EVENT_SEG_TABLE;
 
 #define XHCI_DIR_EP_OUT   0
 #define XHCI_DIR_EP_IN    1
 #define XHCI_GET_DIR(x)      (((x) & (1    <<  7)) >> 7)
-
 #define TRB_GET_STYPE(x)     (((x) & (0x1F << 16)) >> 16)
 #define TRB_SET_STYPE(x)     (((x) & 0x1F) << 16)
 #define TRB_GET_TYPE(x)      (((x) & (0x3F << 10)) >> 10)
@@ -238,33 +145,24 @@ typedef struct _xHCI_EVENT_SEG_TABLE {
 #define TRB_SET_TDSIZE(x)    (((x) & 0x1F) << 17)
 #define TRB_GET_EP(x)        (((x) & (0x1F << 16)) >> 16)
 #define TRB_SET_EP(x)        (((x) & 0x1F) << 16)
-
 #define TRB_GET_TARGET(x)    (((x) & (0x3FF << 22)) >> 22)
 #define TRB_GET_TX_LEN(x)     ((x) & 0x1FFFF)
 #define TRB_GET_TOGGLE(x)    (((x) & (1<<1)) >> 1)
-
 #define TRB_DC(x)            (((x) & (1<<9)) >> 9)
 #define TRB_IS_IMMED_DATA(x) (((x) & (1<<6)) >> 6)
 #define TRB_IOC(x)           (((x) & (1<<5)) >> 5)
 #define TRB_CHAIN(x)         (((x) & (1<<4)) >> 4)
 #define TRB_SPD(x)           (((x) & (1<<2)) >> 2)
 #define TRB_TOGGLE(x)        (((x) & (1<<1)) >> 1)
-
-#define TRB_CYCLE_ON          (1<<0)
-#define TRB_CYCLE_OFF         (0<<0)
-
-#define TRB_TOGGLE_CYCLE_ON   (1<<1)
-#define TRB_TOGGLE_CYCLE_OFF  (0<<1)
-
-#define TRB_CHAIN_ON          (1<<4)
-#define TRB_CHAIN_OFF         (0<<4)
-
-#define TRB_IOC_ON            (1<<5)
-#define TRB_IOC_OFF           (0<<5)
-
-#define TRB_LINK_CMND         (TRB_SET_TYPE(xLINK) | TRB_IOC_OFF | TRB_CHAIN_OFF | TRB_TOGGLE_CYCLE_OFF | TRB_CYCLE_ON)
-
-#define XHCI_IRQ_DONE         BIT(31)
+#define TRB_CYCLE_ON         (1<<0)
+#define TRB_CYCLE_OFF        (0<<0)
+#define TRB_TOGGLE_CYCLE_ON  (1<<1)
+#define TRB_TOGGLE_CYCLE_OFF (0<<1)
+#define TRB_CHAIN_ON         (1<<4)
+#define TRB_CHAIN_OFF        (0<<4)
+#define TRB_IOC_ON           (1<<5)
+#define TRB_IOC_OFF          (0<<5)
+#define TRB_LINK_CMND        (TRB_SET_TYPE(xLINK) | TRB_IOC_OFF | TRB_CHAIN_OFF | TRB_TOGGLE_CYCLE_OFF | TRB_CYCLE_ON)
 
 // setup packets
 #define DEV_TO_HOST     0x80
@@ -281,120 +179,50 @@ typedef struct _xHCI_EVENT_SEG_TABLE {
 #define STDRD_SET_REQUEST   (HOST_TO_DEV | REQ_TYPE_STNDRD | RECPT_DEVICE)
 #define STDRD_SET_INTERFACE (HOST_TO_DEV | REQ_TYPE_STNDRD | RECPT_INTERFACE)
 
-// device requests
-enum { GET_STATUS=0, CLEAR_FEATURE, SET_FEATURE=3, SET_ADDRESS=5, GET_DESCRIPTOR=6, SET_DESCRIPTOR,
-        GET_CONFIGURATION, SET_CONFIGURATION,
-// interface requests
-        GET_INTERFACE, SET_INTERFACE,
-// standard endpoint requests
-        SYNCH_FRAME,
-// Device specific
-        GET_MAX_LUNS = 0xFE, BULK_ONLY_RESET
-};
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+/** structs **/
 
-// Common TRB types
-enum { 
-	xNORMAL=1, 
-	xSETUP_STAGE, 
-	xDATA_STAGE, 
-	xSTATUS_STAGE, 
-	xISOCH, 
-	xLINK = 6,
-	xEVENT_DATA, 
-	xNO_OP,
-    xENABLE_SLOT=9, 
-	xDISABLE_SLOT, 
-	xADDRESS_DEVICE, 
-	xCONFIG_EP, 
-	xEVALUATE_CONTEXT, 
-	xRESET_EP,
-    xSTOP_EP=15, 
-	xSET_TR_DEQUEUE, 
-	xRESET_DEVICE, 
-	xFORCE_EVENT, 
-	xDEG_BANDWIDTH, 
-	xSET_LAT_TOLERANCE,
-    xGET_PORT_BAND=21, 
-	xFORCE_HEADER, NO_OP_CMD,  
-	// 24 - 31 = reserved
-    xTRANS_EVENT=32, 
-	xCOMMAND_COMPLETION, 
-	xPORT_STATUS_CHANGE,
-	xBANDWIDTH_REQUEST, 
-	xDOORBELL_EVENT,
-    xHOST_CONTROLLER_EVENT=37, 
-	xDEVICE_NOTIFICATION, 
-	xMFINDEX_WRAP, 
-    // 40 - 47 = reserved
-    // 48 - 63 = Vendor Defined
-};
+typedef struct _xHCI_SLOT_CONTEXT {
+	volatile UINT_32 DWORD0;
+	volatile UINT_16 max_exit_latency;
+	volatile UINT_8  root_hub_port_number;
+	volatile UINT_8  number_of_ports;
+	volatile UINT_8  TT_hub_slot_id;
+	volatile UINT_8  TT_port_number;
+	volatile UINT_16 WORD2;
+	volatile UINT_8  usb_device_address;
+	volatile UINT_8  WORD_BYTE3[3];
+	volatile UINT_32 reserved[4];
+} __attribute__ ((packed)) xHCI_SLOT_CONTEXT;
 
-// event completion codes
-enum { 
-	xTRB_SUCCESS=1, 
-	xDATA_BUFFER_ERROR,
-	xBABBLE_DETECTION, 
-	xTRANSACTION_ERROR,
-	xTRB_ERROR, 
-	xSTALL_ERROR,
-    xRESOURCE_ERROR=7,
-	xBANDWIDTH_ERROR, 
-	xNO_SLOTS_ERROR, 
-	xINVALID_STREAM_TYPE, 
-	xSLOT_NOT_ENABLED, 
-	xEP_NOT_ENABLED,
-    xSHORT_PACKET=13,
-	xRING_UNDERRUN, 
-	xRUNG_OVERRUN, 
-	xVF_EVENT_RING_FULL, 
-	xPARAMETER_ERROR, 
-	xBANDWITDH_OVERRUN,
-    xCONTEXT_STATE_ERROR=19, 
-	xNO_PING_RESPONSE, 
-	xEVENT_RING_FULL, 
-	xINCOMPATIBLE_DEVICE,
-	xMISSED_SERVICE,
-    xCOMMAND_RING_STOPPED=24, 
-	xCOMMAND_ABORTED, 
-	xSTOPPED, 
-	xSTOPPER_LENGTH_ERROR,
-	xRESERVED, 
-	xISOCH_BUFFER_OVERRUN,
-    xEVERN_LOST=32, 
-	xUNDEFINED, 
-	xINVALID_STREAM_ID,
-	xSECONDARY_BANDWIDTH, 
-	xSPLIT_TRANSACTION
-    /* 37 - 191 reserved */
-    /* 192 - 223 vender defined errors */
-    /* 224 - 225 vendor defined info */
-};
+typedef struct _xHCI_EP_CONTEXT {
+	volatile UINT_16 WORD0;
+	volatile UINT_8  interval;
+	volatile UINT_8  max_esit_payload_hi;
+	volatile UINT_8  BYTE1;
+	volatile UINT_8  max_burst_size;
+	volatile UINT_16 max_packet_size;
+	volatile UINT_32 DWORD2;
+	volatile UINT_32 TR_dequeue_pointer_hi;
+	volatile UINT_16 average_trb_length;
+	volatile UINT_16 max_esit_payload_lo;
+	volatile UINT_32 reserved[3];
+} __attribute__ ((packed)) xHCI_EP_CONTEXT;
 
-// Descriptor types
-enum { 
-  DEVICE=1, 
-  CONFIG, 
-  STRING, 
-  INTERFACE, 
-  ENDPOINT, 
-  DEVICE_QUALIFIER,
-  OTHER_SPEED_CONFIG, 
-  INTERFACE_POWER, 
-  OTG, 
-  DEBUG, 
-  INTERFACE_ASSOSIATION,
-  
-  HID=0x21,
-  HID_REPORT, 
-  HID_PHYSICAL, 
-  
-  INTERFACE_FUNCTION = 0x24,
-  ENDPOINT_FUNCTION,
-  
-  HUB=0x29
-};
+// TRB
+typedef struct _xHCI_TRB {
+	UINT_64 param;
+	UINT_32 status;
+	UINT_32 command;
+} __attribute__ ((packed)) xHCI_TRB;
 
-enum { xCONTROL_EP=0, xISOCHRONOUS_EP, xBULK_EP, xINTERRUPT_EP };
+// event ring specification
+typedef struct _xHCI_EVENT_SEG_TABLE {
+	UINT_64 addr;
+	UINT_32 size;
+	UINT_32 resv;
+} __attribute__ ((packed)) xHCI_EVENT_SEG_TABLE;
+
 typedef struct _xHCI_CAPABILITY {
 	volatile UINT_8  caplength; //0
 	volatile UINT_8  reserved1; //1
@@ -517,6 +345,8 @@ typedef struct _REQUEST_PACKET {
 	UINT_16 length;
 } __attribute__ ((packed)) REQUEST_PACKET;
 
+
+/** Enumerations **/
 typedef enum _XHCI_ROOT_HUB_PORT_NUMBERS {
 	PORT_0 = 0x03,
 	PORT_1 = 0x0C,
@@ -535,7 +365,95 @@ typedef enum _XHCI_ROOT_HUB_PORT_CONNECTION_STATUS {
 	USB3_CONNECTION_PORT_INVALID    = 0x03,
 } XHCI_ROOT_HUB_PORT_CONNECTION_STATUS;
 
-BOOL   start_xhci_controller        (XHCI* x);
+// device requests
+typedef enum _DEVICE_REQUESTS { 
+	GET_STATUS        = 0x00,
+	CLEAR_FEATURE     = 0x01,
+	SET_FEATURE       = 0x03,
+	SET_ADDRESS       = 0x05,
+	GET_DESCRIPTOR    = 0x06,
+	SET_DESCRIPTOR    = 0x07,
+	GET_CONFIGURATION = 0x08,
+	SET_CONFIGURATION = 0x09,
+	// interface requests
+	GET_INTERFACE     = 0x0A,
+	SET_INTERFACE     = 0x0B,
+	// standard endpoint requests
+	SYNCH_FRAME       = 0x0C,
+	// Device specific
+	GET_MAX_LUNS      = 0xFE, 
+	BULK_ONLY_RESET   = 0xFF
+} DEVICE_REQUESTS;
+
+// Common TRB types
+typedef enum _TRB_TYPES_ENUM { 
+	xNORMAL                = 0x01, 
+	xSETUP_STAGE           = 0x02, 
+	xDATA_STAGE            = 0x03, 
+	xSTATUS_STAGE          = 0x04, 
+	xISOCH                 = 0x05, 
+	xLINK                  = 0x06,
+	xEVENT_DATA            = 0x07, 
+	xNO_OP                 = 0x08,
+	xENABLE_SLOT           = 0x09, 
+	xDISABLE_SLOT          = 0x0A, 
+	xADDRESS_DEVICE        = 0x0B, 
+	xCONFIG_EP             = 0x0C, 
+	xEVALUATE_CONTEXT      = 0x0D, 
+	xRESET_EP              = 0x0E,
+	xSTOP_EP               = 0x0F, 
+	xSET_TR_DEQUEUE        = 0x10, 
+	xRESET_DEVICE          = 0x11, 
+	xFORCE_EVENT           = 0x12, 
+	xDEG_BANDWIDTH         = 0x13, 
+	xSET_LAT_TOLERANCE     = 0x14,
+	xGET_PORT_BAND         = 0x15, 
+	xFORCE_HEADER          = 0x16,
+	NO_OP_CMD              = 0x17,  
+	// 24 - 31 = reserved
+	xTRANS_EVENT           = 0x20, 
+	xCOMMAND_COMPLETION    = 0x21, 
+	xPORT_STATUS_CHANGE    = 0x22,
+	xBANDWIDTH_REQUEST     = 0x23, 
+	xDOORBELL_EVENT        = 0x24,
+	xHOST_CONTROLLER_EVENT = 0x25, 
+	xDEVICE_NOTIFICATION   = 0x26, 
+	xMFINDEX_WRAP          = 0x27, 
+	// 40 - 47 = reserved
+	// 48 - 63 = Vendor Defined
+} TRB_TYPES_ENUM;
+
+// Descriptor types
+typedef enum _DESCRIPTOR_TYPES { 
+	DEVICE                = 0x01, 
+	CONFIG                = 0x02, 
+	STRING                = 0x03, 
+	INTERFACE             = 0x04, 
+	ENDPOINT              = 0x05, 
+	DEVICE_QUALIFIER      = 0x06,
+	OTHER_SPEED_CONFIG    = 0x07, 
+	INTERFACE_POWER       = 0x08, 
+	OTG                   = 0x09, 
+	DEBUG                 = 0x0A, 
+	INTERFACE_ASSOSIATION = 0x0B,
+	HID                   = 0x21,
+	HID_REPORT            = 0x22, 
+	HID_PHYSICAL          = 0x23, 
+	INTERFACE_FUNCTION    = 0x24,
+	ENDPOINT_FUNCTION     = 0x25,
+	HUB                   = 0x29
+} DESCRIPTOR_TYPES;
+
+// Endpoint types
+typedef enum _ENDPOINT_TYPES {
+	xCONTROL_EP     = 0x00, 
+	xISOCHRONOUS_EP = 0x01, 
+	xBULK_EP        = 0x02,
+	xINTERRUPT_EP   = 0x03 
+} ENDPOINT_TYPES;
+
+/** functions declarations **/
+BOOL   xhci_start_controller        (XHCI* x);
 void*  xhci_alloc_memory            (UINT_32 byte, UINT_32 alignment, UINT_32 page_boundary);
 void   xhci_free_memory             (void* pointer);
 void   xhci_slot_configuration      (XHCI* x, UINT_32 port, UINT_32 speed);
@@ -544,5 +462,6 @@ XHCI*  xhci_instance_to_idt         (void);
 UINT_8 xhci_get_critical_event      (void);
 void   xhci_slot_set_address        (XHCI* x, BOOL BSR);
 void   xhci_setup_data_status_stages(XHCI* x, void* target, UINT_32 length, UINT_32 max_packet, BOOL first_or_second);
+void   xhci_string_descriptor       (XHCI* x, UINT_8 max_packet, UINT_8 level);
 
 #endif

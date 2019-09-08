@@ -20,8 +20,8 @@ static UINT_8 usb2_connection_ports = 0x00;
 static UINT_8 usb3_connection_ports = 0x00;
 
 // global slot, endpont_0, and transfer ring of ep_0
-static UINT_32           cur_ep_ring_ptr   = 0;
-static UINT_32           cur_ep_ring_cycle = 0;
+static UINT_32           EP_0_ring_Enqueue_pointer   = 0;
+static UINT_32           EP_0_ring_cycle_bit = 0;
 static xHCI_SLOT_CONTEXT gslot;
 static xHCI_EP_CONTEXT   gep;
 
@@ -538,7 +538,7 @@ void NO_OP_test(XHCI* x)
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-BOOL start_xhci_controller(XHCI* x)
+BOOL xhci_start_controller(XHCI* x)
 {
 	UINT_32 i;
     UINT_32 base = x->base_address_lo;
@@ -689,15 +689,7 @@ BOOL start_xhci_controller(XHCI* x)
 	mwrite(PHYSICAL_ADDRESS(x->oper), 0x14, BIT(1));
         
 	if(xDEBUG)
-	{
 		xhci_print_on_screen(x);
-        //printk("base:^, cap:^, op:^, capl:^\n", x->base, x->cap_base, x->oper, x->caplength);
-		//printk("rtsoff:^, dboff:^, hcsp1:^, hcsp2:^\n", x->runtime, x->doorbell, x->hcsparams1, x->hcsparams2);
-		//printk("hccp1:^, hccp2:^\n", x->hccparams1, x->hccparams2);
-		//printk("pgsz:^, cntxsz:^, extcap:^, portoff:^\n", x->page_size, x->context_size, x->ext_cap, x->port_reg_set);
-		//printk("dcbaap:^, crcr:^\n", x->dcbaap, x->crcr);
-		//printk("reading back crcr:^, irq:%\n", pr_crcr, x->irq);
-	}
 
 	// Initialize the interrupters
 	x->ers                  = xhci_alloc_memory(256 * sizeof(xHCI_TRB), 64, 65536);
@@ -715,7 +707,7 @@ BOOL start_xhci_controller(XHCI* x)
 	volatile UINT_32 interrupter0 = base + x->cap->rtsoff + 0x20;
         
 	if(xDEBUG)
-		printk("pri. interrupter:^\n", interrupter0); 
+		printk("prim. interrupter:^\n", interrupter0); 
     
     mwrite(interrupter0, xHC_INTERRUPTER_IMAN,       (xHC_IMAN_IE | xHC_IMAN_IP)); 
 	mwrite(interrupter0, xHC_INTERRUPTER_ERSTSZ,     1); 
@@ -1070,8 +1062,8 @@ void xhci_slot_configuration(XHCI* x, UINT_32 port, UINT_32 speed)
   	ep->DWORD2  = ((UINT_32)ep_tr_pointer | TRB_CYCLE_ON); // TR dequeue pointer + dequeue pointer's CS
 	ep->TR_dequeue_pointer_hi = 0x00;
 	
-	cur_ep_ring_ptr        = (UINT_32)(ep->DWORD2 & (~1));
-	cur_ep_ring_cycle      = (UINT_32)((ep->DWORD2 & BIT(0)));
+	EP_0_ring_Enqueue_pointer = (UINT_32)(ep->DWORD2 & (~1));
+	EP_0_ring_cycle_bit       = (UINT_32)((ep->DWORD2 & BIT(0)));
 	
   	// set the initial values
   	ep->WORD0  = (0 << 10) | (0 << 15) | (0 << 0);
@@ -1159,38 +1151,38 @@ void xhci_soft_reset_endpoint(XHCI* x)
 
 void xhci_setup_stage(XHCI* x, REQUEST_PACKET* request, UINT_8 dir) 
 {
-	//.if(xINTERRUPT_HANDLER_DEBUG) printk("inside setup stage: ep_TR_ring ^\n",  cur_ep_ring_ptr);
-	//.if(xINTERRUPT_HANDLER_DEBUG) printk("inside setup stage: ep_TR_cycle %\n", cur_ep_ring_cycle);
+	//.if(xINTERRUPT_HANDLER_DEBUG) printk("inside setup stage: ep_TR_ring ^\n",  EP_0_ring_Enqueue_pointer);
+	//.if(xINTERRUPT_HANDLER_DEBUG) printk("inside setup stage: ep_TR_cycle %\n", EP_0_ring_cycle_bit);
 	UINT_32 param_lo = (UINT_32)((request->value << 16) | (request->request << 8) | request->request_type);
 	UINT_32 param_hi = (UINT_32) (request->length << 16 | request->index);
 	
-	mwrite(cur_ep_ring_ptr, 0x00, param_lo);
-	mwrite(cur_ep_ring_ptr, 0x04, param_hi);
-	mwrite(cur_ep_ring_ptr, 0x08, 0x08);
-	mwrite(cur_ep_ring_ptr, 0x0C, ((3 << 16) | (2 << 10) | (1 << 6) | (0 << 5) | cur_ep_ring_cycle));	
-	cur_ep_ring_ptr += sizeof(xHCI_TRB);
+	mwrite(EP_0_ring_Enqueue_pointer, 0x00, param_lo);
+	mwrite(EP_0_ring_Enqueue_pointer, 0x04, param_hi);
+	mwrite(EP_0_ring_Enqueue_pointer, 0x08, 0x08);
+	mwrite(EP_0_ring_Enqueue_pointer, 0x0C, ((3 << 16) | (2 << 10) | (1 << 6) | (0 << 5) | EP_0_ring_cycle_bit));	
+	EP_0_ring_Enqueue_pointer += sizeof(xHCI_TRB);
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 void xhci_data_stage(XHCI* x, UINT_32 addr, UINT_8 trb_type, UINT_32 size, UINT_8 direction, UINT_16 max_packet, UINT_32 status_addr)
 {
-	mwrite(cur_ep_ring_ptr, 0x00, addr); 
-	mwrite(cur_ep_ring_ptr, 0x04, 0);    
-	mwrite(cur_ep_ring_ptr, 0x08, (0 << 17) | (size << 0));
-	mwrite(cur_ep_ring_ptr, 0x0C, ((1 << 16) | (3 << 10) | cur_ep_ring_cycle));
-	cur_ep_ring_ptr += sizeof(xHCI_TRB);
+	mwrite(EP_0_ring_Enqueue_pointer, 0x00, addr); 
+	mwrite(EP_0_ring_Enqueue_pointer, 0x04, 0);    
+	mwrite(EP_0_ring_Enqueue_pointer, 0x08, (0 << 17) | (size << 0));
+	mwrite(EP_0_ring_Enqueue_pointer, 0x0C, ((1 << 16) | (3 << 10) | EP_0_ring_cycle_bit));
+	EP_0_ring_Enqueue_pointer += sizeof(xHCI_TRB);
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 void xhci_status_stage(XHCI* x, UINT_8 dir, UINT_32 status_addr) 
 {
-	mwrite(cur_ep_ring_ptr, 0x00, 0x00);
-	mwrite(cur_ep_ring_ptr, 0x04, 0x00);
-	mwrite(cur_ep_ring_ptr, 0x08, (0 << 22));
-	mwrite(cur_ep_ring_ptr, 0x0C, ((0 << 16) | (4 << 10) | (1 << 5) | cur_ep_ring_cycle));
-	cur_ep_ring_ptr += sizeof(xHCI_TRB);
+	mwrite(EP_0_ring_Enqueue_pointer, 0x00, 0x00);
+	mwrite(EP_0_ring_Enqueue_pointer, 0x04, 0x00);
+	mwrite(EP_0_ring_Enqueue_pointer, 0x08, (0 << 22));
+	mwrite(EP_0_ring_Enqueue_pointer, 0x0C, ((0 << 16) | (4 << 10) | (1 << 5) | EP_0_ring_cycle_bit));
+	EP_0_ring_Enqueue_pointer += sizeof(xHCI_TRB);
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

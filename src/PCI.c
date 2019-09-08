@@ -115,7 +115,7 @@ UINT_32 RegisterPCI(PCI* pci, SATA* sata, EHCI* ehci, XHCI* x)
 
                     x->irq_number   = (UINT_8)(Read(pci, bus, device, function, 0x3C) & 0xFF);
                     
-                    start_xhci_controller(x);
+                    xhci_start_controller(x);
                 }
                 //printk("    In PCI: bus %, device(slot) %, function % = vendor %\n", (bus & 0xFF), (device & 0xFF), (function & 0xFF), ((dev.vendor_id & 0xFF00) >> 8));
             }
