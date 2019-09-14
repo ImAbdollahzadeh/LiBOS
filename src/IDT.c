@@ -216,7 +216,7 @@ void IRQ_HANDLER(REGS* r)
 	if(r->int_no == 43) // XHCI must be followed continously
 	{
 		XHCI* x = xhci_instance_to_idt();
-		if(xhci_get_critical_event() == 0)
+		if(!( xhci_get_critical_event() ))
 			return;
 		else
 		{

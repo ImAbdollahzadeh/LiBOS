@@ -20,10 +20,14 @@ static UINT_8 usb2_connection_ports = 0x00;
 static UINT_8 usb3_connection_ports = 0x00;
 
 // global slot, endpont_0, and transfer ring of ep_0
-static UINT_32           EP_0_ring_Enqueue_pointer   = 0;
-static UINT_32           EP_0_ring_cycle_bit = 0;
+static UINT_32           EP_0_ring_Enqueue_pointer  = 0;
+static UINT_32           EP_0_ring_cycle_bit        = 0;
+static UINT_32           EP_in_ring_Enqueue_pointer = 0;
+static UINT_32           EP_in_ring_cycle_bit       = 0;      
 static xHCI_SLOT_CONTEXT gslot;
-static xHCI_EP_CONTEXT   gep;
+static xHCI_EP_CONTEXT   gep_0;
+static xHCI_EP_CONTEXT   gep_in;
+static xHCI_EP_CONTEXT   gep_out;
 
 // IRQ signals
 volatile BOOL signal_from_noop_to_irq                     = FALSE;
@@ -32,6 +36,8 @@ volatile BOOL signal_from_irq_to_slot_configuration       = FALSE;
 volatile BOOL signal_from_slot_configuration_to_irq       = FALSE;
 volatile BOOL signal_from_slot_set_address_to_irq         = FALSE;
 volatile BOOL signal_from_irq_to_slot_set_address         = FALSE;
+volatile BOOL signal_from_configure_endpoint_to_irq       = FALSE;
+volatile BOOL signal_from_irq_to_configure_endpoint       = FALSE;
 volatile BOOL signal_from_setup_data_status_stages_to_irq = FALSE;
 volatile BOOL signal_from_irq_to_setup_data_status_stages = FALSE;
 volatile BOOL signal_from_irq_to_string_descriptor        = FALSE;
@@ -44,7 +50,7 @@ UINT_8 tmp_disconnection = TRUE;
 XHCI*  xx                = 0x00;
 
 // entering critical event in IRQ_HANDLER
-UINT_8 critical_event    = 0x00;
+BOOL critical_event    = FALSE;
 
 // All TRB types
 static TRB_TYPES trb_types[64] = {
@@ -481,15 +487,6 @@ void xhci_get_trb(xHCI_TRB* trb, UINT_32 address)
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-//.
-//.void xhci_set_trb(xHCI_TRB* trb, UINT_32 address) 
-//.{
-//.	mwrite(address, 0, (UINT_32)trb->param);
-//.	mwrite(address,  8, trb->status);
-//.	mwrite(address, 12, trb->command);
-//.}
-//.
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 void xhci_write_doorbell(XHCI* x, UINT_32 slot_id, UINT_32 val) 
 {
@@ -914,7 +911,7 @@ void xhci_interrupt_handler(REGS* r)
     	mwrite(interrupter0, xHC_INTERRUPTER_IMAN, (iman | (xHC_IMAN_IE | xHC_IMAN_IP)));
 		if(xINTERRUPT_HANDLER_DEBUG) 
 			printk("interrupt 4: sts:^, IMAN:^\n", sts, iman);
-		critical_event = 1; // keep it for slot_configuration set
+		critical_event = TRUE; // keep it for slot_configuration set
     }
 	else if((driver_status & xSTS_EINT))
 	{
@@ -922,31 +919,37 @@ void xhci_interrupt_handler(REGS* r)
 		{
 			signal_from_irq_to_slot_configuration = TRUE;
 			xx->usb_device->slot_id = (UINT_8)(trb.command >> 24);
-			critical_event = 0;
+			critical_event = FALSE;
 		}
 		
 		else if(signal_from_slot_set_address_to_irq == TRUE)
 		{
 			signal_from_irq_to_slot_set_address = TRUE;
-			critical_event = 0;
+			critical_event = FALSE;
+		}
+		
+		else if(signal_from_configure_endpoint_to_irq == TRUE)
+		{
+			signal_from_irq_to_configure_endpoint = TRUE;
+			critical_event = FALSE;
 		}
 		
 		else if(signal_from_noop_to_irq == TRUE)
 		{
 			signal_from_irq_to_noop = TRUE;
-			critical_event = 0;
+			critical_event = FALSE;
 		}
 		
 		else if(signal_from_setup_data_status_stages_to_irq == TRUE)
 		{
 			signal_from_irq_to_setup_data_status_stages = TRUE;
-			critical_event = 0;
+			critical_event = FALSE;
 		}
 		
 		else if(signal_from_string_descriptor_to_irq == TRUE)
 		{
 			signal_from_irq_to_string_descriptor = TRUE;
-			critical_event = 0;
+			critical_event = FALSE;
 		}
 		
 		xhci_get_trb(&trb, xx->current_event_ring_address);
@@ -1028,13 +1031,16 @@ void xhci_slot_configuration(XHCI* x, UINT_32 port, UINT_32 speed)
         }
     }
 
-    // at context slot-id < is 1-based and not 0-based! >
-	volatile UINT_32 mdcbaap = mread(PHYSICAL_ADDRESS(x->oper), 0x30);
-	volatile UINT_64* dcbaap = (UINT_64*)((void*)mdcbaap);
-	void* ctx1_buffer       = (void*)((UINT_32)dcbaap[x->usb_device->slot_id]);
+	__IMOS_MemZero((void*)&gslot, x->context_size );
+	__IMOS_MemZero((void*)&gep_0, x->context_size );
 	
-    xHCI_SLOT_CONTEXT* slot = (xHCI_SLOT_CONTEXT*)ctx1_buffer;
-    xHCI_EP_CONTEXT*   ep   = (xHCI_EP_CONTEXT*) ((void*)((UINT_32)ctx1_buffer + x->context_size));
+    // at context slot-id < is 1-based and not 0-based! >
+	volatile UINT_32 mdcbaap  = mread(PHYSICAL_ADDRESS(x->oper), 0x30);
+	volatile UINT_64* dcbaap  = (UINT_64*)((void*)mdcbaap);
+	void* ctx1_buffer         = (void*)((UINT_32)dcbaap[x->usb_device->slot_id]);
+	
+    xHCI_SLOT_CONTEXT* slot   = (xHCI_SLOT_CONTEXT*)ctx1_buffer;
+    xHCI_EP_CONTEXT*   ep     = (xHCI_EP_CONTEXT*) ((void*)(PHYSICAL_ADDRESS(slot) + x->context_size));
 
 	slot->DWORD0               = ((1 << 27) | (speed << 20)); // i.e. 1 endpoint (EP0) + speed     
     slot->root_hub_port_number = port + 1;                    // root hub port number this device is attached to < values are 1 to MaxPort >
@@ -1043,9 +1049,9 @@ void xhci_slot_configuration(XHCI* x, UINT_32 port, UINT_32 speed)
 	slot->TT_hub_slot_id       = 0;    
 	slot->TT_port_number       = 0;    
     slot->WORD2                = 0;                           // interrupter 0
-    slot->WORD_BYTE3[1]        = 0;
+    slot->WORD_BYTE3[0]        = 0;
+	slot->WORD_BYTE3[1]        = 0;
 	slot->WORD_BYTE3[2]        = 0;
-	slot->WORD_BYTE3[3]        = 0;
     slot->usb_device_address   = 0;
 	
 	// allocate the EP's Transfer Ring
@@ -1073,33 +1079,18 @@ void xhci_slot_configuration(XHCI* x, UINT_32 port, UINT_32 speed)
 	ep->max_packet_size = ((speed == 2) ? 8 : (speed == 1) ? 64 : (speed == 3) ? 64 : 512);
   	ep->interval = 0;
 	
-	x->usb_device->slot_address = (void*)slot;
-	x->usb_device->ep0_address  = (void*)ep;
+	x->usb_device->slot_address   = (void*)slot;
+	x->usb_device->ep0_address    = (void*)ep;
+	x->usb_device->ep_in_address  = 0;
+	x->usb_device->ep_out_address = 0;
 	
-	gslot.DWORD0               = slot->DWORD0;
-    gslot.root_hub_port_number = slot->root_hub_port_number;
-	gslot.max_exit_latency     = slot->max_exit_latency;
-	gslot.number_of_ports      = slot->number_of_ports;
-	gslot.TT_hub_slot_id       = slot->TT_hub_slot_id;
-	gslot.TT_port_number       = slot->TT_port_number;
-    gslot.WORD2                = slot->WORD2;
-    gslot.WORD_BYTE3[1]        = slot->WORD_BYTE3[1];
-	gslot.WORD_BYTE3[2]        = slot->WORD_BYTE3[2] ;    
-	gslot.WORD_BYTE3[3]        = slot->WORD_BYTE3[3];     
-    gslot.usb_device_address   = slot->usb_device_address;
-  	gep.DWORD2                 = ep->DWORD2;
-	gep.TR_dequeue_pointer_hi  = ep->TR_dequeue_pointer_hi;
-  	gep.WORD0                  = ep->WORD0;
-  	gep.BYTE1                  = ep->BYTE1;
-  	gep.average_trb_length     = ep->average_trb_length;
-  	gep.max_burst_size         = ep->max_burst_size;
-	gep.max_packet_size        = ep->max_packet_size;
-  	gep.interval               = ep->interval;
+	get_contexts(x, &gslot, &gep_0);
+	
     //if(xINTERRUPT_HANDLER_DEBUG) printk("slot address for configuration:^\n", (UINT_32)x->usb_device->slot_address);
     //if(xINTERRUPT_HANDLER_DEBUG) printk("ep   address for configuration:^\n", (UINT_32)x->usb_device->ep0_address);	
 
 	x->usb_device->slot_configuration = TRUE;
-	
+
 	xhci_slot_set_address(x, TRUE);
 	
 	if( !reset_port(x, x->usb_device->port) )
@@ -1107,7 +1098,7 @@ void xhci_slot_configuration(XHCI* x, UINT_32 port, UINT_32 speed)
 		printk("second device reset failed\n");
 		return;
     }
-	
+
 	xhci_slot_set_address(x, FALSE);
 }
 
@@ -1116,21 +1107,7 @@ void xhci_slot_configuration(XHCI* x, UINT_32 port, UINT_32 speed)
 void xhci_slot_release(XHCI* x, UINT_32 port, UINT_32 speed)
 {
 	printk("slot release\n");
-	critical_event = 0;
-}
-
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-void xhci_configure_endpoint(XHCI* x, UINT_32 inp)
-{
-	xHCI_TRB trb = { .param = (UINT_64)inp, .status = 0, .command = (((x->usb_device->slot_id) << 24) | (12 << 10))};
-	mwrite(x->command_ring_Enqueue, 0x00, trb.param); 
-	mwrite(x->command_ring_Enqueue, 0x04, 0x00);  
-	mwrite(x->command_ring_Enqueue, 0x08, trb.status);                       
-	mwrite(x->command_ring_Enqueue, 0x0C, (trb.command | x->command_ring_PCS));
-	x->command_ring_Enqueue += sizeof(xHCI_TRB);
-	xhci_write_doorbell(x, 0, 0);
-	WaitSecond(1);
+	critical_event = FALSE;
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -1149,39 +1126,44 @@ void xhci_soft_reset_endpoint(XHCI* x)
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-void xhci_setup_stage(XHCI* x, REQUEST_PACKET* request, UINT_8 dir) 
+void xhci_setup_stage(XHCI* x, REQUEST_PACKET* request, UINT_32 dir) 
 {
 	//.if(xINTERRUPT_HANDLER_DEBUG) printk("inside setup stage: ep_TR_ring ^\n",  EP_0_ring_Enqueue_pointer);
 	//.if(xINTERRUPT_HANDLER_DEBUG) printk("inside setup stage: ep_TR_cycle %\n", EP_0_ring_cycle_bit);
-	UINT_32 param_lo = (UINT_32)((request->value << 16) | (request->request << 8) | request->request_type);
-	UINT_32 param_hi = (UINT_32) (request->length << 16 | request->index);
+	UINT_32 param_lo = (UINT_32)((UINT_32)(request->value << 16) | (UINT_32)(request->request << 8) | request->request_type);
+	UINT_32 param_hi = (UINT_32) ((UINT_32)(request->length << 16) | request->index);
+	UINT_32 direction = dir;
 	
 	mwrite(EP_0_ring_Enqueue_pointer, 0x00, param_lo);
 	mwrite(EP_0_ring_Enqueue_pointer, 0x04, param_hi);
 	mwrite(EP_0_ring_Enqueue_pointer, 0x08, 0x08);
-	mwrite(EP_0_ring_Enqueue_pointer, 0x0C, ((3 << 16) | (2 << 10) | (1 << 6) | (0 << 5) | EP_0_ring_cycle_bit));	
+	mwrite(EP_0_ring_Enqueue_pointer, 0x0C, ((direction << 16) | (2 << 10) | (1 << 6) | (0 << 5) | EP_0_ring_cycle_bit));	
 	EP_0_ring_Enqueue_pointer += sizeof(xHCI_TRB);
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-void xhci_data_stage(XHCI* x, UINT_32 addr, UINT_8 trb_type, UINT_32 size, UINT_8 direction, UINT_16 max_packet, UINT_32 status_addr)
+void xhci_data_stage(XHCI* x, UINT_32 addr, UINT_8 trb_type, UINT_32 size, UINT_32 dir, UINT_16 max_packet, UINT_32 status_addr)
 {
+	UINT_32 direction = dir;
+	
 	mwrite(EP_0_ring_Enqueue_pointer, 0x00, addr); 
 	mwrite(EP_0_ring_Enqueue_pointer, 0x04, 0);    
 	mwrite(EP_0_ring_Enqueue_pointer, 0x08, (0 << 17) | (size << 0));
-	mwrite(EP_0_ring_Enqueue_pointer, 0x0C, ((1 << 16) | (3 << 10) | EP_0_ring_cycle_bit));
+	mwrite(EP_0_ring_Enqueue_pointer, 0x0C, ((direction << 16) | (3 << 10) | EP_0_ring_cycle_bit));
 	EP_0_ring_Enqueue_pointer += sizeof(xHCI_TRB);
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-void xhci_status_stage(XHCI* x, UINT_8 dir, UINT_32 status_addr) 
+void xhci_status_stage(XHCI* x, UINT_32 dir, UINT_32 status_addr) 
 {
+	UINT_32 direction = dir;
+	
 	mwrite(EP_0_ring_Enqueue_pointer, 0x00, 0x00);
 	mwrite(EP_0_ring_Enqueue_pointer, 0x04, 0x00);
 	mwrite(EP_0_ring_Enqueue_pointer, 0x08, (0 << 22));
-	mwrite(EP_0_ring_Enqueue_pointer, 0x0C, ((0 << 16) | (4 << 10) | (1 << 5) | EP_0_ring_cycle_bit));
+	mwrite(EP_0_ring_Enqueue_pointer, 0x0C, ((direction << 16) | (4 << 10) | (1 << 5) | EP_0_ring_cycle_bit));
 	EP_0_ring_Enqueue_pointer += sizeof(xHCI_TRB);
 }
 
@@ -1367,23 +1349,81 @@ SUCCESS_STRING_DESCRIPTOR:
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
+void xhci_configuration_descriptor(XHCI* x, UINT_8 max_packet) 
+{
+	UINT_32 buffer_addr = (UINT_32)(xhci_alloc_memory(255, 64, 65536));
+	__IMOS_MemZero((void*)buffer_addr, 255);
+
+	REQUEST_PACKET config_packet = { STDRD_GET_REQUEST, GET_DESCRIPTOR, ((CONFIG << 8) | 0), 0, 255 };
+	
+	xhci_setup_stage (x, &config_packet, xHCI_DIR_IN);
+	xhci_data_stage  (x, buffer_addr, xDATA_STAGE, 255, xHCI_DIR_IN_B, max_packet, 0);
+	xhci_status_stage(x, (xHCI_DIR_IN_B ^ 1), 0);
+
+	signal_from_setup_data_status_stages_to_irq = TRUE;
+	xhci_write_doorbell(x, x->usb_device->slot_id, 1);
+	
+	UINT_32 timing = 2000;
+	while(timing)
+    {
+        volatile BOOL tmp = signal_from_irq_to_setup_data_status_stages;
+        if(tmp == TRUE)
+        {
+            signal_from_irq_to_setup_data_status_stages = FALSE;
+            signal_from_setup_data_status_stages_to_irq = FALSE;
+            break;
+        }
+        WaitMiliSecond(1);
+        timing--;
+        if(timing == 0)
+        {
+            printk("CONFIGURATION DESCRIPTOR timed out\n");
+			signal_from_setup_data_status_stages_to_irq = FALSE;
+            break;
+        }
+    }
+	
+	UINT_16 total_length_of_descriptor = *(UINT_16*)( (void*)(PHYSICAL_ADDRESS(buffer_addr) + 0x02) );
+	__IMOS_HexDump((void*)buffer_addr, total_length_of_descriptor, "xhci_configuration_Descriptor");
+	
+	UNIVERSAL_SLOT_ENDPOINT_ATTRIBUTES* uni_config = x->usb_device->uni_config;
+	UINT_8* tmp_buf = (UINT_8*)((void*)buffer_addr);
+	uni_config->config_value             = tmp_buf[5];
+	uni_config->config_attribs           = tmp_buf[7];
+	uni_config->number_of_endpoints      = tmp_buf[13];
+	uni_config->class_code               = tmp_buf[14];
+	uni_config->sub_class                = tmp_buf[15];
+	uni_config->protocol                 = tmp_buf[16];
+	uni_config->des_length               = (UINT_16)((tmp_buf[25] | (UINT_16)(tmp_buf[26] << 8)));
+	uni_config->endpoint_address         = tmp_buf[29];
+	uni_config->endpoint_attribs         = tmp_buf[30];
+	uni_config->endpoint_max_packet_size = (UINT_16)((tmp_buf[31] | (UINT_16)(tmp_buf[32] << 8)));
+	uni_config->endpoint_interval        = tmp_buf[33];
+	
+	return;
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
 void xhci_slot_set_address(XHCI* x, BOOL BSR)
 {
 	//printk("slot set address\n");
-	UINT_32 input_context = (UINT_32)( xhci_alloc_memory(x->context_size * 32, 64, x->page_size) );
-	__IMOS_MemZero((void*)input_context, (x->context_size * 32));
+	UINT_32 input_context = (UINT_32)( xhci_alloc_memory(33 * x->context_size, 64, x->page_size) );
+	__IMOS_MemZero((void*)input_context, (x->context_size * 33));
 	mwrite(input_context, 0x00, 0x00); // Drops bits
 	mwrite(input_context, 0x04, 0x03); // Adds  bits < only bits 0 and 1 are set >
-
-    xHCI_SLOT_CONTEXT* slot = (xHCI_SLOT_CONTEXT*)x->usb_device->slot_address;
-    xHCI_EP_CONTEXT*   ep   = (xHCI_EP_CONTEXT*)  x->usb_device->ep0_address;
 	
 	xHCI_SLOT_CONTEXT* input_context_slot = (xHCI_SLOT_CONTEXT*)((void*)(input_context + x->context_size));
 	xHCI_EP_CONTEXT*   input_context_ep   = (xHCI_EP_CONTEXT*)  ((void*)(input_context + x->context_size + x->context_size));
 
-	*input_context_slot = gslot;
-	*input_context_ep   = gep;
-	
+	if(BSR)
+		get_contexts(x, input_context_slot, input_context_ep);
+	else
+	{
+		*input_context_slot = gslot;
+		*input_context_ep   = gep_0;
+	}
+		
 	xHCI_TRB trb = { .param = (UINT_64)(input_context), .status = 0, .command = ((11 << 10) | ((x->usb_device->slot_id) << 24) | (BSR << 9)) };
 	
     mwrite(x->command_ring_Enqueue, 0x00, trb.param); 
@@ -1421,23 +1461,33 @@ void xhci_slot_set_address(XHCI* x, BOOL BSR)
         }
     }
 	
+	xHCI_SLOT_CONTEXT* slot = (xHCI_SLOT_CONTEXT*)(x->usb_device->slot_address);
+	xHCI_EP_CONTEXT*   ep   = (xHCI_EP_CONTEXT*)  (x->usb_device->ep0_address);
+	
 	x->usb_device->slot_set_address = TRUE;
-
-	gslot.DWORD0             = slot->DWORD0;
-    gslot.usb_device_address = slot->usb_device_address;
-  	gep.WORD0                = ep->WORD0;
-	gep.max_packet_size      = ep->max_packet_size;
 	
 	DEVICE_DESC dev_desc;
 	if (BSR)
 		xhci_setup_data_status_stages(x, (void*)(&dev_desc), 8, ep->max_packet_size, TRUE);
 	else 
-	{
+	{	
 		xhci_setup_data_status_stages(x, (void*)(&dev_desc), 18, ep->max_packet_size, FALSE);
 		xhci_string_descriptor(x, ep->max_packet_size, 0);
-		this_TRB_to_print = TRUE;
 		xhci_string_descriptor(x, ep->max_packet_size, 1);
 		xhci_string_descriptor(x, ep->max_packet_size, 2);
+		xhci_configuration_descriptor(x, ep->max_packet_size);
+		
+		this_TRB_to_print = TRUE;
+		xhci_configure_endpoint(x);
+
+		//this_TRB_to_print = TRUE;
+		//xhci_set_idle_HID(x);
+		
+		this_TRB_to_print = TRUE;
+		xhci_set_protocol_HID(x);
+		
+		
+		//xhci_HID_report(x, ep->max_packet_size);
 	}
 }
 
@@ -1450,17 +1500,246 @@ XHCI* xhci_instance_to_idt(void)
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-UINT_8 xhci_get_critical_event(void)
+BOOL xhci_get_critical_event(void)
 {
-	return critical_event ;
+	return critical_event;
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-//. RESET_ENDPOINT
-//. 	xHCI_TRB trb = { .param = 0ULL, .status = 0, .command = ((1 << 24) | (1 << 16) | (14 << 10) | (0 << 9) )};
-//.     mwrite(x->command_ring_Enqueue, 0x00, trb.param); 
-//. 	mwrite(x->command_ring_Enqueue, 0x04, 0x00);  
-//. 	mwrite(x->command_ring_Enqueue, 0x08, trb.status);                       
-//. 	mwrite(x->command_ring_Enqueue, 0x0C, (trb.command | x->command_ring_PCS));
-//. 	x->command_ring_Enqueue += sizeof(xHCI_TRB);
-//. 	xhci_write_doorbell(x, 0, 0);
+
+void xhci_configure_endpoint(XHCI* x)
+{
+	UINT_32 input_context = (UINT_32)( xhci_alloc_memory(33 * x->context_size, 64, x->page_size) );
+	__IMOS_MemZero((void*)input_context, (x->context_size * 33));
+	
+	UINT_32 endpoint_address           = (x->usb_device->uni_config->endpoint_address & 0x0F);
+	BOOL    endpoint_address_direction = (x->usb_device->uni_config->endpoint_address & 0xF0) >> 7; // 0: Out, 1: In
+
+	mwrite(input_context, 0x00, 0x00); 
+	mwrite(input_context, 0x04, 0x09);
+	
+	xHCI_SLOT_CONTEXT* input_context_slot = (xHCI_SLOT_CONTEXT*)((void*)(input_context + x->context_size));
+	xHCI_EP_CONTEXT*   input_context_ep   = (xHCI_EP_CONTEXT*)  ((void*)(input_context + x->context_size + x->context_size));
+	xHCI_EP_CONTEXT*   input_context_ep_x = (xHCI_EP_CONTEXT*)  ((void*)(
+		input_context + (2 * x->context_size) + (((endpoint_address_direction ? (endpoint_address + 1) : (endpoint_address))) * x->context_size)));
+
+	UNIVERSAL_SLOT_ENDPOINT_ATTRIBUTES* uni_config = x->usb_device->uni_config;
+	
+	gslot.DWORD0                = ((3 << 27) | (x->usb_device->speed << 20)); 
+    gslot.root_hub_port_number  = x->usb_device->port + 1;
+    gslot.max_exit_latency      = 0; 
+	gslot.number_of_ports       = 0;    
+	gslot.TT_hub_slot_id        = 0;    
+	gslot.TT_port_number        = 0;    
+    gslot.WORD2                 = 0;
+    gslot.WORD_BYTE3[0]         = 0;
+	gslot.WORD_BYTE3[1]         = 0;
+	gslot.WORD_BYTE3[2]         = 0;
+	
+	xHCI_SLOT_CONTEXT* tmp_slot = (xHCI_SLOT_CONTEXT*)(x->usb_device->slot_address);
+    gslot.usb_device_address    = tmp_slot->usb_device_address;
+	
+	void* ep_tr_pointer = xhci_alloc_memory((256 * sizeof(xHCI_TRB)), 256, 65536);
+	__IMOS_MemZero(ep_tr_pointer, (256 * sizeof(xHCI_TRB)));
+	volatile UINT_32 pos = (UINT_32)ep_tr_pointer + ((255) * sizeof(xHCI_TRB));
+	mwrite(pos, 0x00, (UINT_32)ep_tr_pointer);  
+	mwrite(pos, 0x04, 0x00); 
+	mwrite(pos, 0x08, 0x00);
+	mwrite(pos, 0x0C, TRB_LINK_CMND);
+	
+	__IMOS_MemZero((void*)&gep_in, x->context_size);
+	gep_in.DWORD2                = ((UINT_32)ep_tr_pointer | TRB_CYCLE_ON);
+	gep_in.TR_dequeue_pointer_hi = 0x00;
+	EP_in_ring_Enqueue_pointer = (UINT_32)( gep_in.DWORD2 & (~1));
+	EP_in_ring_cycle_bit       = (UINT_32)((gep_in.DWORD2 & BIT(0)));
+	
+  	// set the initial values
+  	gep_in.WORD0               = (0 << 10) | (0 << 15) | (0 << 0);
+  	gep_in.BYTE1               = (3 << 1)  | (7 << 3)  | BIT(7);
+	gep_in.max_packet_size     = x->usb_device->uni_config->endpoint_max_packet_size;
+  	gep_in.interval            = x->usb_device->uni_config->endpoint_interval;
+  	gep_in.average_trb_length  = 8; //x->usb_device->uni_config->endpoint_max_packet_size / 2;
+  	gep_in.max_burst_size      = 0;
+	
+	*input_context_slot = gslot;
+	//*input_context_ep   = gep_0;
+	*input_context_ep_x = (endpoint_address_direction ? gep_in : gep_out);
+	
+	xHCI_TRB trb = { .param = (UINT_64)(input_context), .status = 0, .command = ((12 << 10) | ((x->usb_device->slot_id) << 24) | (0 << 9)) };
+	
+    mwrite(x->command_ring_Enqueue, 0x00, trb.param); 
+	mwrite(x->command_ring_Enqueue, 0x04, (UINT_32)(trb.param >> 32));  
+	mwrite(x->command_ring_Enqueue, 0x08, trb.status);                       
+	mwrite(x->command_ring_Enqueue, 0x0C, (trb.command | x->command_ring_PCS));
+	x->command_ring_Enqueue += sizeof(xHCI_TRB);
+	UINT_32 cmnd = mread(x->command_ring_Enqueue, 0x0C);
+	if (TRB_GET_TYPE(cmnd) == xLINK) 
+	{
+		mwrite(x->command_ring_Enqueue, 0x0C, ((cmnd & ~1) | x->command_ring_PCS));
+		x->command_ring_Enqueue = x->driver_crcr;
+		x->command_ring_PCS ^= 1;
+	}
+
+    signal_from_configure_endpoint_to_irq = TRUE;
+	xhci_write_doorbell(x, 0, 0);
+    UINT_32 timing = 2000;
+    while(timing)
+    {
+        volatile BOOL tmp = signal_from_irq_to_configure_endpoint;
+        if(tmp == TRUE)
+        {
+            signal_from_irq_to_configure_endpoint = FALSE;
+            signal_from_configure_endpoint_to_irq = FALSE;
+            break;
+        }
+        WaitMiliSecond(1);
+        timing--;
+        if(timing == 0)
+        {
+            printk("CONFIGURE ENDPOINT timed out\n");
+			signal_from_configure_endpoint_to_irq = FALSE;
+            break;
+        }
+    }
+	
+	//xHCI_SLOT_CONTEXT* slot = (xHCI_SLOT_CONTEXT*)(x->usb_device->slot_address);
+	//UINT_8 state = slot->WORD_BYTE3[2] >> 3;
+	//UINT_8 address = slot->usb_device_address;
+	//printk("slot state: ^\n", state);
+	//printk("slot address: ^\n", address);
+	//xHCI_EP_CONTEXT* tmp = (xHCI_EP_CONTEXT*)((void*)( PHYSICAL_ADDRESS(slot) + (3 * x->context_size) ));
+	//UINT_8 ep_state = (tmp->WORD0 & 0x0007);
+	//printk("endpoint state: ^\n", ep_state);
+	//xHCI_EP_CONTEXT* ttmp = (xHCI_EP_CONTEXT*)((void*)( PHYSICAL_ADDRESS(slot) + x->context_size ));
+	//UINT_8 ep0_state = (ttmp->WORD0 & 0x0007);
+	//printk("endpoint 0 state: ^\n", ep0_state);
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+void xhci_HID_report(XHCI* x, UINT_8 max_packet)
+{
+	UINT_32 buffer_addr = (UINT_32)(xhci_alloc_memory(255, 64, 65536));
+	__IMOS_MemZero((void*)buffer_addr, 255);
+	
+	REQUEST_PACKET set_idle_packet = { (DEV_TO_HOST | REQ_TYPE_STNDRD | RECPT_INTERFACE), GET_DESCRIPTOR, ((0x22 << 8) | 0), 0, (x->usb_device->uni_config->des_length) };
+	
+	xhci_setup_stage (x, &set_idle_packet, xHCI_DIR_IN);
+	xhci_data_stage  (x, buffer_addr, xDATA_STAGE, 255, xHCI_DIR_IN_B, max_packet, 0);
+	xhci_status_stage(x, (xHCI_DIR_IN_B ^ 1), 0);
+
+	signal_from_setup_data_status_stages_to_irq = TRUE;
+	xhci_write_doorbell(x, x->usb_device->slot_id, 1);
+	
+	UINT_32 timing = 2000;
+	while(timing)
+    {
+        volatile BOOL tmp = signal_from_irq_to_setup_data_status_stages;
+        if(tmp == TRUE)
+        {
+            signal_from_irq_to_setup_data_status_stages = FALSE;
+            signal_from_setup_data_status_stages_to_irq = FALSE;
+            break;
+        }
+        WaitMiliSecond(1);
+        timing--;
+        if(timing == 0)
+        {
+            printk("REPORT DESCRIPTORET timed out\n");
+			signal_from_setup_data_status_stages_to_irq = FALSE;
+            break;
+        }
+    }
+
+	__IMOS_HexDump((void*)buffer_addr, (x->usb_device->uni_config->des_length), "xhci_HID_report_descriptor");
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+void xhci_set_idle_HID(XHCI* x) /* If the HID returns a STALL in response to this request, the HID can send reports whether or not the data has changed. */
+{	
+	REQUEST_PACKET set_idle_packet = { CLASS_SET_INTERFACE, 0x0A, 0x0000, 0, 0 };
+	
+	xhci_setup_stage (x, &set_idle_packet, xHCI_DIR_NO_DATA);
+	xhci_status_stage(x, 1, 0);
+
+	signal_from_setup_data_status_stages_to_irq = TRUE;
+	xhci_write_doorbell(x, x->usb_device->slot_id, 1);
+	
+	UINT_32 timing = 2000;
+	while(timing)
+    {
+        volatile BOOL tmp = signal_from_irq_to_setup_data_status_stages;
+        if(tmp == TRUE)
+        {
+            signal_from_irq_to_setup_data_status_stages = FALSE;
+            signal_from_setup_data_status_stages_to_irq = FALSE;
+            break;
+        }
+        WaitMiliSecond(1);
+        timing--;
+        if(timing == 0)
+        {
+            printk("SET IDLE timed out\n");
+			signal_from_setup_data_status_stages_to_irq = FALSE;
+            break;
+        }
+    }
+}
+	
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+void xhci_set_protocol_HID(XHCI* x)
+{
+	REQUEST_PACKET set_protocol_packet = { CLASS_SET_INTERFACE, 0x0B, 0x0001, 0, 0 };
+	
+	xhci_setup_stage (x, &set_protocol_packet, xHCI_DIR_NO_DATA);
+	xhci_status_stage(x, 1, 0);
+
+	signal_from_setup_data_status_stages_to_irq = TRUE;
+	xhci_write_doorbell(x, x->usb_device->slot_id, 1);
+	
+	UINT_32 timing = 2000;
+	while(timing)
+    {
+        volatile BOOL tmp = signal_from_irq_to_setup_data_status_stages;
+        if(tmp == TRUE)
+        {
+            signal_from_irq_to_setup_data_status_stages = FALSE;
+            signal_from_setup_data_status_stages_to_irq = FALSE;
+            break;
+        }
+        WaitMiliSecond(1);
+        timing--;
+        if(timing == 0)
+        {
+            printk("SET PROTOCOL timed out\n");
+			signal_from_setup_data_status_stages_to_irq = FALSE;
+            break;
+        }
+    }
+}
+	
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+void get_contexts(XHCI* x, xHCI_SLOT_CONTEXT* global_slot, xHCI_EP_CONTEXT* global_ep0)
+{
+	UINT_32 slot_offset = PHYSICAL_ADDRESS(x->usb_device->slot_address);
+	UINT_32 ep0_offset  = PHYSICAL_ADDRESS(x->usb_device->ep0_address);
+	UINT_32 i;
+	
+	for(i = 0; i < 4; i++)
+	{
+		UINT_32 val = mread(slot_offset, (4 * i));
+		mwrite( PHYSICAL_ADDRESS(global_slot), (4 * i), val);
+	}
+	
+	for(i = 0; i < 5; i++)
+	{
+		UINT_32 val = mread(ep0_offset, (4 * i));
+		mwrite( PHYSICAL_ADDRESS(global_ep0), (4 * i), val);
+	}
+	
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
