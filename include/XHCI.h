@@ -80,6 +80,9 @@
 #define xHCI_DIR_OUT_B    0
 #define xHCI_DIR_IN_B     1
 
+#define xHCI_HOST_ACKNOWLEDGE   0
+#define xHCI_DEVICE_ACKNOWLEDGE 1
+
 // Endpoint Doorbell numbers
 #define xHCI_SLOT_CNTX   0
 #define xHCI_CONTROL_EP  1
@@ -178,7 +181,7 @@
 #define STDRD_GET_REQUEST   (DEV_TO_HOST | REQ_TYPE_STNDRD | RECPT_DEVICE)
 #define STDRD_SET_REQUEST   (HOST_TO_DEV | REQ_TYPE_STNDRD | RECPT_DEVICE)
 #define STDRD_SET_INTERFACE (HOST_TO_DEV | REQ_TYPE_STNDRD | RECPT_INTERFACE)
-
+#define CLASS_SET_INTERFACE (HOST_TO_DEV | REQ_TYPE_CLASS  | RECPT_INTERFACE)
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 /** structs **/
 
@@ -271,6 +274,21 @@ typedef volatile struct _xHCI_PORT_INFO {
 	volatile UINT_8  reserved;
 } __attribute__ ((packed)) xHCI_PORT_INFO;
 
+typedef struct _UNIVERSAL_SLOT_ENDPOINT_ATTRIBUTES {
+	UINT_8  config_value;
+	UINT_8  config_attribs;
+	UINT_8  interface_number;
+	UINT_8  number_of_endpoints;
+	UINT_8  class_code;
+	UINT_8  sub_class;
+	UINT_8  protocol;
+	UINT_16 des_length;
+	UINT_8  endpoint_address;
+	UINT_8  endpoint_attribs;
+	UINT_16 endpoint_max_packet_size;
+	UINT_8  endpoint_interval;
+	UINT_8  reserved[0x10 - 0x0E];
+} __attribute__ ((packed)) UNIVERSAL_SLOT_ENDPOINT_ATTRIBUTES;
 
 typedef struct _USB_DEVICE_CONNECTION {
 	volatile BOOL   connected;           // 1: connected; 0: disconnected
@@ -287,6 +305,9 @@ typedef struct _USB_DEVICE_CONNECTION {
 	volatile UINT_8 slot_id;
 	volatile void*  slot_address;
 	volatile void*  ep0_address;
+	volatile void*  ep_in_address;
+	volatile void*  ep_out_address;
+	volatile UNIVERSAL_SLOT_ENDPOINT_ATTRIBUTES* uni_config;
 } __attribute__((packed)) USB_DEVICE_CONNECTION;
 
 typedef volatile struct _XHCI {
@@ -385,6 +406,22 @@ typedef enum _DEVICE_REQUESTS {
 	BULK_ONLY_RESET   = 0xFF
 } DEVICE_REQUESTS;
 
+// HID class requests
+typedef enum _HID_CLASS_REQUESTS { 
+	HID_CLASS_GET_REPORT   = 0x01,
+	HID_CLASS_GET_IDLE     = 0x02,
+	HID_CLASS_GET_PROTOCOL = 0x03,
+	HID_CLASS_SET_REPORT   = 0x09,
+	HID_CLASS_SET_IDLE     = 0x0A,
+	HID_CLASS_SET_PROTOCOL = 0x0B
+} HID_CLASS_REQUESTS;
+
+// HID protocols
+typedef enum _HID_PROTOCOL { 
+	HID_BOOT_PROTOCOL   = 0x00,
+	HID_REPORT_PROTOCOL = 0x01
+} HID_PROTOCOL;
+
 // Common TRB types
 typedef enum _TRB_TYPES_ENUM { 
 	xNORMAL                = 0x01, 
@@ -459,9 +496,17 @@ void   xhci_free_memory             (void* pointer);
 void   xhci_slot_configuration      (XHCI* x, UINT_32 port, UINT_32 speed);
 void   xhci_slot_release            (XHCI* x, UINT_32 port, UINT_32 speed);
 XHCI*  xhci_instance_to_idt         (void);
-UINT_8 xhci_get_critical_event      (void);
+BOOL   xhci_get_critical_event      (void);
 void   xhci_slot_set_address        (XHCI* x, BOOL BSR);
 void   xhci_setup_data_status_stages(XHCI* x, void* target, UINT_32 length, UINT_32 max_packet, BOOL first_or_second);
 void   xhci_string_descriptor       (XHCI* x, UINT_8 max_packet, UINT_8 level);
+void   xhci_configure_endpoint      (XHCI* x);
+void   xhci_HID_report              (XHCI* x, UINT_8 max_packet);
+void   xhci_set_idle_HID            (XHCI* x);
+void   xhci_set_protocol_HID        (XHCI* x);
+void   xhci_get_protocol_HID        (XHCI* x);
+void   get_contexts                 (XHCI* x, xHCI_SLOT_CONTEXT* global_slot, xHCI_EP_CONTEXT* global_ep0);
+void   xhci_reset_endpoint          (XHCI* x, UINT_32 ep);
+void   xhci_set_configuration_device(XHCI* x);
 
 #endif

@@ -42,7 +42,10 @@ volatile BOOL signal_from_setup_data_status_stages_to_irq = FALSE;
 volatile BOOL signal_from_irq_to_setup_data_status_stages = FALSE;
 volatile BOOL signal_from_irq_to_string_descriptor        = FALSE;
 volatile BOOL signal_from_string_descriptor_to_irq        = FALSE;
-
+volatile BOOL signal_from_irq_to_reset_endpoint           = FALSE;            
+volatile BOOL signal_from_reset_endpoint_to_irq           = FALSE;
+volatile BOOL signal_from_irq_to_evaluate_endpoint        = FALSE;
+volatile BOOL signal_from_evaluate_endpoint_to_irq        = FALSE;
 // tmp
 UINT_8 tmp_disconnection = TRUE;
 
@@ -952,6 +955,18 @@ void xhci_interrupt_handler(REGS* r)
 			critical_event = FALSE;
 		}
 		
+		else if(signal_from_reset_endpoint_to_irq == TRUE)
+		{
+			signal_from_irq_to_reset_endpoint = TRUE;
+			critical_event = FALSE;
+		}
+		
+		else if(signal_from_evaluate_endpoint_to_irq == TRUE)
+		{
+			signal_from_irq_to_evaluate_endpoint = TRUE;
+			critical_event = FALSE;
+		}
+		
 		xhci_get_trb(&trb, xx->current_event_ring_address);
         if(this_TRB_to_print)
 		{
@@ -1390,6 +1405,7 @@ void xhci_configuration_descriptor(XHCI* x, UINT_8 max_packet)
 	UINT_8* tmp_buf = (UINT_8*)((void*)buffer_addr);
 	uni_config->config_value             = tmp_buf[5];
 	uni_config->config_attribs           = tmp_buf[7];
+	uni_config->interface_number         = tmp_buf[11];
 	uni_config->number_of_endpoints      = tmp_buf[13];
 	uni_config->class_code               = tmp_buf[14];
 	uni_config->sub_class                = tmp_buf[15];
@@ -1477,17 +1493,22 @@ void xhci_slot_set_address(XHCI* x, BOOL BSR)
 		xhci_string_descriptor(x, ep->max_packet_size, 2);
 		xhci_configuration_descriptor(x, ep->max_packet_size);
 		
-		this_TRB_to_print = TRUE;
+		//this_TRB_to_print = TRUE;
 		xhci_configure_endpoint(x);
 
+		//this_TRB_to_print = TRUE;
+		xhci_set_configuration_device(x);
+		
+		xhci_HID_report(x, ep->max_packet_size);
+		
 		//this_TRB_to_print = TRUE;
 		//xhci_set_idle_HID(x);
 		
 		this_TRB_to_print = TRUE;
+		xhci_get_protocol_HID(x);
+		
+		this_TRB_to_print = TRUE;
 		xhci_set_protocol_HID(x);
-		
-		
-		//xhci_HID_report(x, ep->max_packet_size);
 	}
 }
 
@@ -1512,10 +1533,14 @@ void xhci_configure_endpoint(XHCI* x)
 	UINT_32 input_context = (UINT_32)( xhci_alloc_memory(33 * x->context_size, 64, x->page_size) );
 	__IMOS_MemZero((void*)input_context, (x->context_size * 33));
 	
+	__IMOS_MemZero((void*)&gslot,  x->context_size);
+	__IMOS_MemZero((void*)&gep_0,  x->context_size);
+	__IMOS_MemZero((void*)&gep_in, x->context_size);
+	
 	UINT_32 endpoint_address           = (x->usb_device->uni_config->endpoint_address & 0x0F);
 	BOOL    endpoint_address_direction = (x->usb_device->uni_config->endpoint_address & 0xF0) >> 7; // 0: Out, 1: In
 
-	mwrite(input_context, 0x00, 0x00); 
+	mwrite(input_context, 0x00, ~0x09); 
 	mwrite(input_context, 0x04, 0x09);
 	
 	xHCI_SLOT_CONTEXT* input_context_slot = (xHCI_SLOT_CONTEXT*)((void*)(input_context + x->context_size));
@@ -1535,19 +1560,25 @@ void xhci_configure_endpoint(XHCI* x)
     gslot.WORD_BYTE3[0]         = 0;
 	gslot.WORD_BYTE3[1]         = 0;
 	gslot.WORD_BYTE3[2]         = 0;
-	
-	xHCI_SLOT_CONTEXT* tmp_slot = (xHCI_SLOT_CONTEXT*)(x->usb_device->slot_address);
-    gslot.usb_device_address    = tmp_slot->usb_device_address;
+    gslot.usb_device_address    = 0;
+
+	//xHCI_EP_CONTEXT* ep       = (xHCI_EP_CONTEXT*)x->usb_device->ep0_address;
+	//gep_0.DWORD2              = ep->DWORD2;
+	//gep_0.max_packet_size     = 8;//x->usb_device->uni_config->endpoint_max_packet_size;
+	//gep_in.WORD0              = (0 << 10) | (0 << 15) | (0 << 0);
+  	//gep_0.BYTE1               = (3 << 1)  | (4 << 3)  | BIT(7);
+  	//gep_0.interval            = 0;//x->usb_device->uni_config->endpoint_interval;
+  	//gep_0.average_trb_length  = 8;
+  	//gep_0.max_burst_size      = 0; //(gep_in.max_packet_size & 0x1800) >> 11;
 	
 	void* ep_tr_pointer = xhci_alloc_memory((256 * sizeof(xHCI_TRB)), 256, 65536);
 	__IMOS_MemZero(ep_tr_pointer, (256 * sizeof(xHCI_TRB)));
-	volatile UINT_32 pos = (UINT_32)ep_tr_pointer + ((255) * sizeof(xHCI_TRB));
-	mwrite(pos, 0x00, (UINT_32)ep_tr_pointer);  
-	mwrite(pos, 0x04, 0x00); 
-	mwrite(pos, 0x08, 0x00);
-	mwrite(pos, 0x0C, TRB_LINK_CMND);
-	
-	__IMOS_MemZero((void*)&gep_in, x->context_size);
+	volatile UINT_32 pos2 = (UINT_32)ep_tr_pointer + ((255) * sizeof(xHCI_TRB));
+	mwrite(pos2, 0x00, (UINT_32)ep_tr_pointer);  
+	mwrite(pos2, 0x04, 0x00); 
+	mwrite(pos2, 0x08, 0x00);
+	mwrite(pos2, 0x0C, TRB_LINK_CMND);
+
 	gep_in.DWORD2                = ((UINT_32)ep_tr_pointer | TRB_CYCLE_ON);
 	gep_in.TR_dequeue_pointer_hi = 0x00;
 	EP_in_ring_Enqueue_pointer = (UINT_32)( gep_in.DWORD2 & (~1));
@@ -1559,12 +1590,14 @@ void xhci_configure_endpoint(XHCI* x)
 	gep_in.max_packet_size     = x->usb_device->uni_config->endpoint_max_packet_size;
   	gep_in.interval            = x->usb_device->uni_config->endpoint_interval;
   	gep_in.average_trb_length  = 8; //x->usb_device->uni_config->endpoint_max_packet_size / 2;
-  	gep_in.max_burst_size      = 0;
-	
+  	gep_in.max_burst_size      = (gep_in.max_packet_size & 0x1800) >> 11;
+	UINT_32 max_esit_payload   = gep_in.max_packet_size * (gep_in.max_burst_size + 1);
+	gep_in.max_esit_payload_lo = 0; //(max_esit_payload & 0x0000FFFF);
+	gep_in.max_esit_payload_hi = 0; //(max_esit_payload & 0x000F0000) >> 16;
 	*input_context_slot = gslot;
 	//*input_context_ep   = gep_0;
-	*input_context_ep_x = (endpoint_address_direction ? gep_in : gep_out);
-	
+	*input_context_ep_x = gep_in; //(endpoint_address_direction ? gep_in : gep_out);
+
 	xHCI_TRB trb = { .param = (UINT_64)(input_context), .status = 0, .command = ((12 << 10) | ((x->usb_device->slot_id) << 24) | (0 << 9)) };
 	
     mwrite(x->command_ring_Enqueue, 0x00, trb.param); 
@@ -1657,11 +1690,12 @@ void xhci_HID_report(XHCI* x, UINT_8 max_packet)
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 void xhci_set_idle_HID(XHCI* x) /* If the HID returns a STALL in response to this request, the HID can send reports whether or not the data has changed. */
-{	
-	REQUEST_PACKET set_idle_packet = { CLASS_SET_INTERFACE, 0x0A, 0x0000, 0, 0 };
+{
+	REQUEST_PACKET set_idle_packet = { CLASS_SET_INTERFACE, HID_CLASS_SET_IDLE, x->usb_device->uni_config->interface_number, 0, 0 };
 	
 	xhci_setup_stage (x, &set_idle_packet, xHCI_DIR_NO_DATA);
-	xhci_status_stage(x, 1, 0);
+	WaitMiliSecond(150);
+	xhci_status_stage(x, xHCI_DEVICE_ACKNOWLEDGE, 0);
 
 	signal_from_setup_data_status_stages_to_irq = TRUE;
 	xhci_write_doorbell(x, x->usb_device->slot_id, 1);
@@ -1691,10 +1725,17 @@ void xhci_set_idle_HID(XHCI* x) /* If the HID returns a STALL in response to thi
 
 void xhci_set_protocol_HID(XHCI* x)
 {
-	REQUEST_PACKET set_protocol_packet = { CLASS_SET_INTERFACE, 0x0B, 0x0001, 0, 0 };
+	REQUEST_PACKET set_protocol_packet = { 
+		(HOST_TO_DEV | REQ_TYPE_CLASS  | RECPT_INTERFACE), 
+		HID_CLASS_SET_PROTOCOL, 
+		HID_REPORT_PROTOCOL, 
+		0, 
+		0 
+	};
 	
 	xhci_setup_stage (x, &set_protocol_packet, xHCI_DIR_NO_DATA);
-	xhci_status_stage(x, 1, 0);
+	WaitMiliSecond(100);
+	xhci_status_stage(x, xHCI_DEVICE_ACKNOWLEDGE, 0);
 
 	signal_from_setup_data_status_stages_to_irq = TRUE;
 	xhci_write_doorbell(x, x->usb_device->slot_id, 1);
@@ -1722,6 +1763,52 @@ void xhci_set_protocol_HID(XHCI* x)
 	
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
+void xhci_get_protocol_HID(XHCI* x)
+{
+	REQUEST_PACKET get_protocol_packet = { 
+		/* 0xA1 */ (DEV_TO_HOST | REQ_TYPE_CLASS | RECPT_INTERFACE),
+		/* 0x03 */ HID_CLASS_GET_PROTOCOL, 
+		x->usb_device->uni_config->interface_number, 
+		0, 
+		1 
+	};
+	UINT_32 data_buffer = 0x000000FF;
+	void* buff = (void*)&data_buffer;
+	
+	xhci_setup_stage (x, &get_protocol_packet, xHCI_DIR_IN);
+	WaitMiliSecond(100);
+	xhci_data_stage  (x, PHYSICAL_ADDRESS(buff), xDATA_STAGE, 1, xHCI_DIR_IN_B, x->usb_device->uni_config->endpoint_max_packet_size, 0);
+	WaitMiliSecond(100);
+	xhci_status_stage(x, xHCI_HOST_ACKNOWLEDGE, 0);
+
+	signal_from_setup_data_status_stages_to_irq = TRUE;
+	xhci_write_doorbell(x, x->usb_device->slot_id, 1);
+	
+	UINT_32 timing = 2000;
+	while(timing)
+    {
+        volatile BOOL tmp = signal_from_irq_to_setup_data_status_stages;
+        if(tmp == TRUE)
+        {
+            signal_from_irq_to_setup_data_status_stages = FALSE;
+            signal_from_setup_data_status_stages_to_irq = FALSE;
+            break;
+        }
+        WaitMiliSecond(1);
+        timing--;
+        if(timing == 0)
+        {
+            printk("GET PROTOCOL timed out\n");
+			signal_from_setup_data_status_stages_to_irq = FALSE;
+            break;
+        }
+    }
+	
+	printk("protocol returned ^\n", data_buffer);
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
 void get_contexts(XHCI* x, xHCI_SLOT_CONTEXT* global_slot, xHCI_EP_CONTEXT* global_ep0)
 {
 	UINT_32 slot_offset = PHYSICAL_ADDRESS(x->usb_device->slot_address);
@@ -1743,3 +1830,83 @@ void get_contexts(XHCI* x, xHCI_SLOT_CONTEXT* global_slot, xHCI_EP_CONTEXT* glob
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+void xhci_reset_endpoint(XHCI* x, UINT_32 ep)
+{
+	xHCI_TRB trb = { .param = 0ULL, .status = 0, .command = ((14 << 10) | ((ep + 1) << 16) | ((x->usb_device->slot_id) << 24) | (0 << 9)) };
+	
+    mwrite(x->command_ring_Enqueue, 0x00, trb.param); 
+	mwrite(x->command_ring_Enqueue, 0x04, (UINT_32)(trb.param >> 32));  
+	mwrite(x->command_ring_Enqueue, 0x08, trb.status);                       
+	mwrite(x->command_ring_Enqueue, 0x0C, (trb.command | x->command_ring_PCS));
+	x->command_ring_Enqueue += sizeof(xHCI_TRB);
+	UINT_32 cmnd = mread(x->command_ring_Enqueue, 0x0C);
+	if (TRB_GET_TYPE(cmnd) == xLINK) 
+	{
+		mwrite(x->command_ring_Enqueue, 0x0C, ((cmnd & ~1) | x->command_ring_PCS));
+		x->command_ring_Enqueue = x->driver_crcr;
+		x->command_ring_PCS ^= 1;
+	}
+    
+    signal_from_reset_endpoint_to_irq = TRUE;
+	xhci_write_doorbell(x, 0, 0);
+    UINT_32 timing = 2000;
+    while(timing)
+    {
+        volatile BOOL tmp = signal_from_irq_to_reset_endpoint;
+        if(tmp == TRUE)
+        {
+            signal_from_irq_to_reset_endpoint = FALSE;
+            signal_from_reset_endpoint_to_irq = FALSE;
+            break;
+        }
+        WaitMiliSecond(1);
+        timing--;
+        if(timing == 0)
+        {
+            printk("RESET_ENDPOINT timed out\n");
+			signal_from_reset_endpoint_to_irq = FALSE;
+            break;
+        }
+    }
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+void xhci_set_configuration_device(XHCI* x)
+{
+	REQUEST_PACKET set_configuration_packet = { 
+		/* 0x00 */ (HOST_TO_DEV | REQ_TYPE_STNDRD | RECPT_DEVICE), 
+		/* 0x09 */ SET_CONFIGURATION, 
+		/* 0x01 */ (UINT_16)x->usb_device->uni_config->config_value, 
+		0, 
+		0 
+	};
+
+	xhci_setup_stage (x, &set_configuration_packet, xHCI_DIR_NO_DATA);
+	WaitMiliSecond(100);
+	xhci_status_stage(x, 1, 0);
+
+	signal_from_setup_data_status_stages_to_irq = TRUE;
+	xhci_write_doorbell(x, x->usb_device->slot_id, 1);
+	
+	UINT_32 timing = 2000;
+	while(timing)
+    {
+        volatile BOOL tmp = signal_from_irq_to_setup_data_status_stages;
+        if(tmp == TRUE)
+        {
+            signal_from_irq_to_setup_data_status_stages = FALSE;
+            signal_from_setup_data_status_stages_to_irq = FALSE;
+            break;
+        }
+        WaitMiliSecond(1);
+        timing--;
+        if(timing == 0)
+        {
+            printk("SET CONFIGURATION DEVICE timed out\n");
+			signal_from_setup_data_status_stages_to_irq = FALSE;
+            break;
+        }
+    }
+}
