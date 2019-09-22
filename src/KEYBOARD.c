@@ -90,7 +90,7 @@ UINT_32 RegisterKeyboard(KEYBOARD* keyboard)
 	
 	__irq_install_handler(1, &keyboard_handler);
 	
-	printk( "        >>> Keyboard registered successfully <<<\n");
+	//.printk( "        >>> Keyboard registered successfully <<<\n");
 	
 	return 1;
 }

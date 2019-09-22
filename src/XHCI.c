@@ -46,6 +46,9 @@ volatile BOOL signal_from_irq_to_reset_endpoint           = FALSE;
 volatile BOOL signal_from_reset_endpoint_to_irq           = FALSE;
 volatile BOOL signal_from_irq_to_evaluate_endpoint        = FALSE;
 volatile BOOL signal_from_evaluate_endpoint_to_irq        = FALSE;
+volatile BOOL signal_from_HID_MOUSE_to_irq                = FALSE;
+volatile BOOL signal_from_irq_to_HID_MOUSE                = FALSE;
+
 // tmp
 UINT_8 tmp_disconnection = TRUE;
 
@@ -160,22 +163,22 @@ UINT_8 port_speed(UINT_16 portSpeed)
 	switch (portSpeed)
 	{
 		case 0:
-			printk("undefined\n");
+			//.printk("undefined\n");
 			break;
 		case 1:
-			printk("full-speed - 12MiB/s - USB 2.0\n");
+			//.printk("full-speed - 12MiB/s - USB 2.0\n");
 			tag=1;
 			break;
 		case 2:
-			printk("low-speed - 1.5Mib/s - USB 2.0\n");
+			//.printk("low-speed - 1.5Mib/s - USB 2.0\n");
 			tag=2;
 			break;
 		case 3:
-			printk("high-speed - 480Mib/s - USB 2.0\n");
+			//.printk("high-speed - 480Mib/s - USB 2.0\n");
 			tag=3;
 			break;
 		case 4:
-			printk("super-speed - 5Gib/s - USB 3.0\n");
+			//.printk("super-speed - 5Gib/s - USB 3.0\n");
 			tag=4;
 			break;
 	}
@@ -333,7 +336,7 @@ FULL_RESET:
 			//.val |= (xPORT_CHANGE_BITS | xPORT_POW);
     		//.mwrite(prs, 0x00, val);
 			
-			printk("Device at port % connected\n", port);
+			//.printk("Device at port % connected\n", port);
             goto SUCCESSFUL;   
         }
 		else 
@@ -918,7 +921,12 @@ void xhci_interrupt_handler(REGS* r)
     }
 	else if((driver_status & xSTS_EINT))
 	{
-		if(signal_from_slot_configuration_to_irq == TRUE)
+		if(signal_from_HID_MOUSE_to_irq == TRUE)
+		{
+			goto USB_MOUSE_TAG;
+		}			
+		
+		else if(signal_from_slot_configuration_to_irq == TRUE)
 		{
 			signal_from_irq_to_slot_configuration = TRUE;
 			xx->usb_device->slot_id = (UINT_8)(trb.command >> 24);
@@ -966,14 +974,14 @@ void xhci_interrupt_handler(REGS* r)
 			signal_from_irq_to_evaluate_endpoint = TRUE;
 			critical_event = FALSE;
 		}
-		
+
 		xhci_get_trb(&trb, xx->current_event_ring_address);
         if(this_TRB_to_print)
 		{
 			this_TRB_to_print = FALSE;
 			report_commmand_completion_trb(&trb);	
 		}
-		
+USB_MOUSE_TAG:		
 		xx->current_event_ring_address += sizeof(xHCI_TRB);
     	mwrite(interrupter0, xHC_INTERRUPTER_ERDP, (xx->current_event_ring_address | BIT(3))); 
 		mwrite(interrupter0, xHC_INTERRUPTER_ERDP + 4, 0); 
@@ -1222,10 +1230,10 @@ void xhci_setup_data_status_stages(XHCI* x, void* target, UINT_32 length, UINT_3
 
 	x->usb_device->setup_data_status_stages = TRUE;
 	
-	if(first_or_second)
-		__IMOS_HexDump((void*)buffer_addr, 0x08, "xhci_first_8_bytes_of_Device_Descriptor");
-	else
-		__IMOS_HexDump((void*)buffer_addr, 0x12, "xhci_second_18_bytes_of_Device_Descriptor");
+	//.if(first_or_second)
+	//.	__IMOS_HexDump((void*)buffer_addr, 0x08, "xhci_first_8_bytes_of_Device_Descriptor");
+	//.else
+	//.	__IMOS_HexDump((void*)buffer_addr, 0x12, "xhci_second_18_bytes_of_Device_Descriptor");
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -1280,7 +1288,7 @@ DEFAULT_STRING_DESCRIPTOR:
     }
 	
 	length_of_the_descriptor = *(UINT_8*)((void*)buffer_addr);
-	__IMOS_HexDump((void*)buffer_addr, length_of_the_descriptor, "xhci_string_Descriptor");
+	//.__IMOS_HexDump((void*)buffer_addr, length_of_the_descriptor, "xhci_string_Descriptor");
 	lang_id = ((*(UINT_32*)((void*)buffer_addr)) & 0xFF00) >> 8;
 	goto SUCCESS_STRING_DESCRIPTOR;
 	
@@ -1318,7 +1326,7 @@ MANUFACTURER_STRING_DESCRIPTOR:
     }
 	
 	length_of_the_descriptor = *(UINT_8*)((void*)buffer_addr);
-	__IMOS_HexDump((void*)buffer_addr, length_of_the_descriptor, "xhci_string_manufacturer_descriptor"); // for my mouse: "Logitech"
+	//.__IMOS_HexDump((void*)buffer_addr, length_of_the_descriptor, "xhci_string_manufacturer_descriptor"); // for my mouse: "Logitech"
 	goto SUCCESS_STRING_DESCRIPTOR;
 
 PRODUCT_STRING_DESCRIPTOR:
@@ -1355,7 +1363,7 @@ PRODUCT_STRING_DESCRIPTOR:
     }
 	
 	length_of_the_descriptor = *(UINT_8*)((void*)buffer_addr);
-	__IMOS_HexDump((void*)buffer_addr, length_of_the_descriptor, "xhci_string_product_descriptor"); // for my mouse: "usb optical mouse"
+	//.__IMOS_HexDump((void*)buffer_addr, length_of_the_descriptor, "xhci_string_product_descriptor"); // for my mouse: "usb optical mouse"
 	goto SUCCESS_STRING_DESCRIPTOR;
 	
 SUCCESS_STRING_DESCRIPTOR:
@@ -1399,7 +1407,7 @@ void xhci_configuration_descriptor(XHCI* x, UINT_8 max_packet)
     }
 	
 	UINT_16 total_length_of_descriptor = *(UINT_16*)( (void*)(PHYSICAL_ADDRESS(buffer_addr) + 0x02) );
-	__IMOS_HexDump((void*)buffer_addr, total_length_of_descriptor, "xhci_configuration_Descriptor");
+	//.__IMOS_HexDump((void*)buffer_addr, total_length_of_descriptor, "xhci_configuration_Descriptor");
 	
 	UNIVERSAL_SLOT_ENDPOINT_ATTRIBUTES* uni_config = x->usb_device->uni_config;
 	UINT_8* tmp_buf = (UINT_8*)((void*)buffer_addr);
@@ -1504,11 +1512,14 @@ void xhci_slot_set_address(XHCI* x, BOOL BSR)
 		//this_TRB_to_print = TRUE;
 		//xhci_set_idle_HID(x);
 		
-		this_TRB_to_print = TRUE;
+		//this_TRB_to_print = TRUE;
 		xhci_get_protocol_HID(x);
 		
-		this_TRB_to_print = TRUE;
+		//this_TRB_to_print = TRUE;
 		xhci_set_protocol_HID(x);
+		
+		//this_TRB_to_print = TRUE;
+		xhci_hid_test_mouse(x);		
 	}
 }
 
@@ -1589,11 +1600,11 @@ void xhci_configure_endpoint(XHCI* x)
   	gep_in.BYTE1               = (3 << 1)  | (7 << 3)  | BIT(7);
 	gep_in.max_packet_size     = x->usb_device->uni_config->endpoint_max_packet_size;
   	gep_in.interval            = x->usb_device->uni_config->endpoint_interval;
-  	gep_in.average_trb_length  = 8; //x->usb_device->uni_config->endpoint_max_packet_size / 2;
+  	gep_in.average_trb_length  = x->usb_device->uni_config->endpoint_max_packet_size / 2;
   	gep_in.max_burst_size      = (gep_in.max_packet_size & 0x1800) >> 11;
 	UINT_32 max_esit_payload   = gep_in.max_packet_size * (gep_in.max_burst_size + 1);
-	gep_in.max_esit_payload_lo = 0; //(max_esit_payload & 0x0000FFFF);
-	gep_in.max_esit_payload_hi = 0; //(max_esit_payload & 0x000F0000) >> 16;
+	gep_in.max_esit_payload_lo = (max_esit_payload & 0x0000FFFF);
+	gep_in.max_esit_payload_hi = (max_esit_payload & 0x000F0000) >> 16;
 	*input_context_slot = gslot;
 	//*input_context_ep   = gep_0;
 	*input_context_ep_x = gep_in; //(endpoint_address_direction ? gep_in : gep_out);
@@ -1684,7 +1695,7 @@ void xhci_HID_report(XHCI* x, UINT_8 max_packet)
         }
     }
 
-	__IMOS_HexDump((void*)buffer_addr, (x->usb_device->uni_config->des_length), "xhci_HID_report_descriptor");
+	//.__IMOS_HexDump((void*)buffer_addr, (x->usb_device->uni_config->des_length), "xhci_HID_report_descriptor");
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -1803,8 +1814,6 @@ void xhci_get_protocol_HID(XHCI* x)
             break;
         }
     }
-	
-	printk("protocol returned ^\n", data_buffer);
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -1909,4 +1918,56 @@ void xhci_set_configuration_device(XHCI* x)
             break;
         }
     }
+	
+	xhci_hid_timer_set();
 }
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+void xhci_hid_test_mouse(XHCI* x)
+{
+	volatile UINT_32 buffer      = 0x00000000;
+	volatile UINT_32 buffer_addr = PHYSICAL_ADDRESS(&buffer);
+	BOOL ring_doorbel = FALSE;
+
+	while(1)
+	{
+		FAST_MWRITE(EP_in_ring_Enqueue_pointer, 0x00, buffer_addr);
+		FAST_MWRITE(EP_in_ring_Enqueue_pointer, 0x08, (0 << 17) | (4 << 0));
+		FAST_MWRITE(EP_in_ring_Enqueue_pointer, 0x0C, ((1 << 16) | (3 << 10) | (0 << 5) | EP_in_ring_cycle_bit));
+		EP_in_ring_Enqueue_pointer += sizeof(xHCI_TRB);
+			
+		UINT_32 cmnd;
+		FAST_MREAD(EP_in_ring_Enqueue_pointer, 0x0C, (&cmnd));
+		if (TRB_GET_TYPE(cmnd) == xLINK) 
+		{
+			printk(" --- \n");
+			FAST_MWRITE(EP_in_ring_Enqueue_pointer, 0x0C, ((cmnd & ~1) | EP_in_ring_cycle_bit));
+			EP_in_ring_Enqueue_pointer = (UINT_32)( gep_in.DWORD2 & (~1));
+			EP_in_ring_cycle_bit ^= 1;
+		}
+		
+		signal_from_HID_MOUSE_to_irq = TRUE;
+		if(ring_doorbel == FALSE)
+		{
+			xhci_write_doorbell(x, x->usb_device->slot_id, /* INTERRUPT IN EP */ 3);
+			ring_doorbel == TRUE;
+		}
+		
+		signal_from_HID_MOUSE_to_irq = FALSE;		
+		mouse_pointer_update((INT_8*)((void*)buffer_addr));
+		buffer = 0;
+		
+		//if(buffer != tmp_buffer)
+		//{
+		//	//__IMOS_HexDump((void*)buffer_addr, 4, "xhci_hid_mouse_test");
+		//	mouse_pointer_update((INT_8*)((void*)buffer_addr));
+		//	tmp_buffer = buffer;			
+		//}
+		
+		//xhci_hid_timer_next_interval();
+		WaitMiliSecond(100);
+	}
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

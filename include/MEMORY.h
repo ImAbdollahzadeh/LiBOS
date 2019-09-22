@@ -3,6 +3,12 @@
 
 #include "IMOS_CORE.h"
 
+#define FAST_MWRITE(ADDRESS_BASE, ADDRESS_OFFSET, VALUE) do { (*(volatile UINT_32*)((void*)(ADDRESS_BASE + ADDRESS_OFFSET)) = VALUE); } while(0)
+#define FAST_MREAD(ADDRESS_BASE, ADDRESS_OFFSET, RET_POINTER)                          \
+do {                                                                                   \
+	*RET_POINTER = (*(volatile UINT_32*)((void*)(ADDRESS_BASE + ADDRESS_OFFSET))); \
+} while(0)
+
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 typedef struct _FREE_HOLE {

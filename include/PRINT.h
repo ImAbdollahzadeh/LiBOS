@@ -15,6 +15,7 @@
 extern void    printk       ( INT_8* fmt, ... );
        void    clear_screen ( void );
        void    panic        ( INT_8* id );
+       void    mouse_pointer_update ( INT_8* report_packet );
        UINT_8* Disps        (void);
        void __IMOS_HexDump  (void* pointer_to_buffer, UINT_32 bytes, INT_8* begin_message);
 

@@ -27,11 +27,13 @@ typedef struct _TIMER {
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-void    timer_handler  (REGS* r);
-UINT_32 RegisterTimer  (TIMER* timer, UINT_32 Hz);
-void    WaitMicroSecond(UINT_32 usec);  
-void    WaitMiliSecond (UINT_32 msec);  
-void    WaitSecond     (UINT_32 sec);   
+void    timer_handler                (REGS* r);
+UINT_32 RegisterTimer                (TIMER* timer, UINT_32 Hz);
+void    WaitMicroSecond              (UINT_32 usec);  
+void    WaitMiliSecond               (UINT_32 msec);  
+void    WaitSecond                   (UINT_32 sec);  
+void    xhci_hid_timer_set           (void);
+void    xhci_hid_timer_next_interval (void);
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 

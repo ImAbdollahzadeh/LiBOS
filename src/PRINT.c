@@ -2,6 +2,9 @@
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ GLOBAL AND STATIC VARIABLES
 
+INT_32 current_x_pos = 0;
+INT_32 current_y_pos = 0;
+
 UINT_32 counter    = 0;
 UINT_32 line       = 1;
 INT_32  ARGS_LIST[64];
@@ -192,6 +195,38 @@ void __IMOS_HexDump(void* pointer_to_buffer, UINT_32 bytes, INT_8* begin_message
 	}
 	
 	printk("\n");
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+#define SIGNED(UNSIGNED) (INT_8)((UINT_8)(UNSIGNED ^ 0xFF))
+void mouse_pointer_update(INT_8* report_packet)
+{
+	UINT_8* vid = (UINT_8*)0xb8000;
+	INT_8 x = report_packet[1];
+	INT_8 y = report_packet[2];
+	
+	if(x & 0x80)
+		x = -SIGNED(x);
+	if(y & 0x80)
+		y = -SIGNED(y);
+	
+	UINT_32 position = ((current_y_pos * 160) + (2 * current_x_pos));
+	vid[position]     = ' ';
+	vid[position + 1] = 0x00;
+	
+	current_x_pos += (x / 10);
+	current_y_pos += (y / 10);
+	
+	if(current_x_pos >= 79) current_x_pos = 79;
+	if(current_y_pos >= 24) current_y_pos = 24;
+	if(current_x_pos <= 0)  current_x_pos = 0;
+	if(current_y_pos <= 0)  current_y_pos = 0;
+	
+	position = ((current_y_pos * 160) + (2 * current_x_pos));
+	
+	vid[position]     = 219;
+	vid[position + 1] = 0x04;	
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
