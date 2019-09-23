@@ -11,7 +11,7 @@ The goal was primarily to support usb HIDs (mouse and keyboard), but finally I f
 Basically it has always been and still is my primarily goal to learn and start deep thinking of the OS working principles. 
 I would love to implement fast, assembly-optimized graphic applications (from kernel, driver, and graphic adapter point of view). No doubt the best resource is "zen of assembly" and "zen of graphic" by M. Abrash
 ## Contact me:
-iman_ab2013[at]yahoo.com<br/>Basically I'm always available
+iman_ab2013[at]yahoo[DoT]com<br/>Basically I'm always available
 ## Wonderful open and close resources:
 1. Zen of assembly language<br/>
 2. Zen of Graphics Programming<br/>
