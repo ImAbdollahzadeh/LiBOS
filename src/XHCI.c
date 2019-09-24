@@ -14,14 +14,14 @@ static BOOL this_TRB_to_print = FALSE;
 
 #define SIGNED_8_BIT(UNSIGNED_8_BIT) (INT_8)((UINT_8)(UNSIGNED_8_BIT ^ 0xFF))
 
-#define mouse_pointer_update(report_packet) do {                       \
+#define mouse_pointer_update(report_packet) do {                           \
 	UINT_8* vid = (UINT_8*)0xb8000;                                    \
 	INT_8 x = report_packet[1];                                        \
 	INT_8 y = report_packet[2];                                        \
 	if(x & 0x80)                                                       \
-		x = -SIGNED_8_BIT(x);                                          \
+		x = -SIGNED_8_BIT(x);                                      \
 	if(y & 0x80)                                                       \
-		y = -SIGNED_8_BIT(y);                                          \
+		y = -SIGNED_8_BIT(y);                                      \
 	UINT_32 position = ((current_y_pos * 160) + (current_x_pos << 1)); \
 	vid[position]     = ' ';                                           \
 	vid[position + 1] = 0x00;                                          \
@@ -53,9 +53,9 @@ static UINT_8 usb3_connection_ports = 0x00;
 
 /* virtual usb 2.0 various SPEEDS ( BIT(0)    = LOW_SPEED;
                                     BIT(1)    = FULL_SPEED;
-									BIT(2)    = HIGH_SPEED;
-									BITS(3-8) = RESERVED <INVALID>
-								  ) */
+				    BIT(2)    = HIGH_SPEED;
+				    BITS(3-8) = RESERVED <INVALID>
+				  ) */
 static UINT_8 virtual_attached_device_speed_format = 0x00;
 
 // global slot, endpont_0, and transfer ring of ep_0
@@ -95,7 +95,7 @@ UINT_8 tmp_disconnection = TRUE;
 XHCI*  xx                = 0x00;
 
 // entering critical event in IRQ_HANDLER
-BOOL critical_event    = FALSE;
+BOOL critical_event      = FALSE;
 
 // All TRB types
 static TRB_TYPES trb_types[64] = {
