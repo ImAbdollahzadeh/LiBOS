@@ -508,6 +508,6 @@ void   xhci_get_protocol_HID        (XHCI* x);
 void   get_contexts                 (XHCI* x, xHCI_SLOT_CONTEXT* global_slot, xHCI_EP_CONTEXT* global_ep0);
 void   xhci_reset_endpoint          (XHCI* x, UINT_32 ep);
 void   xhci_set_configuration_device(XHCI* x);
-void   xhci_hid_test_mouse          (XHCI* x);
+void   xhci_hid_mouse_poll          (XHCI* x);
 
 #endif

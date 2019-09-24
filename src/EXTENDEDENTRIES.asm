@@ -8,8 +8,6 @@ section .data
 	DECIMALSYMB             equ '%'
 	HEXADECIMALSYMB         equ '^'
 	CONSOLE_OUTPUT_COLOR    equ 0x02
-	XHCI_SPURIOUS_SEMAPHORE DD  0
-	XHCI_POINTER            DD  0
 
 ;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
@@ -19,8 +17,6 @@ section .text
 	global printk
 	global IDTLoad
 	global GDTLoad
-	global set_xhci_pointer
-	global get_xhci_pointer
 	extern idt_pointer
 	extern gdt_pointer
 	extern FAULT_HANDLER
@@ -77,14 +73,11 @@ section .text
 	global IRQ14
 	global IRQ15
 	global IRQ16
-	global IRQ100
-	
 	global CHECK_DS
 	global CHECK_GS
 	global CHECK_ES
 	global CHECK_FS
 	global WM
-	global idt_xhci_spurious
 
 ;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
@@ -376,12 +369,6 @@ IRQ16:
     push dword 48
     jmp irq_common_stub
 
-IRQ100:
-    cli
-    push dword 0   
-    push dword 132
-    jmp irq_common_stub
-
 irq_common_stub:
     push  eax
     push  ecx
@@ -422,19 +409,19 @@ irq_common_stub:
 
 IDTLoad:
 	push ebp
-    mov  ebp, esp
-    lidt [idt_pointer]
+	mov  ebp, esp
+	lidt [idt_pointer]
 	mov  eax, dword [ebp + 4]
 	mov  esp, ebp
-    pop  ebp
-    ret
+	pop  ebp
+	ret
 
 ;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 GDTLoad:
 	push ebp
-    mov  ebp, esp
-    lgdt [gdt_pointer]
+	mov  ebp, esp
+	lgdt [gdt_pointer]
 	mov  ax, 0x10
 	mov  ds, ax
 	mov  es, ax
@@ -443,10 +430,10 @@ GDTLoad:
 	mov  ss, ax
 	jmp  0x08:@end
 @end:
-    mov  eax, dword [ebp + 4]
+	mov  eax, dword [ebp + 4]
 	mov  esp, ebp
-    pop  ebp
-    ret
+	pop  ebp
+	ret
 
 ;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
@@ -461,8 +448,8 @@ _STI:
 ;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 printk: 
-    push ebp
-    mov  ebp, esp                  
+	push ebp
+	mov  ebp, esp                  
 	mov  eax, [ebp + 8] 
 	mov  edi, 0
 	mov  ecx, 0
@@ -507,9 +494,9 @@ printk:
 	pop  eax
 	pop  edx
 	mov  DWORD [LENGTH_OF_ARGS], 0
-    mov  esp, ebp
-    pop  ebp
-    ret
+	mov  esp, ebp
+	pop  ebp
+	ret
 		
 ;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
@@ -597,59 +584,3 @@ WM:
 	WBINVD
 
 ;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-;; idt_xhci_spurious(unsigned int execution_flag, unsignet int* ret_value);
-	;; execution_flag = 0 -> clear the semaphore
-	;; execution_flag = 1 -> set the semaphore
-	;; execution_flag = 2 -> report the semaphore
-
-idt_xhci_spurious:
-	push ebp
-    	mov  ebp, esp
-	
-	mov eax, [ebp + 8]
-	cmp eax, 0
-	jne NEXT1
-	mov DWORD[XHCI_SPURIOUS_SEMAPHORE], 0x00000000 
-	mov ebx, [ebp + 12]
-	mov DWORD [ebx], 0x00000000 
-	jmp FINISH_IDT_XHCI
-NEXT1:
-	cmp eax, 1
-	jne NEXT2
-	mov DWORD[XHCI_SPURIOUS_SEMAPHORE], 0x0000001
-	mov ebx, [ebp + 12]
-	mov DWORD [ebx], 0x00000001 
-	jmp FINISH_IDT_XHCI
-NEXT2:
-	cmp eax, 2
-	jne FINISH_IDT_XHCI
-	mov eax, DWORD[XHCI_SPURIOUS_SEMAPHORE]
-	mov ebx, [ebp + 12]
-	mov DWORD [ebx], eax 
-	jmp FINISH_IDT_XHCI
-
-FINISH_IDT_XHCI:
-	mov  esp, ebp
-    	pop  ebp
-    	ret
-
-;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-set_xhci_pointer:
-	push ebp
-    	mov  ebp, esp
-	mov  eax, [ebp + 8]
-	mov DWORD[XHCI_POINTER], eax
-	mov  esp, ebp
-    	pop  ebp
-    	ret
-
-get_xhci_pointer:
-	push ebp
-    	mov  ebp, esp
-	mov  eax, [ebp + 8]
-	mov  ebx, DWORD[XHCI_POINTER]
-	mov  [eax], ebx
-	mov  esp, ebp
-    	pop  ebp
-    	ret

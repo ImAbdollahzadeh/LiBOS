@@ -15,10 +15,10 @@ void (*handler)(REGS* r);
 void SetIDTEntry(UINT_8 Interrupt, UINT_32 HandlerAddress, UINT_16 CodeSegmentSelectorOffset, UINT_8 flags)
 {
 	idt[Interrupt].handlerAddressLowBits   = (((UINT_32)HandlerAddress) & 0xFFFF);
-    idt[Interrupt].handlerAddressHighBits  = (((UINT_32)HandlerAddress) >> 16) & 0xFFFF;
-    idt[Interrupt].gdt_codeSegmentSelector = CodeSegmentSelectorOffset;
-    idt[Interrupt].reserved                = 0;
-    idt[Interrupt].access                  = flags;
+	idt[Interrupt].handlerAddressHighBits  = (((UINT_32)HandlerAddress) >> 16) & 0xFFFF;
+	idt[Interrupt].gdt_codeSegmentSelector = CodeSegmentSelectorOffset;
+	idt[Interrupt].reserved                = 0;
+	idt[Interrupt].access                  = flags;
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

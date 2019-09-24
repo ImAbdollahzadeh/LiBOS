@@ -29,15 +29,15 @@ UINT_32 RegisterGDT(GDT* gdt)
 	if(!gdt)
 		return 0;
 	gdt->NullSegmentSelector = __RegisterSegmentDescriptor(0, 0, 0, 0);
-    gdt->CodeSegmentSelector = __RegisterSegmentDescriptor(0, 0xFFFFFFFF, 0x9A, 0xCF);
-    gdt->DataSegmentSelector = __RegisterSegmentDescriptor(0, 0xFFFFFFFF, 0x92, 0xCF);
+	gdt->CodeSegmentSelector = __RegisterSegmentDescriptor(0, 0xFFFFFFFF, 0x9A, 0xCF);
+	gdt->DataSegmentSelector = __RegisterSegmentDescriptor(0, 0xFFFFFFFF, 0x92, 0xCF);
 	
 	//.printk( "    In GDT: NullSegmentSelector created\n");
 	//.printk( "    In GDT: CodeSegmentSelector created\n");
 	//.printk( "    In GDT: DataSegmentSelector created\n");
 	
-    gdt_pointer.size = (sizeof(SEGMENTDESCRIPTOR)*3) - 1;
-    gdt_pointer.base = (UINT_32)((void*)gdt);
+	gdt_pointer.size = (sizeof(SEGMENTDESCRIPTOR)*3) - 1;
+	gdt_pointer.base = (UINT_32)((void*)gdt);
 	if(!gdt_pointer.size || !gdt_pointer.base)
 	{
 		panic("GDT pointer Failed\n");
@@ -79,11 +79,11 @@ UINT_16 GDTDataSegmentSelector(GDT* gdt)
 UINT_32 SegmentDescriptorBase(SEGMENTDESCRIPTOR* segmentdescriptor)
 {
 	UINT_8* target = (UINT_8*)segmentdescriptor;
-    UINT_32 result = target[7];
-    result = (result << 8) + target[4];
-    result = (result << 8) + target[3];
-    result = (result << 8) + target[2];
-    return result;
+	UINT_32 result = target[7];
+	result = (result << 8) + target[4];
+	result = (result << 8) + target[3];
+	result = (result << 8) + target[2];
+	return result;
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

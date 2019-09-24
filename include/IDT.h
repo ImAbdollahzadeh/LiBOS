@@ -88,17 +88,9 @@ extern void IRQ13();
 extern void IRQ14();
 extern void IRQ15();
 extern void IRQ16();
-extern void IRQ100();
-
 extern void _CLI();
 extern void _STI();
 extern void WM();
-extern void idt_xhci_spurious(UINT_32 execution_flag, UINT_32* ret_value);
-extern void modify_op_base(UINT_32 val);
-extern void get_op_base(UINT_32* ptr);
-extern void set_xhci_pointer(UINT_32);
-extern void get_xhci_pointer(UINT_32*);
-void set_lapic_to_idt(UINT_32*);
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 

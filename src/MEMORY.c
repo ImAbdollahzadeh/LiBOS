@@ -70,7 +70,6 @@ static void __IMOS_Remove_Entry(UINT_32 entry)
 	int i;
 	for (i = entry; i < __free_hole_counter; i++)
 		__free_hole[i] = __free_hole[i + 1];
-	
 	return;
 }
 

@@ -8,7 +8,6 @@
        TIMER   global_OS_timer;             /* This is the main OS's timer */
        UINT_32 __ProgramTimer(UINT_32 Hz);  /* Forward declaration of internal function */
 static UINT_32 timer_ticks    = 0;          /* This is the main OS timer tick counter */
-static UINT_32 xhci_hid_timer = 0;
 void __CurrentTimeReporter(void);
 void __CurrentDateReporter(void);
 
@@ -20,7 +19,6 @@ void timer_handler(REGS* r)
 	   requirement for the OS. All other stuff related to the timer would be 
 	   implemented separately. Here only the timer tick update is enough */
 	timer_ticks++    == 0xFFFFFFFF ? timer_ticks    = 0 : 0;
-	xhci_hid_timer++ == 0xFFFFFFFF ? xhci_hid_timer = 0 : 0;
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -159,23 +157,6 @@ void __CurrentTimeReporter(void)
 void __CurrentDateReporter(void)
 {
 	return;
-}
-	
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-void xhci_hid_timer_set(void)
-{
-	xhci_hid_timer = 0;
-}
-
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-void xhci_hid_timer_next_interval(void)
-{
-	/* for now, we know that our hid mouse interval is 10 ms. */
-	UINT_32 interval = 10 * (global_OS_timer.clock_Hz / 1000);
-	while(xhci_hid_timer % interval)
-		;
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
