@@ -45,9 +45,9 @@ i586-elf-gcc %GCCPARAMS%  -o ./obj/MEMORY.o     -c ./src/MEMORY.c
 i586-elf-gcc %GCCPARAMS%  -o ./obj/DOSSPEC.o    -c ./src/DOSSPEC.c
 i586-elf-gcc %GCCPARAMS%  -o ./obj/XHCI.o       -c ./src/XHCI.c
 ::-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-i586-elf-ld  %LDPARAMS% -T ./linker.ld -o ./bin/ThirdOS.bin %ALLOBJECTFILES%
+i586-elf-ld  %LDPARAMS% -T ./linker.ld -o ./bin/LiBOS.bin %ALLOBJECTFILES%
 ::-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-qemu-system-i386 -device nec-usb-xhci,id=xhci -kernel ./bin/ThirdOS.bin
+qemu-system-i386 -device nec-usb-xhci,id=xhci -kernel ./bin/LiBOS.bin
 ::-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 del %0 >nul
 ::-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
