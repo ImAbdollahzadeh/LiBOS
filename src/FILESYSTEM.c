@@ -121,10 +121,10 @@ UINT_32 ReadOperation( HDPARAMS DriveVolume, DESCRIPTOR* descriptor, UINT_8* Buf
 DESCRIPTOR OpenOperation( HDPARAMS DriveVolume, IN_8* DosPath )
 {
 	DESCRIPTOR      desc                            = { .validity = 0x00000000, .tree = 0ULL };
-	UINT_8          IMOS_OPEN                      = 0xE1;
-	UINT_8          IMOS_TREE_NIBBLE_COUNT         = 0x00;
-	UINT_8          IMOS_NOTHING_FLAG              = 0x00;
-	UINT_8          IMOS_RESERVED                  = 0x88;	
+	UINT_8          LiBOS_OPEN                      = 0xE1;
+	UINT_8          LiBOS_TREE_NIBBLE_COUNT         = 0x00;
+	UINT_8          LiBOS_NOTHING_FLAG              = 0x00;
+	UINT_8          LiBOS_RESERVED                  = 0x88;	
 	UINT_32         status, j, k, _offs, offs, directory_children = 0;
 	DIRECTORYENTRY  dirent[16];            
 	UINT_32         root                           = DriveVolume.root;
@@ -173,7 +173,7 @@ DESCRIPTOR OpenOperation( HDPARAMS DriveVolume, IN_8* DosPath )
 				
 				desc.tree |= ((UINT_64)j << directory_children);
 				directory_children += 4;
-				IMOS_TREE_NIBBLE_COUNT++;
+				LiBOS_TREE_NIBBLE_COUNT++;
 				
 			    _offs = ((UINT_32)(dirent[j].firstClusterHigh) << 16) | ((UINT_32)dirent[j].firstClusterLow);
 			     offs = data + secpclus * (_offs - 2);
@@ -189,8 +189,8 @@ DESCRIPTOR OpenOperation( HDPARAMS DriveVolume, IN_8* DosPath )
 		pointer_to_dos_name = pointer_to_dos_name->next;
 		thisPath = (INT_8*)(pointer_to_dos_name->name);
 	}
-	desc.tree    |= ((UINT_64)IMOS_TREE_NIBBLE_COUNT << 56);
-	desc.validity = ((UINT_32)IMOS_OPEN << 24) | ((UINT_32)IMOS_NOTHING_FLAG << 16) | ((UINT_32)IMOS_TREE_NIBBLE_COUNT << 8) | (IMOS_RESERVED);
+	desc.tree    |= ((UINT_64)LiBOS_TREE_NIBBLE_COUNT << 56);
+	desc.validity = ((UINT_32)LiBOS_OPEN << 24) | ((UINT_32)LiBOS_NOTHING_FLAG << 16) | ((UINT_32)LiBOS_TREE_NIBBLE_COUNT << 8) | (LiBOS_RESERVED);
 	
     status = ReleaseDosPackage(&dosNamePackage);
     if (!status)

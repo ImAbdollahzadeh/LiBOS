@@ -1,7 +1,7 @@
 #ifndef _MEMORY__H__
 #define _MEMORY__H__
 
-#include "IMOS_CORE.h"
+#include "LiBOS_CORE.h"
 
 #define FAST_MWRITE(ADDRESS_BASE, ADDRESS_OFFSET, VALUE) do { (*(volatile UINT_32*)((void*)(ADDRESS_BASE + ADDRESS_OFFSET)) = VALUE); } while(0)
 #define FAST_MREAD(ADDRESS_BASE, ADDRESS_OFFSET, RET_POINTER)                          \

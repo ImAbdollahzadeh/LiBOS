@@ -1,7 +1,7 @@
 #ifndef _TIMER__H__
 #define _TIMER__H__
 
-#include "IMOS_CORE.h"
+#include "LiBOS_CORE.h"
 #include "IDT.h"
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

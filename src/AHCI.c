@@ -37,12 +37,12 @@ void PortRebase(HBA_PORT* port, HBA_CMD_HEADER* cl, HBA_CMD_TBL* ctlist, HBA_FIS
     
     port->clb  = (UINT_32)cl;
 	port->clbu = 0;
-	__IMOS_MemZero((void*)port->clb, 1024);
+	__LiBOS_MemZero((void*)port->clb, 1024);
 	//.printk("port->clb: ^", (int)((void*)port->clb));
 	
     port->fb   = (UINT_32)fisbase;
 	port->fbu  = 0;
-    __IMOS_MemZero((void*)port->fb, 256);
+    __LiBOS_MemZero((void*)port->fb, 256);
     //.printk(", port->fb: ^", (int)((void*)port->fb));
     
     for (i=0; i<32; i++)
@@ -50,7 +50,7 @@ void PortRebase(HBA_PORT* port, HBA_CMD_HEADER* cl, HBA_CMD_TBL* ctlist, HBA_FIS
         cl[i].prdtl = 8; 
         cl[i].ctba  = (UINT_32)ctlist;
         cl[i].ctbau = 0;
-        __IMOS_MemZero((void*)cl[i].ctba, 256);
+        __LiBOS_MemZero((void*)cl[i].ctba, 256);
     }
     
     while (port->cmd & HBA_PxCMD_CR);
@@ -125,7 +125,7 @@ int read(HBA_PORT* port, UINT_32 startl, UINT_32 starth, UINT_32 count, UINT_8* 
 	cmdheader->prdtl = (UINT_16)((count-1)>>4) + 1;	    // PRDT entries count
  
 	HBA_CMD_TBL* cmdtbl = (HBA_CMD_TBL*)(cmdheader->ctba);
-	__IMOS_MemZero(cmdtbl, sizeof(HBA_CMD_TBL) + (cmdheader->prdtl-1)*sizeof(HBA_PRDT_ENTRY));
+	__LiBOS_MemZero(cmdtbl, sizeof(HBA_CMD_TBL) + (cmdheader->prdtl-1)*sizeof(HBA_PRDT_ENTRY));
  
 	// 8K bytes (16 sectors) per PRDT
 	for (i=0; i<cmdheader->prdtl-1; i++)
@@ -203,7 +203,7 @@ void ProbePort(HBA_MEM* abar, int* which_port)
 	int i=0, j=0;
 	UINT_8 main_buffer[40000];
 	int status = 0;
-	__IMOS_MemZero(main_buffer, 40000);
+	__LiBOS_MemZero(main_buffer, 40000);
 	while (i<32)
 	{
 		if (pi&1)

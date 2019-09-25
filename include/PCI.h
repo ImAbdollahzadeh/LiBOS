@@ -1,7 +1,7 @@
 #ifndef _PCI__H__
 #define _PCI__H__
 
-#include "IMOS_CORE.h"
+#include "LiBOS_CORE.h"
 #include "PORT.h"
 #include "AHCI.h"
 #include "EHCI.h"

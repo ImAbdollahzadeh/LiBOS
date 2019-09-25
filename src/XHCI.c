@@ -51,13 +51,6 @@ extern void CHECK_DS                        (UINT_32* ds);
 static UINT_8 usb2_connection_ports = 0x00;
 static UINT_8 usb3_connection_ports = 0x00;
 
-/* virtual usb 2.0 various SPEEDS ( BIT(0)    = LOW_SPEED;
-                                    BIT(1)    = FULL_SPEED;
-				    BIT(2)    = HIGH_SPEED;
-				    BITS(3-8) = RESERVED <INVALID>
-				  ) */
-static UINT_8 virtual_attached_device_speed_format = 0x00;
-
 // global slot, endpont_0, and transfer ring of ep_0
 static UINT_32           EP_0_ring_Enqueue_pointer  = 0;
 static UINT_32           EP_0_ring_cycle_bit        = 0;
@@ -202,22 +195,22 @@ UINT_8 port_speed(UINT_16 portSpeed)
 	switch (portSpeed)
 	{
 		case 0:
-			//printk("undefined\n");
+			//-->printk("undefined\n");
 			break;
 		case 1:
-			//printk("full-speed - 12MiB/s - USB 2.0\n");
+			//-->printk("full-speed - 12MiB/s - USB 2.0\n");
 			tag=1;
 			break;
 		case 2:
-			//printk("low-speed - 1.5Mib/s - USB 2.0\n");
+			//-->printk("low-speed - 1.5Mib/s - USB 2.0\n");
 			tag=2;
 			break;
 		case 3:
-			//printk("high-speed - 480Mib/s - USB 2.0\n");
+			//-->printk("high-speed - 480Mib/s - USB 2.0\n");
 			tag=3;
 			break;
 		case 4:
-			//printk("super-speed - 5Gib/s - USB 3.0\n");
+			//-->printk("super-speed - 5Gib/s - USB 3.0\n");
 			tag=4;
 			break;
 	}
@@ -676,8 +669,8 @@ BOOL xhci_start_controller(XHCI* x)
 	// allocate the dcbaa, crcr and the slot contexts.
 	void* mdcbaap = xhci_alloc_memory(4096, 64, x->page_size);
 	void* mcrcr   = xhci_alloc_memory((CMND_RING_TRBS * sizeof(xHCI_TRB)), 64, 65536);
-	__IMOS_MemZero(mdcbaap, 4096);               
-	__IMOS_MemZero(mcrcr, CMND_RING_TRBS * sizeof(xHCI_TRB));
+	__LiBOS_MemZero(mdcbaap, 4096);               
+	__LiBOS_MemZero(mcrcr, CMND_RING_TRBS * sizeof(xHCI_TRB));
 	 
 	// setting up the scratchpad buffer
 	UINT_8 MaxScratchpadBuffers = ((x->cap->hcsparams2 >> 27) & 0x1F) | ((x->cap->hcsparams2 >> 16) & 0xE0);
@@ -687,11 +680,11 @@ BOOL xhci_start_controller(XHCI* x)
 			printk("scratchpad buffers number = %\n", (UINT_32)MaxScratchpadBuffers);
 		
 		UINT_64* ScratchpadBuffersPtr = (UINT_64*)(xhci_alloc_memory(32*32, 64, x->page_size));
-		__IMOS_MemZero((void*)ScratchpadBuffersPtr, 32*32);		   		   
+		__LiBOS_MemZero((void*)ScratchpadBuffersPtr, 32*32);		   		   
 		for(i=0; i<MaxScratchpadBuffers; i++)
 		{
 			UINT_32 tmp = (UINT_32)( xhci_alloc_memory(x->page_size, x->page_size, x->page_size) );
-			__IMOS_MemZero((void*)tmp, x->page_size);
+			__LiBOS_MemZero((void*)tmp, x->page_size);
 			ScratchpadBuffersPtr[i] = (UINT_64)tmp;
 		}
 		
@@ -702,7 +695,7 @@ BOOL xhci_start_controller(XHCI* x)
 	for(i=1; i<(maxSlots+1); i++)
 	{
 		void* DevCntxSlots = xhci_alloc_memory(32 * x->context_size, 256, x->page_size);
-		__IMOS_MemZero(DevCntxSlots, 32 * x->context_size);
+		__LiBOS_MemZero(DevCntxSlots, 32 * x->context_size);
 		mwrite((UINT_32)mdcbaap, (0x08 * i), (UINT_32)DevCntxSlots);
 	}
     
@@ -737,8 +730,8 @@ BOOL xhci_start_controller(XHCI* x)
 	x->ers                  = xhci_alloc_memory(256 * sizeof(xHCI_TRB), 64, 65536);
 	x->erst                 = xhci_alloc_memory(sizeof(xHCI_EVENT_SEG_TABLE), 64, 65536);
 	x->current_event_ring_address  = (UINT_32)x->ers;
-	__IMOS_MemZero(x->ers,  256 * sizeof(xHCI_TRB));
-	__IMOS_MemZero(x->erst, sizeof(xHCI_EVENT_SEG_TABLE));
+	__LiBOS_MemZero(x->ers,  256 * sizeof(xHCI_TRB));
+	__LiBOS_MemZero(x->erst, sizeof(xHCI_EVENT_SEG_TABLE));
     
 	xHCI_EVENT_SEG_TABLE* segment_table = (xHCI_EVENT_SEG_TABLE*)x->erst;
 	segment_table->addr                 = (UINT_64)(0ULL | (UINT_32)x->ers);
@@ -1090,8 +1083,8 @@ void xhci_slot_configuration(XHCI* x, UINT_32 port, UINT_32 speed)
 		}
 	}
 
-	__IMOS_MemZero((void*)&gslot, x->context_size );
-	__IMOS_MemZero((void*)&gep_0, x->context_size );
+	__LiBOS_MemZero((void*)&gslot, x->context_size );
+	__LiBOS_MemZero((void*)&gep_0, x->context_size );
 	
 	// at context slot-id < is 1-based and not 0-based! >
 	volatile UINT_32 mdcbaap  = mread(PHYSICAL_ADDRESS(x->oper), 0x30);
@@ -1115,7 +1108,7 @@ void xhci_slot_configuration(XHCI* x, UINT_32 port, UINT_32 speed)
 	
 	// allocate the EP's Transfer Ring
 	void* ep_tr_pointer = xhci_alloc_memory((256 * sizeof(xHCI_TRB)), 256, 65536);
-	__IMOS_MemZero(ep_tr_pointer, (256 * sizeof(xHCI_TRB)));
+	__LiBOS_MemZero(ep_tr_pointer, (256 * sizeof(xHCI_TRB)));
 	
 	// make the last one a link TRB to point to the first one
 	volatile UINT_32 pos = (UINT_32)ep_tr_pointer + ((255) * sizeof(xHCI_TRB));
@@ -1143,21 +1136,23 @@ void xhci_slot_configuration(XHCI* x, UINT_32 port, UINT_32 speed)
 	x->usb_device->ep_in_address  = 0;
 	x->usb_device->ep_out_address = 0;
 	
-	get_contexts(x, &gslot, &gep_0);	
+	get_contexts(x, &gslot, &gep_0);
 
 	x->usb_device->slot_configuration = TRUE;
 
-	/* ONLY FOR LOW- FULL- SPEED DEVICES PERFORM THESE STEPS. FOR HIGH-SPEED DEVICE NEVER DO THAT, OTHERWISE THE DEVICE MALFUNCTIONS */
-	/* << FROM HERE UNTIL THE NEXT TAG MUST BE COMMENTED OUT FOR HIGH-SPEED DEVICES >> */
-	xhci_slot_set_address(x, TRUE);
+	/* ONLY FOR LOW- FULL- SPEED DEVICES PERFORM INITIAL "8byte-RESET" STEPS. FOR HIGH-SPEED DEVICE NEVER DO THAT, OTHERWISE THE DEVICE MALFUNCTIONS */
 	
-	if( !reset_port(x, x->usb_device->port) )
+	if( (x->usb_device->speed == xHCI_SPEED_LOW) || (x->usb_device->speed == xHCI_SPEED_FULL) )
 	{
-		printk("second device reset failed\n");
-		return;
+		xhci_slot_set_address(x, TRUE);
+	
+		if( !reset_port(x, x->usb_device->port) )
+		{
+			printk("second device reset failed\n");
+			return;
+		}
 	}
 
-	/* << UP TO HERE >> */
 	xhci_slot_set_address(x, FALSE);
 }
 
@@ -1213,8 +1208,8 @@ void xhci_setup_data_status_stages(XHCI* x, void* target, UINT_32 length, UINT_3
 {
 	UINT_32 status_addr = (UINT_32)(xhci_alloc_memory(4, 16, 16));     // we need a dword status buffer with a physical address
 	UINT_32 buffer_addr = (UINT_32)(xhci_alloc_memory(18, 64, 65536)); // get a physical address buffer and then copy from it later
-	__IMOS_MemZero((void*)status_addr, 4);
-	__IMOS_MemZero((void*)buffer_addr, 18);
+	__LiBOS_MemZero((void*)status_addr, 4);
+	__LiBOS_MemZero((void*)buffer_addr, 18);
 
 	REQUEST_PACKET packet = { STDRD_GET_REQUEST, GET_DESCRIPTOR, ((DEVICE << 8) | 0), 0, length };
 	
@@ -1251,10 +1246,10 @@ void xhci_setup_data_status_stages(XHCI* x, void* target, UINT_32 length, UINT_3
 	x->usb_device->setup_data_status_stages = TRUE;
 	WaitMiliSecond(150);
 	
-	//if(first_or_second)
-	//	__IMOS_HexDump((void*)buffer_addr, 0x08, "xhci_first_8_bytes_of_Device_Descriptor");
-	//else
-	//	__IMOS_HexDump((void*)buffer_addr, 0x12, "xhci_second_18_bytes_of_Device_Descriptor");
+	//-->if(first_or_second)
+	//-->	__LiBOS_HexDump((void*)buffer_addr, 0x08, "xhci_first_8_bytes_of_Device_Descriptor");
+	//-->else
+	//-->	__LiBOS_HexDump((void*)buffer_addr, 0x12, "xhci_second_18_bytes_of_Device_Descriptor");
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -1274,7 +1269,7 @@ void xhci_string_descriptor(XHCI* x, UINT_8 max_packet, UINT_8 level)
 	
 DEFAULT_STRING_DESCRIPTOR:
 	buffer_addr = (UINT_32)(xhci_alloc_memory(255, 64, 65536));
-	__IMOS_MemZero((void*)buffer_addr, 255);
+	__LiBOS_MemZero((void*)buffer_addr, 255);
 
 	REQUEST_PACKET packet = { STDRD_GET_REQUEST, GET_DESCRIPTOR, ((STRING << 8) | 0), 0, 255 };
 	
@@ -1306,13 +1301,13 @@ DEFAULT_STRING_DESCRIPTOR:
 	}
 	
 	length_of_the_descriptor = *(UINT_8*)((void*)buffer_addr);
-	//__IMOS_HexDump((void*)buffer_addr, length_of_the_descriptor, "xhci_string_Descriptor");
+	//-->__LiBOS_HexDump((void*)buffer_addr, length_of_the_descriptor, "xhci_string_Descriptor");
 	lang_id = ((*(UINT_32*)((void*)buffer_addr)) & 0xFF00) >> 8;
 	goto SUCCESS_STRING_DESCRIPTOR;
 	
 MANUFACTURER_STRING_DESCRIPTOR:
 	buffer_addr = (UINT_32)(xhci_alloc_memory(255, 64, 65536));
-	__IMOS_MemZero((void*)buffer_addr, 255);
+	__LiBOS_MemZero((void*)buffer_addr, 255);
 
 	REQUEST_PACKET prod_desc_packet = { STDRD_GET_REQUEST, GET_DESCRIPTOR, ((STRING << 8) | /* must be general */0x01), lang_id, 255 };
 	
@@ -1344,12 +1339,12 @@ MANUFACTURER_STRING_DESCRIPTOR:
 	}
 	
 	length_of_the_descriptor = *(UINT_8*)((void*)buffer_addr);
-	//__IMOS_HexDump((void*)buffer_addr, length_of_the_descriptor, "xhci_string_manufacturer_descriptor"); // for my mouse: "Logitech"
+	//-->__LiBOS_HexDump((void*)buffer_addr, length_of_the_descriptor, "xhci_string_manufacturer_descriptor"); // for my mouse: "Logitech"
 	goto SUCCESS_STRING_DESCRIPTOR;
 
 PRODUCT_STRING_DESCRIPTOR:
 	buffer_addr = (UINT_32)(xhci_alloc_memory(255, 64, 65536));
-	__IMOS_MemZero((void*)buffer_addr, 255);
+	__LiBOS_MemZero((void*)buffer_addr, 255);
 
 	REQUEST_PACKET mauf_desc_packet = { STDRD_GET_REQUEST, GET_DESCRIPTOR, ((STRING << 8) | /* must be general */0x02), lang_id, 255 };
 	
@@ -1381,7 +1376,7 @@ PRODUCT_STRING_DESCRIPTOR:
 	}
 	
 	length_of_the_descriptor = *(UINT_8*)((void*)buffer_addr);
-	//__IMOS_HexDump((void*)buffer_addr, length_of_the_descriptor, "xhci_string_product_descriptor"); // for my mouse: "usb optical mouse"
+	//-->__LiBOS_HexDump((void*)buffer_addr, length_of_the_descriptor, "xhci_string_product_descriptor"); // for my mouse: "usb optical mouse"
 	goto SUCCESS_STRING_DESCRIPTOR;
 	
 SUCCESS_STRING_DESCRIPTOR:
@@ -1393,7 +1388,7 @@ SUCCESS_STRING_DESCRIPTOR:
 void xhci_configuration_descriptor(XHCI* x, UINT_8 max_packet) 
 {
 	UINT_32 buffer_addr = (UINT_32)(xhci_alloc_memory(255, 64, 65536));
-	__IMOS_MemZero((void*)buffer_addr, 255);
+	__LiBOS_MemZero((void*)buffer_addr, 255);
 
 	REQUEST_PACKET config_packet = { 
 		STDRD_GET_REQUEST, 
@@ -1431,7 +1426,7 @@ void xhci_configuration_descriptor(XHCI* x, UINT_8 max_packet)
 	}
 	
 	UINT_16 total_length_of_descriptor = *(UINT_16*)( (void*)(PHYSICAL_ADDRESS(buffer_addr) + 0x02) );
-	//__IMOS_HexDump((void*)buffer_addr, total_length_of_descriptor, "xhci_configuration_Descriptor");
+	//-->__LiBOS_HexDump((void*)buffer_addr, total_length_of_descriptor, "xhci_configuration_Descriptor");
 	
 	UNIVERSAL_SLOT_ENDPOINT_ATTRIBUTES* uni_config = x->usb_device->uni_config;
 	UINT_8* tmp_buf = (UINT_8*)((void*)buffer_addr);
@@ -1456,7 +1451,7 @@ void xhci_configuration_descriptor(XHCI* x, UINT_8 max_packet)
 void xhci_slot_set_address(XHCI* x, BOOL BSR)
 {
 	UINT_32 input_context = (UINT_32)( xhci_alloc_memory(33 * x->context_size, 64, x->page_size) );
-	__IMOS_MemZero((void*)input_context, (x->context_size * 33));
+	__LiBOS_MemZero((void*)input_context, (x->context_size * 33));
 	mwrite(input_context, 0x00, 0x00); // Drops bits
 	mwrite(input_context, 0x04, 0x03); // Adds  bits < only bits 0 and 1 are set >
 	
@@ -1528,12 +1523,12 @@ void xhci_slot_set_address(XHCI* x, BOOL BSR)
 		xhci_string_descriptor(x, ep->max_packet_size, 2);
 		xhci_configuration_descriptor(x, ep->max_packet_size);
 		xhci_configure_endpoint(x);
-		xhci_set_configuration_device(x);		
-		xhci_HID_report(x, ep->max_packet_size);
-		//xhci_set_idle_HID(x);
-		xhci_get_protocol_HID(x);
-		xhci_set_protocol_HID(x);
-		xhci_hid_mouse_poll(x);		
+		xhci_set_configuration_device(x);
+		//xhci_HID_report(x, ep->max_packet_size);
+		////xhci_set_idle_HID(x);
+		//xhci_get_protocol_HID(x);
+		//xhci_set_protocol_HID(x);
+		//xhci_hid_mouse_poll(x);
 	}
 }
 
@@ -1556,11 +1551,11 @@ BOOL xhci_get_critical_event(void)
 void xhci_configure_endpoint(XHCI* x)
 {
 	UINT_32 input_context = (UINT_32)( xhci_alloc_memory(33 * x->context_size, 64, x->page_size) );
-	__IMOS_MemZero((void*)input_context, (x->context_size * 33));
+	__LiBOS_MemZero((void*)input_context, (x->context_size * 33));
 	
-	__IMOS_MemZero((void*)&gslot,  x->context_size);
-	__IMOS_MemZero((void*)&gep_0,  x->context_size);
-	__IMOS_MemZero((void*)&gep_in, x->context_size);
+	__LiBOS_MemZero((void*)&gslot,  x->context_size);
+	__LiBOS_MemZero((void*)&gep_0,  x->context_size);
+	__LiBOS_MemZero((void*)&gep_in, x->context_size);
 	
 	UINT_32 endpoint_address           = (x->usb_device->uni_config->endpoint_address & 0x0F);
 	BOOL    endpoint_address_direction = (x->usb_device->uni_config->endpoint_address & 0xF0) >> 7; // 0: Out, 1: In
@@ -1597,7 +1592,7 @@ void xhci_configure_endpoint(XHCI* x)
 	//gep_0.max_burst_size      = 0; //(gep_in.max_packet_size & 0x1800) >> 11;
 	
 	void* ep_tr_pointer = xhci_alloc_memory((256 * sizeof(xHCI_TRB)), 256, 65536);
-	__IMOS_MemZero(ep_tr_pointer, (256 * sizeof(xHCI_TRB)));
+	__LiBOS_MemZero(ep_tr_pointer, (256 * sizeof(xHCI_TRB)));
 	volatile UINT_32 pos2 = (UINT_32)ep_tr_pointer + ((255) * sizeof(xHCI_TRB));
 	mwrite(pos2, 0x00, (UINT_32)ep_tr_pointer);  
 	mwrite(pos2, 0x04, 0x00); 
@@ -1682,7 +1677,7 @@ void xhci_configure_endpoint(XHCI* x)
 void xhci_HID_report(XHCI* x, UINT_8 max_packet)
 {
 	UINT_32 buffer_addr = (UINT_32)(xhci_alloc_memory(255, 64, 65536));
-	__IMOS_MemZero((void*)buffer_addr, 255);
+	__LiBOS_MemZero((void*)buffer_addr, 255);
 	
 	REQUEST_PACKET set_idle_packet = { 
 		(DEV_TO_HOST | REQ_TYPE_STNDRD | RECPT_INTERFACE), 
@@ -1719,7 +1714,7 @@ void xhci_HID_report(XHCI* x, UINT_8 max_packet)
 		}
 	}
 
-	//.__IMOS_HexDump((void*)buffer_addr, (x->usb_device->uni_config->des_length), "xhci_HID_report_descriptor");
+	//.__LiBOS_HexDump((void*)buffer_addr, (x->usb_device->uni_config->des_length), "xhci_HID_report_descriptor");
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -1977,7 +1972,7 @@ void xhci_hid_mouse_poll(XHCI* x)
 			//EP_in_ring_Enqueue_pointer = (UINT_32)( gep_in.DWORD2 & (~1));
 			//EP_in_ring_cycle_bit ^= 1;
 			
-			__IMOS_MemZero((void*)EP_in_ring_Enqueue_pointer, 256 * sizeof(xHCI_TRB));
+			__LiBOS_MemZero((void*)EP_in_ring_Enqueue_pointer, 256 * sizeof(xHCI_TRB));
 		}
 		
 		if(ring_doorbel == FALSE)

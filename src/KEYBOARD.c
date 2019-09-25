@@ -50,7 +50,7 @@ UINT_8   KEYBOARD_SCANCODES[128] =
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-static void __IMOS_EvaluateArrowKeys(void)
+static void __LiBOS_EvaluateArrowKeys(void)
 {
 	UINT_32 i;
 	UINT_8* vid = ( UINT_8* )0xb8000;
@@ -155,7 +155,7 @@ void keyboard_handler(REGS* r)
 			}
 		}
 	}
-	__IMOS_EvaluateArrowKeys();
+	__LiBOS_EvaluateArrowKeys();
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

@@ -1,7 +1,7 @@
 #ifndef _DOSSPEC__H__
 #define _DOSSPEC__H__ 
 
-#include "IMOS_CORE.h"
+#include "LiBOS_CORE.h"
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 

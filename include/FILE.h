@@ -1,7 +1,7 @@
 #ifndef _FILE__H__
 #define _FILE__H__
 
-#include "IMOS_CORE.h"
+#include "LiBOS_CORE.h"
 #include "FILESYSTEM.h"
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 

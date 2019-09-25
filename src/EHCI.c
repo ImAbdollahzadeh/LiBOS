@@ -164,7 +164,7 @@ BOOL process_ehci(PEHCI ehci)
 	
 	// allocate then initialize the async queue list (Control and Bulk TD's)
 	async_base = (UINT_32)( Alloc(16 * EHCI_QUEUE_HEAD_SIZE, 32) );
-	__IMOS_MemZero((void*)async_base, 16 * EHCI_QUEUE_HEAD_SIZE);
+	__LiBOS_MemZero((void*)async_base, 16 * EHCI_QUEUE_HEAD_SIZE);
 	ehci_init_stack_frame(async_base);
 	
 	// set and start the Host Controllers schedule
@@ -325,7 +325,7 @@ BOOL ehci_reset_port(const int port)
 BOOL ehci_get_descriptor(const int port) 
 {
 	DEVICE_DESC dev_desc;
-	__IMOS_MemZero(&dev_desc, 18);
+	__LiBOS_MemZero(&dev_desc, 18);
 	/*
 	* Since most high-speed devices will only work with a max packet size of 64,
 	*  we don't request the first 8 bytes, then set the address, and request
@@ -351,7 +351,7 @@ BOOL ehci_get_descriptor(const int port)
 	ehci_set_address(max_packet, dev_address);
 	
 	// get the whole packet.
-	__IMOS_MemZero(&dev_desc, 18);
+	__LiBOS_MemZero(&dev_desc, 18);
 	if (!ehci_control_in(&dev_desc, 18, max_packet, dev_address))
 		return FALSE;
 	

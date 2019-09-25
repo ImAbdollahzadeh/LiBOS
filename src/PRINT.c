@@ -158,7 +158,7 @@ UINT_8* Disps(void)
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-void __IMOS_HexDump(void* pointer_to_buffer, UINT_32 bytes, INT_8* begin_message)
+void __LiBOS_HexDump(void* pointer_to_buffer, UINT_32 bytes, INT_8* begin_message)
 {
 	if (!pointer_to_buffer)
 		return;

@@ -87,7 +87,7 @@ UINT_32 RegisterPCI(PCI* pci, SATA* sata, EHCI* ehci, XHCI* x)
 				}
 				if(dev.class_id == 0x0C && dev.subclass_id == 0x03 && dev.interface_id == 0x30)
 				{
-					__IMOS_MemZero((void*)x, sizeof(XHCI));
+					__LiBOS_MemZero((void*)x, sizeof(XHCI));
 					
 					UINT_32 bar0 = (Read(pci, bus, device, function, FNC_BAR_0) & 0xFFFFFFF0);
 					UINT_32 bar1 =  Read(pci, bus, device, function, FNC_BAR_1);

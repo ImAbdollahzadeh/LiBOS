@@ -1,7 +1,7 @@
 #ifndef _KEYBOARD__H__
 #define _KEYBOARD__H__
 
-#include "IMOS_CORE.h"
+#include "LiBOS_CORE.h"
 #include "IDT.h"
 #include "PORT.h"
 

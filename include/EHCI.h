@@ -1,7 +1,7 @@
 #ifndef _EHCI__H__
 #define _EHCI__H__
 
-#include "IMOS_CORE.h"
+#include "LiBOS_CORE.h"
 
 #define EHC_CAPS_CapLength      0x00
 #define EHC_CAPS_Reserved       0x01

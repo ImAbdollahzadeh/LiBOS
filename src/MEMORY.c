@@ -13,10 +13,10 @@
  ****************************************************************************************************************************/
 
 
-void*   __IMOS_Heap             = (void*)  ( 0x01000000 );
-UINT_32 __IMOS_Heap_size        = (UINT_32)( 0xC0000000 - 0x01000000 - 1); // ~3 GiB
-void*   __IMOS_Urgent_Heap      = (void*)  ( 0x00100000 );
-UINT_32 __IMOS_Urgent_Heap_size = (UINT_32)( 0x00F00000 - 0x00100000 - 1); // 14 MiB
+void*   __LiBOS_Heap             = (void*)  ( 0x01000000 );
+UINT_32 __LiBOS_Heap_size        = (UINT_32)( 0xC0000000 - 0x01000000 - 1); // ~3 GiB
+void*   __LiBOS_Urgent_Heap      = (void*)  ( 0x00100000 );
+UINT_32 __LiBOS_Urgent_Heap_size = (UINT_32)( 0x00F00000 - 0x00100000 - 1); // 14 MiB
 
 #define SWAP_HOLE_ENTRIES(ENT1,ENT2) do { FREE_HOLE tmp; tmp = *ENT1; *ENT1 = *ENT2; *ENT2 = tmp; } while(0)
 #define MEMBLOCKSIZE (sizeof(MEM_BLOCK_PRECEDENTIAL) + sizeof(MEM_BLOCK_TERMINATION))
@@ -33,7 +33,7 @@ extern void CHECK_GS(UINT_32* gs);
 extern void CHECK_ES(UINT_32* es);
 extern void CHECK_FS(UINT_32* fs);
 
-static void* __IMOS_retrive_alloc_ptr(UINT_32 bytes, UINT_32 alignment, UINT_32 boundary, UINT_32* hole_or_heap, INT_32* entry)
+static void* __LiBOS_retrive_alloc_ptr(UINT_32 bytes, UINT_32 alignment, UINT_32 boundary, UINT_32* hole_or_heap, INT_32* entry)
 {
 	UINT_32 i = 0;
 	UINT_32 size = 0;
@@ -60,12 +60,12 @@ static void* __IMOS_retrive_alloc_ptr(UINT_32 bytes, UINT_32 alignment, UINT_32 
 
 	*entry = -1;
 	*hole_or_heap = HEAP;
-	return __IMOS_Heap;
+	return __LiBOS_Heap;
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-static void __IMOS_Remove_Entry(UINT_32 entry)
+static void __LiBOS_Remove_Entry(UINT_32 entry)
 {
 	int i;
 	for (i = entry; i < __free_hole_counter; i++)
@@ -75,7 +75,7 @@ static void __IMOS_Remove_Entry(UINT_32 entry)
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-static void __IMOS_SortFreeList(void)
+static void __LiBOS_SortFreeList(void)
 {
 	int i = 0, j = 0;
 
@@ -90,7 +90,7 @@ static void __IMOS_SortFreeList(void)
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-static void __IMOS_MergeFreeListEntries(void)
+static void __LiBOS_MergeFreeListEntries(void)
 {
 	UINT_32 i = 0;
 	UINT_32 j = 0;
@@ -120,7 +120,7 @@ static void __IMOS_MergeFreeListEntries(void)
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-static void __IMOS_RemoveTaggedEntries(void)
+static void __LiBOS_RemoveTaggedEntries(void)
 {
 	UINT_32 tagged = 0, i, j, ii;
 
@@ -163,7 +163,7 @@ void* Alloc(UINT_32 bytes, UINT_32 alignment, UINT_32 boundary)
 	MEM_BLOCK_PRECEDENTIAL blk1;
 	MEM_BLOCK_TERMINATION  blk2;
 
-	current_alloc_ptr = __IMOS_retrive_alloc_ptr(bytes, alignment, boundary, &got_from_hole, &hole_entry); // either alloc_ptr or zeroth of an empty hole
+	current_alloc_ptr = __LiBOS_retrive_alloc_ptr(bytes, alignment, boundary, &got_from_hole, &hole_entry); // either alloc_ptr or zeroth of an empty hole
 	current_alloc_ptr = (void*)((UINT_32)current_alloc_ptr + MEMBLOCKSIZE);
 
 	UINT_32 pointer_for_alignment = ((UINT_32)(current_alloc_ptr)+(alignment - 1)) & (~(alignment - 1));
@@ -189,12 +189,12 @@ void* Alloc(UINT_32 bytes, UINT_32 alignment, UINT_32 boundary)
 	*(MEM_BLOCK_TERMINATION*)((void*)(((UINT_32)current_alloc_ptr + sizeof(MEM_BLOCK_PRECEDENTIAL) + blk1.alignment_bound_space))) = blk2;
 
 	if (blk1.from_heap_or_hole == HEAP)
-		__IMOS_Heap = (void*)(((UINT_32)current_alloc_ptr + MEMBLOCKSIZE + blk1.alignment_bound_space + blk1.actual_allocated_bytes));
+		__LiBOS_Heap = (void*)(((UINT_32)current_alloc_ptr + MEMBLOCKSIZE + blk1.alignment_bound_space + blk1.actual_allocated_bytes));
 	else
 	{
 		//.printk("allocated from hole not heap ");
 		if(hole_entry != -1)
-			__IMOS_Remove_Entry(hole_entry);
+			__LiBOS_Remove_Entry(hole_entry);
 	}
 
 	//.printk("ZE = ^. S = ^. E = ^\n", (UINT_32)blk1.zeroth_ptr, (UINT_32)blk1.start_ptr, (UINT_32)blk1.end_ptr);
@@ -221,9 +221,9 @@ void Free(void* ptr)
 	if (blk1->from_heap_or_hole == HEAP) //it it have been already from hole, there is no need to increment the hole counter
 		__free_hole_counter++;
 
-	__IMOS_SortFreeList();
-	__IMOS_MergeFreeListEntries();
-	__IMOS_RemoveTaggedEntries();
+	__LiBOS_SortFreeList();
+	__LiBOS_MergeFreeListEntries();
+	__LiBOS_RemoveTaggedEntries();
 
 	//UINT_8* ttmp = (UINT_8*)blk1->zeroth_ptr;
 	//UINT_32 count = MEMBLOCKSIZE + blk1->alignment_bound_space + blk1->actual_allocated_bytes;

@@ -1,7 +1,7 @@
 #ifndef _XHCI__H__
 #define _XHCI__H__
 
-#include "IMOS_CORE.h"
+#include "LiBOS_CORE.h"
 
 #define CMND_RING_TRBS   256  // not more than 4096
 #define TRBS_PER_RING    256

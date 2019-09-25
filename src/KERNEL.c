@@ -1,4 +1,4 @@
-#include "../include/IMOS_CORE.h"
+#include "../include/LiBOS_CORE.h"
 #include "../include/GDT.h"
 #include "../include/PORT.h"
 #include "../include/IDT.h"
