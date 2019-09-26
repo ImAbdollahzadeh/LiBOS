@@ -11,6 +11,7 @@
 static INT_32 current_x_pos   = 0;
 static INT_32 current_y_pos   = 0;
 static BOOL this_TRB_to_print = FALSE;
+static BOOL usb_mouse_exist   = FALSE;
 
 #define SIGNED_8_BIT(UNSIGNED_8_BIT) (INT_8)((UINT_8)(UNSIGNED_8_BIT ^ 0xFF))
 
@@ -1524,11 +1525,11 @@ void xhci_slot_set_address(XHCI* x, BOOL BSR)
 		xhci_configuration_descriptor(x, ep->max_packet_size);
 		xhci_configure_endpoint(x);
 		xhci_set_configuration_device(x);
-		//xhci_HID_report(x, ep->max_packet_size);
-		////xhci_set_idle_HID(x);
-		//xhci_get_protocol_HID(x);
-		//xhci_set_protocol_HID(x);
-		//xhci_hid_mouse_poll(x);
+		xhci_HID_report(x, ep->max_packet_size);
+		//xhci_set_idle_HID(x);
+		xhci_get_protocol_HID(x);
+		xhci_set_protocol_HID(x);
+		xhci_hid_mouse_poll(x);
 	}
 }
 
@@ -1956,7 +1957,7 @@ void xhci_hid_mouse_poll(XHCI* x)
 	volatile UINT_32 buffer      = 0x00000000;
 	volatile UINT_32 buffer_addr = PHYSICAL_ADDRESS(&buffer);
 	BOOL ring_doorbel            = FALSE;
-
+		
 	while(TRUE)
 	{
 		FAST_MWRITE(EP_in_ring_Enqueue_pointer, 0x00, buffer_addr);
@@ -1988,6 +1989,15 @@ void xhci_hid_mouse_poll(XHCI* x)
 
 		WaitMiliSecond(6);
 	}
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+BOOL xhci_exist_and_ready_to_use_any_usb_mouse (void)
+{
+	if(usb_mouse_exist)
+		return TRUE;
+	return FALSE;
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

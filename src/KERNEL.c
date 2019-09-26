@@ -13,7 +13,7 @@
 #include "../include/KEYBOARD.h"
 #include "../include/MOUSE.h"
 #include "../include/MEMORY.h"
-#include "../include/VESA.h"
+#include "../include/SVGA.h"
 #include "../include/DOSSPEC.h"
 
 void KERNEL_MAIN_ENTRY(void)
@@ -23,6 +23,22 @@ void KERNEL_MAIN_ENTRY(void)
 	//printk("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
 	//printk("    Welcome to IMAN ABDOLLAHZADEH OS        \n");
 	//printk("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
+	
+	//.SVGA svga;
+	//.status = RegisterSVGA(&svga);
+	//.if(!status)
+	//.{
+	//.	panic( "SVGA registration failed\n" );
+	//.	return;
+	//.}
+	//.
+	//.unsigned char* fb = svga.LFB;
+	//.int i = 0;
+	//.int j = 0;
+	//.for(j=0;j <svga.height; j++){
+	//.	for(i=0; i<4*svga.width; i++)
+	//.		fb[(j*(svga.width * 4)) + i] = 255;
+	//.}
 	
 	GDT gdt;
 	status = RegisterGDT(&gdt);
@@ -68,7 +84,23 @@ void KERNEL_MAIN_ENTRY(void)
 		panic( "PCI registration failed\n" );
 		return;
 	}
-
+	
+	USB_MOUSE usb_mouse;
+	status = RegisterMouse(&usb_mouse);
+	if(!status)
+	{
+		panic( "USB MOUSE registration failed\n" );
+		return;
+	}
+	
+	SVGA svga;
+	status = RegisterSVGA(&svga);
+	if(!status)
+	{
+		panic( "SVGA registration failed\n" );
+		return;
+	}
+	
 	_STI();
 	while(1);
 }

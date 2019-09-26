@@ -8,10 +8,12 @@ objects =   obj/LOADER.o          \
             obj/PORT.o            \
             obj/IDT.o             \
             obj/EXTENDEDENTRIES.o \
+	    obj/BIOS_CALL.o       \
             obj/TIMER.o           \
             obj/PCI.o             \
 	    obj/AHCI.o            \
 	    obj/XHCI.o            \
+	    obj/SVGA.o            \
 	    obj/KEYBOARD.o        \
 	    obj/MOUSE.o           \
 	    obj/MEMORY.o          \
@@ -38,6 +40,8 @@ run:
 	@make GDT.o
 	@make PORT.o
 	@make EXTENDEDENTRIES.o
+	@make BIOS_CALL.o
+	@make SVGA.o
 	@make IDT.o
 	@make TIMER.o
 	@make PCI.o

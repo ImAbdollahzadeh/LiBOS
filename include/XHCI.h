@@ -509,5 +509,5 @@ void   get_contexts                 (XHCI* x, xHCI_SLOT_CONTEXT* global_slot, xH
 void   xhci_reset_endpoint          (XHCI* x, UINT_32 ep);
 void   xhci_set_configuration_device(XHCI* x);
 void   xhci_hid_mouse_poll          (XHCI* x);
-
+BOOL   xhci_exist_and_ready_to_use_any_usb_mouse (void);
 #endif

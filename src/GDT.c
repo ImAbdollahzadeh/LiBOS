@@ -38,6 +38,7 @@ UINT_32 RegisterGDT(GDT* gdt)
 	
 	gdt_pointer.size = (sizeof(SEGMENTDESCRIPTOR)*3) - 1;
 	gdt_pointer.base = (UINT_32)((void*)gdt);
+	
 	if(!gdt_pointer.size || !gdt_pointer.base)
 	{
 		panic("GDT pointer Failed\n");

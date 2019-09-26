@@ -25,7 +25,7 @@ void SetIDTEntry(UINT_8 Interrupt, UINT_32 HandlerAddress, UINT_16 CodeSegmentSe
 
 UINT_32 RegisterIDT(void)
 {
-	UINT_32 status = 0, i;	
+	UINT_32 status = 0, i;
 	
 	for(i=255;i>0;i--)
 	{
@@ -92,6 +92,7 @@ UINT_32 RegisterIDT(void)
 
 	idt_pointer.size = (sizeof(GATEDESCRIPTOR) * 256) - 1;
     idt_pointer.base = (UINT_32)((void*)(&idt[0]));
+	
 	if(!idt_pointer.size || !idt_pointer.base)
 	{
 		panic("IDT pointer Failed\n");

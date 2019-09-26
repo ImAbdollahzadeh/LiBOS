@@ -32,8 +32,8 @@ typedef unsigned int       BOOL;
 #	elif LiBOS_64_BIT
 #		define PHYSICAL_ADDRESS(ANY_POINTER) (UINT_64)((void*)(ANY_POINTER))
 #	else
-#   		define PHYSICAL_ADDRESS(ANY_POINTER) (0x00)
-#   	endif
+#   	define PHYSICAL_ADDRESS(ANY_POINTER) (0x00)
+#   endif
 
 // debuggers definitions
 #	define LiBOS_SPECIAL_GDT_DEBUGGER        FALSE   /* special debugger for high priority GDT stuff        */
