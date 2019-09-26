@@ -1,7 +1,7 @@
 # LiBOS
 A 32-bit operating system implemented fully in assembly and C languages<br/>
 It is gifted to my beloved gold fishes, Lila and Bob, who made the name of the OS to be originated from<br/>
-LiBOS: ##**Li**la and **B**ob **OS**
+LiBOS: ***Li***la and **B**ob **OS**
 
 # Aims:
 ## learn how an OS services by touching everything from scratch
