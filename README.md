@@ -30,3 +30,4 @@ iman_ab2013[at]yahoo[DoT]com<br/>Basically I'm always available
 13. Intel® 7 Series / C216 Chipset Family Platform Controller Hub (PCH) Datasheet: by Intel<br/>
 14. USB Made Simple: A Series of Articles on USB: Copyright © 2006-2008 MQP Electronics Ltd<br/>
 15. USB Device Class Definition for Human Interface Devices (HID) Version 1.11<br/>
+16. VESA BIOS EXTENSION (VBE); Core Functions; Standard Version: 2.0 Document Revision: 1.1<br/>
