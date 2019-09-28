@@ -5,41 +5,42 @@
 #include "../include/MEMORY.h"
 #include "../include/IDT.h"
 #include "../include/PORT.h"
+#include "../include/MOUSE.h"
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ GLOBAL AND STATIC VARIABLES
 
-static INT_32 current_x_pos   = 0;
-static INT_32 current_y_pos   = 0;
+//static INT_32 current_x_pos   = 0;
+//static INT_32 current_y_pos   = 0;
 static BOOL this_TRB_to_print = FALSE;
 static BOOL usb_mouse_exist   = FALSE;
 
-#define SIGNED_8_BIT(UNSIGNED_8_BIT) (INT_8)((UINT_8)(UNSIGNED_8_BIT ^ 0xFF))
-
-#define mouse_pointer_update(report_packet) do {                           \
-	UINT_8* vid = (UINT_8*)0xb8000;                                    \
-	INT_8 x = report_packet[1];                                        \
-	INT_8 y = report_packet[2];                                        \
-	if(x & 0x80)                                                       \
-		x = -SIGNED_8_BIT(x);                                      \
-	if(y & 0x80)                                                       \
-		y = -SIGNED_8_BIT(y);                                      \
-	UINT_32 position = ((current_y_pos * 160) + (current_x_pos << 1)); \
-	vid[position]     = ' ';                                           \
-	vid[position + 1] = 0x00;                                          \
-	current_x_pos += (x >> 4);                                         \
-	current_y_pos += (y >> 4);                                         \
-	if(current_x_pos >= 79) current_x_pos = 79;                        \
-	if(current_y_pos >= 24) current_y_pos = 24;                        \
-	if(current_x_pos <= 0)  current_x_pos = 0;                         \
-	if(current_y_pos <= 0)  current_y_pos = 0;                         \
-	position = ((current_y_pos * 160) + (current_x_pos << 1));         \
-	vid[position]     = 219;                                           \
-	vid[position + 1] = 0x04;                                          \
-	INT_8 status = report_packet[0];                                   \
-	if(status & BIT(0))      printk("LEFT CLICK pressed\n");           \
-	else if(status & BIT(1)) printk("RIGHT CLICK pressed\n");          \
-	else if(status & BIT(2)) printk("MIDDLE CLICK pressed\n");         \
-} while(0)
+//#define SIGNED_8_BIT(UNSIGNED_8_BIT) (INT_8)((UINT_8)(UNSIGNED_8_BIT ^ 0xFF))
+//
+//#define mouse_pointer_update(report_packet) do {                           \
+//	UINT_8* vid = (UINT_8*)0xb8000;                                    \
+//	INT_8 x = report_packet[1];                                        \
+//	INT_8 y = report_packet[2];                                        \
+//	if(x & 0x80)                                                       \
+//		x = -SIGNED_8_BIT(x);                                      \
+//	if(y & 0x80)                                                       \
+//		y = -SIGNED_8_BIT(y);                                      \
+//	UINT_32 position = ((current_y_pos * 160) + (current_x_pos << 1)); \
+//	vid[position]     = ' ';                                           \
+//	vid[position + 1] = 0x00;                                          \
+//	current_x_pos += (x >> 4);                                         \
+//	current_y_pos += (y >> 4);                                         \
+//	if(current_x_pos >= 79) current_x_pos = 79;                        \
+//	if(current_y_pos >= 24) current_y_pos = 24;                        \
+//	if(current_x_pos <= 0)  current_x_pos = 0;                         \
+//	if(current_y_pos <= 0)  current_y_pos = 0;                         \
+//	position = ((current_y_pos * 160) + (current_x_pos << 1));         \
+//	vid[position]     = 219;                                           \
+//	vid[position + 1] = 0x04;                                          \
+//	INT_8 status = report_packet[0];                                   \
+//	if(status & BIT(0))      printk("LEFT CLICK pressed\n");           \
+//	else if(status & BIT(1)) printk("RIGHT CLICK pressed\n");          \
+//	else if(status & BIT(2)) printk("MIDDLE CLICK pressed\n");         \
+//} while(0)
 
 #define xDEBUG FALSE
 #define xINTERRUPT_HANDLER_DEBUG FALSE
@@ -1957,7 +1958,9 @@ void xhci_hid_mouse_poll(XHCI* x)
 	volatile UINT_32 buffer      = 0x00000000;
 	volatile UINT_32 buffer_addr = PHYSICAL_ADDRESS(&buffer);
 	BOOL ring_doorbel            = FALSE;
-		
+	
+	USB_MOUSE* usb_mouse = get_usb_mouse_instance();
+
 	while(TRUE)
 	{
 		FAST_MWRITE(EP_in_ring_Enqueue_pointer, 0x00, buffer_addr);
@@ -1983,11 +1986,12 @@ void xhci_hid_mouse_poll(XHCI* x)
 			ring_doorbel == TRUE;
 			signal_from_HID_MOUSE_to_irq = FALSE;	
 		}
-			
-		mouse_pointer_update( ((INT_8*)((void*)buffer_addr)) );
+
+		//mouse_pointer_update( ((INT_8*)((void*)buffer_addr)), (lfb) );
+		fast_pointer_blitter( (INT_8*)((void*)buffer_addr), usb_mouse );
 		buffer = 0;
 
-		WaitMiliSecond(6);
+		WaitMiliSecond(10);
 	}
 }
 

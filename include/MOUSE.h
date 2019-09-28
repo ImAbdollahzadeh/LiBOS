@@ -8,13 +8,16 @@
 typedef struct _USB_MOUSE {
 	UINT_8* up_pointer;
 	UINT_8* back_pointer;
-	void(*usb_mouse_pointer_blitter)(UINT_8* report_packet);
 	UINT_32 reserved;
 } __attribute__((packed)) USB_MOUSE;
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-UINT_32 RegisterMouse(USB_MOUSE* usb_mouse);
+UINT_32    RegisterMouse                        (USB_MOUSE* usb_mouse);
+void       fast_pointer_blitter                 (INT_8* report_packet, USB_MOUSE* usb_mouse);
+void       usb_mouse_construct_up_mouse_pointer (void);
+void       usb_mouse_blit_from_to               (UINT_8* from, UINT_8* to, UINT_32 byte, BOOL direction);
+USB_MOUSE* get_usb_mouse_instance               (void);
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
   

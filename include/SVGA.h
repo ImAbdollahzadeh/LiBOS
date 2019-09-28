@@ -108,6 +108,7 @@ extern void    __LiBOS_BiosCall          (UINT_8 call_number, SVGA_REGS_16_BIT* 
        SVGA*   get_svga_instance         (void);
        void    svga_report_vbe_info      (SVGA* svga);
        void    svga_report_vbe_mode_info (SVGA* svga);
+       void    page_flip                 (UINT_32 address);
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 

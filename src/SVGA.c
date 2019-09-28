@@ -12,7 +12,9 @@ static BOOL BiosCall(UINT_8 call_number, UINT_32 query_mode, SVGA* svga)
 {
 	SVGA_REGS_16_BIT r;
 	
-	UINT_16 mode = 0x0118;
+	UINT_16 mode = 0x0118; // 0x0118: 24 bit <8:8:8>   - (1024 x 768)
+	                       // 0x011B: 24 bit <8:8:8>   - (1280 x 1024)
+	                       // 0x0164: 32 bit <8:8:8:8> - (1440 x 900)
 	
 	// hard coded below 1MiB area allocation
 	VBE_INFO*      vbe_info      = (VBE_INFO*)0x0600;  
@@ -110,12 +112,12 @@ UINT_32 RegisterSVGA(SVGA* svga)
 	else
 		svga_report_vbe_mode_info(svga);
 	
-	//status = BiosCall(0x10, LIBOS_SET_MODE, svga);
-	//if(!status)
-	//{
-	//	printk("svga set_mode failed\n");
-	//	return 0;
-	//}
+	status = BiosCall(0x10, LIBOS_SET_MODE, svga);
+	if(!status)
+	{
+		printk("svga set_mode failed\n");
+		return 0;
+	}
 	
 	global_svga = svga;
 	
@@ -191,4 +193,14 @@ SVGA* get_svga_instance(void)
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+void page_flip(UINT_32 address)
+{
+	SVGA_REGS_16_BIT r;
+	r.ax = 0x4F07;
+	r.bx = 0x0000;
+	r.cx = LOW_WORD (address);
+	r.dx = HIGH_WORD(address);
+	__LiBOS_BiosCall(0x10, &r);
+}
 
