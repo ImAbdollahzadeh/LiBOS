@@ -12,11 +12,15 @@ objects =   obj/LOADER.o          \
             obj/TIMER.o           \
             obj/PCI.o             \
 	    obj/AHCI.o            \
+	    obj/FILE.o            \
+	    obj/FILESYSTEM.o      \
+	    obj/DOSSPEC.o         \
 	    obj/XHCI.o            \
 	    obj/SVGA.o            \
 	    obj/KEYBOARD.o        \
 	    obj/MOUSE.o           \
 	    obj/MEMORY.o          \
+	    obj/LiBOS_LOGO.o      \
             obj/KERNEL.o
 
 %.o: ./src/%.c
@@ -45,12 +49,16 @@ run:
 	@make IDT.o
 	@make TIMER.o
 	@make PCI.o
+	@make FILE.o
+	@make FILESYSTEM.o
+	@make DOSSPEC.o
 	@make AHCI.o
 	@make XHCI.o
 	@make KEYBOARD.o
 	@make MOUSE.o
 	@make MEMORY.o
 	@make KERNEL.o
+	@make LiBOS_LOGO.o
 	@make LiBOS.bin
 	@make copy_to_boot
 	@make run_qemu

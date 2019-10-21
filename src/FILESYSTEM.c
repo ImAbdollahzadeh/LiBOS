@@ -4,12 +4,16 @@
 #include "../include/MEMORY.h"
 #include "../include/DOSSPEC.h"
 
+#define SWAP_ENDIANNESS(u8_ptr, N) do { *N = (((UINT_32)(u8_ptr)[3]) | ((UINT_32)(u8_ptr[2]) << 8) | ((UINT_32)(u8_ptr[1]) << 16) | ((UINT_32)(u8_ptr[0]) << 24)); } while(0)
+
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ GLOBAL AND STATIC VARIABLES
 
 UINT_32 sata_in_use = 0;
 UINT_32 RootStartAsDriveEntry = 0; // visible only to FILE.c
 UINT_32 RootData = 0; 
 UINT_32 RootSectorsPerCluster = 0; 
+/**/UINT_32 Fat_start = 0;
+/**/UINT_32 bps = 0;
 SATA*   RootSata = 0;
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -33,10 +37,12 @@ UINT_32 ReadBiosBlock( SATA* hd, UINT_32 partitionOffset )
 	}
 	
 	fatStart  = partitionOffset + bpb.reservedSectors;
+	/**/Fat_start = fatStart;
 	fatSize   = bpb.tableSize;
 	fatCopies = (UINT_32)bpb.fatCopies;
 	dataStart = fatStart  + fatSize * bpb.fatCopies;
 	rootStart = dataStart + bpb.sectorPerCluster * (bpb.rootCluster - 2);
+	/**/bps = bpb.bytesPerSector;
 
 	status = read(&hd->abar->ports[hd->sata_port_number], rootStart, 0, 1 /* that's exactly 1 sector of 512 bytes */, (UINT_8*)&dirent[0]);
 	if (!status)
@@ -91,44 +97,91 @@ UINT_32 ReadOperation( HDPARAMS DriveVolume, DESCRIPTOR* descriptor, UINT_8* Buf
 		panic("Reading DriveRoot failed\n");
 		return 0;
 	}
-	
+
 	while(descriptor_tree_count)
 	{
 		which_dirent = (tree & ((UINT_64)(0x0F) << i)) >> i;
 		paperCluster  = (((UINT_32)(dirent[which_dirent].firstClusterHigh) << 16)) | (((UINT_32)dirent[which_dirent].firstClusterLow));
 		paperSector   = data + secpclus * (paperCluster - 2);
-		status       = (descriptor_tree_count==1) ? read(&hd->abar->ports[hd->sata_port_number], paperSector, 0, 1, Buffer)
-			                                      : read(&hd->abar->ports[hd->sata_port_number], paperSector, 0, 1, (UINT_8*)&dirent[0]);
+		//.status       = (descriptor_tree_count==1) ? read(&hd->abar->ports[hd->sata_port_number], paperSector, 0, 1, Buffer)
+		//.	                                      : read(&hd->abar->ports[hd->sata_port_number], paperSector, 0, 1, (UINT_8*)&dirent[0]);
+		//.
+		printk("SectorPerCluster: %\n", secpclus);
+		printk("BytesPerSector: %\n", (UINT_32)bps);
+		BOOL __first__ = TRUE;
+		if(descriptor_tree_count==1)
+		{
+			INT_32 SIZE = dirent[which_dirent].size; // file's byte size
+			printk("file size: % bytes\n", (UINT_32)SIZE);
+			UINT_32 next_paper_cluster = paperCluster;
+			printk("first cluster:^\n", next_paper_cluster);
+			UINT_8 fat_buffer[513];
+			UINT_32 n_sector = 0;
+			UINT_8* main_buffer = (UINT_8*)(&Buffer[0]);
+			while(SIZE > 0)
+			{
+				paperSector = data + (secpclus * (next_paper_cluster - 2));
+				UINT_32 sector_offset = 0;
+				
+				while(sector_offset < secpclus)
+				{
+					read(&hd->abar->ports[hd->sata_port_number], (paperSector + sector_offset), 0, 1, main_buffer);
+					main_buffer = (UINT_8*)((void*)(PHYSICAL_ADDRESS(main_buffer) + 512));
+					SIZE -= 512;
+					n_sector++;
+					sector_offset++;
+				}
+
+				printk("% sector read\n", n_sector);
+				
+				UINT_32 Fat_sector_for_current_cluster = Fat_start + ((next_paper_cluster * 4) / 512);
+				read(&hd->abar->ports[hd->sata_port_number], Fat_sector_for_current_cluster, 0, 1, fat_buffer);
+				
+				UINT_32 Fat_offset_in_sector_for_current_cluster = ((next_paper_cluster * 4) - 1)% 512;//(__first__) ? ((next_paper_cluster * 4) % 512) : (((next_paper_cluster * 4) - 4) % 512);
+				//__first__ = FALSE;
+				UINT_8* tmp_ptr = (UINT_8*)((void*)(&fat_buffer[Fat_offset_in_sector_for_current_cluster]));
+				__LiBOS_HexDump((void*)tmp_ptr, 4, "");
+
+				UINT_32 pt = (*(UINT_32*)tmp_ptr) & 0x0FFFFFFF;
+				//SWAP_ENDIANNESS(tmp_ptr, &pt);
+				next_paper_cluster = pt;
+				printk("next cluster:^\n", next_paper_cluster);
+			}
+		}
+		else
+			status = read(&hd->abar->ports[hd->sata_port_number], paperSector, 0, 1, (UINT_8*)&dirent[0]);
+		
 		if (!status)
 		{
 			panic("Reading 'PORT & PAPERS' failed\n");
 			return 0;
 		}
+		
 		i += 4;
 		descriptor_tree_count--;
 	}
 	
 	
 	Buffer[dirent[which_dirent].size] = '\0';
-	printk((char*)Buffer);
-	printk("\n");
+	//.printk((char*)Buffer);
+	//.printk("\n");
 	
 	return 1;
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-DESCRIPTOR OpenOperation( HDPARAMS DriveVolume, IN_8* DosPath )
+DESCRIPTOR OpenOperation( HDPARAMS DriveVolume, INT_8* DosPath )
 {
 	DESCRIPTOR      desc                            = { .validity = 0x00000000, .tree = 0ULL };
 	UINT_8          LiBOS_OPEN                      = 0xE1;
 	UINT_8          LiBOS_TREE_NIBBLE_COUNT         = 0x00;
 	UINT_8          LiBOS_NOTHING_FLAG              = 0x00;
-	UINT_8          LiBOS_RESERVED                  = 0x88;	
+	UINT_8          LiBOS_RESERVED                  = 0x88;
 	UINT_32         status, j, k, _offs, offs, directory_children = 0;
 	DIRECTORYENTRY  dirent[16];            
 	UINT_32         root                           = DriveVolume.root;
-	PSATA           hd                             = DriveVolume.sata;
+	SATA*           hd                             = DriveVolume.sata;
 	UINT_32         data                           = DriveVolume.data;
 	UINT_32         secpclus                       = DriveVolume.sectorsPerCluster;
 	DOSNAME         dosNamePackage                 = { .next = 0 };
@@ -156,13 +209,13 @@ DESCRIPTOR OpenOperation( HDPARAMS DriveVolume, IN_8* DosPath )
 		for(j=0;j<16;j++)
 		{
 			if (dirent[j].name[0] == 0x00)
-				break;		
+				break;
 			if (dirent[j].name[0] == 0xE5)
 				continue;
 			
 			INT_8 tmp[15];
 		    for(k=0;k<11;k++)
-		    	tmp[k] = dirent[j].name[k];
+				tmp[k] = dirent[j].name[k];
 		
 			status = DosStrcmp(tmp, thisPath, 11);
 			
@@ -283,7 +336,7 @@ UINT_32 ReadPartition( SATA* hd )
 		//	}
 		//}
 		
-		if(mbr.primaryPartitions[j].partition_id == 0x0B) //FAT32
+		if(mbr.primaryPartitions[j].partition_id == 0x0C) //FAT32
 		{
 			status = ReadBiosBlock(hd, mbr.primaryPartitions[j].start_lba);
 			if (!status)
@@ -301,7 +354,7 @@ UINT_32 ReadPartition( SATA* hd )
 
 UINT_32 RegisterFilesystem( FILESYSTEM* filesystem, SATA* sata )
 {
-	UINT_32 status;	
+	UINT_32 status;
 	if(!sata)
 	{
 		panic("Invalid SATA object\n");

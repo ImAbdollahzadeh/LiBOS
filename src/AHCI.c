@@ -1,5 +1,6 @@
 #include "../include/AHCI.h"
 #include "../include/PRINT.h"
+#include "../include/TIMER.h"
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ GLOBAL AND STATIC VARIABLES
 
@@ -108,7 +109,7 @@ int FindCmdSlot(HBA_PORT* port)
 
 int read(HBA_PORT* port, UINT_32 startl, UINT_32 starth, UINT_32 count, UINT_8* buf)
 {
-	int i, spin = 0; 
+	INT_32 i, spin = 0; 
 	
 	port->is = (UINT_32) -1;
 	int slot = FindCmdSlot(port);
@@ -116,7 +117,7 @@ int read(HBA_PORT* port, UINT_32 startl, UINT_32 starth, UINT_32 count, UINT_8* 
 	{
 		panic("slot=-1\n");
 		return 0;
-	}		
+	}
  
 	HBA_CMD_HEADER* cmdheader = (HBA_CMD_HEADER*)port->clb;
 	cmdheader += slot;
@@ -148,7 +149,7 @@ int read(HBA_PORT* port, UINT_32 startl, UINT_32 starth, UINT_32 count, UINT_8* 
 	cmdfis->c = 1;	// Command
 	cmdfis->command = ATA_CMD_READ_DMA_EX;
  
-	cmdfis->lba0 = (UINT_8)startl;
+	cmdfis->lba0 = (UINT_8)(startl);
 	cmdfis->lba1 = (UINT_8)(startl>>8);
 	cmdfis->lba2 = (UINT_8)(startl>>16);
 	cmdfis->device = 1<<6;	// LBA mode
@@ -168,7 +169,7 @@ int read(HBA_PORT* port, UINT_32 startl, UINT_32 starth, UINT_32 count, UINT_8* 
 		panic("port is hung\n");
 		return 0;
 	}
- 
+	
 	port->ci = 1<<slot;	// Issue command
  
 	// Wait for completion
@@ -184,8 +185,8 @@ int read(HBA_PORT* port, UINT_32 startl, UINT_32 starth, UINT_32 count, UINT_8* 
 			return 0;
 		}
 	}
- 
-	// Check again
+ 	
+	//Check again
 	if (port->is & HBA_PxIS_TFES)
 	{
 		printk("read disk error %\n", 1);
@@ -255,7 +256,7 @@ void AhciBegin( SATA* hd )
 	hd->abar             = (HBA_MEM*)bar5;
 	abar                 = (HBA_MEM*)hd->abar;
 	ProbePort(abar, &harddisk_port);
-	hd->sata_port_number = harddisk_port;	
+	hd->sata_port_number = harddisk_port;
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

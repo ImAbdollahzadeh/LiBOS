@@ -61,7 +61,7 @@ void fast_pointer_blitter(INT_8* report_packet, USB_MOUSE* usb_mouse)
 	if(y & 0x80)
 		y = -SIGNED_8_BIT(y);
 	
-	UINT_8* target = (UINT_8*)((void*)(&fb[(current_y_pos * 4 * width) + (current_x_pos * 4)]));
+	UINT_8* target = (UINT_8*)((void*)(&fb[4 * ((current_y_pos * width) + (current_x_pos))]));
 	
 	usb_mouse_blit_from_to(usb_mouse->back_pointer, target, 1024, TRUE);
 	
@@ -75,7 +75,7 @@ void fast_pointer_blitter(INT_8* report_packet, USB_MOUSE* usb_mouse)
 	if(current_y_pos >= (height-8)) current_y_pos = height-8;
 	
 
-	target = (UINT_8*)((void*)(&fb[(current_y_pos * 4 * width) + (current_x_pos * 4)]));
+	target = (UINT_8*)((void*)(&fb[4 * ((current_y_pos * width) + (current_x_pos))]));
 	
 	usb_mouse_blit_from_to(target, usb_mouse->back_pointer, 1024, FALSE);
 	usb_mouse_blit_from_to(target, usb_mouse->up_pointer, 1024, FALSE);
@@ -234,8 +234,17 @@ void usb_mouse_blit_from_to(UINT_8* from, UINT_8* to, UINT_32 byte, BOOL directi
 	}
 	while(j < 16)
 	{
-		for(i=0; i<64; i++)
-			to[(j*64) + i] = from[(j*4*width) + i];
+		*trg++ = *src++;
+		*trg++ = *src++;
+		*trg++ = *src++;
+		*trg++ = *src++;
+		*trg++ = *src++;
+		*trg++ = *src++;
+		*trg++ = *src++;
+		*trg++ = *src++;
+		src    = (UINT_64*)((void*)(PHYSICAL_ADDRESS(src) + (4*width) - 64));
+		//for(i=0; i<64; i++)
+		//	to[(j*64) + i] = from[(j*4*width) + i];
 		j++;
 	}
 }

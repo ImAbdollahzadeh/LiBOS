@@ -745,7 +745,7 @@ BOOL xhci_start_controller(XHCI* x)
         
 	if(xDEBUG)
 		printk("prim. interrupter:^\n", interrupter0); 
-    
+	
 	mwrite(interrupter0, xHC_INTERRUPTER_IMAN,       (xHC_IMAN_IE | xHC_IMAN_IP)); 
 	mwrite(interrupter0, xHC_INTERRUPTER_ERSTSZ,     1); 
 	mwrite(interrupter0, xHC_INTERRUPTER_ERSTBA,     (UINT_32)x->erst); 
@@ -1988,7 +1988,8 @@ void xhci_hid_mouse_poll(XHCI* x)
 		}
 
 		//mouse_pointer_update( ((INT_8*)((void*)buffer_addr)), (lfb) );
-		fast_pointer_blitter( (INT_8*)((void*)buffer_addr), usb_mouse );
+		if((buffer & 0x0000FF00) || (buffer & 0x00FF0000))
+			fast_pointer_blitter( (INT_8*)((void*)buffer_addr), usb_mouse );
 		buffer = 0;
 
 		WaitMiliSecond(10);

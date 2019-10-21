@@ -8,6 +8,9 @@
        TIMER   global_OS_timer;             /* This is the main OS's timer */
        UINT_32 __ProgramTimer(UINT_32 Hz);  /* Forward declaration of internal function */
 static UINT_32 timer_ticks    = 0;          /* This is the main OS timer tick counter */
+static UINT_32 timer_tick_low_user = 0;
+static UINT_32 timer_tick_high_user = 0;
+
 void __CurrentTimeReporter(void);
 void __CurrentDateReporter(void);
 
@@ -18,7 +21,13 @@ void timer_handler(REGS* r)
 	/* we don't want to bother with the minimum timer_handler 
 	   requirement for the OS. All other stuff related to the timer would be 
 	   implemented separately. Here only the timer tick update is enough */
-	timer_ticks++    == 0xFFFFFFFF ? timer_ticks    = 0 : 0;
+	timer_ticks++ == 0xFFFFFFFF ? timer_ticks = 0 : 0;
+	
+	if(timer_tick_low_user++ == 0xFFFFFFFF)
+	{
+		timer_tick_low_user = 0;
+		timer_tick_high_user++;
+	}
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -157,6 +166,22 @@ void __CurrentTimeReporter(void)
 void __CurrentDateReporter(void)
 {
 	return;
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+void start_user_timer(void)
+{
+	timer_tick_low_user  = 0;
+	timer_tick_high_user = 0;
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+void end_user_timer(UINT_32* high_packet, UINT_32* low_packet)
+{
+	*high_packet = timer_tick_high_user;
+	*low_packet  = timer_tick_low_user;
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

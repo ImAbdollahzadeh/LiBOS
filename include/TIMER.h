@@ -32,6 +32,8 @@ UINT_32 RegisterTimer                (TIMER* timer, UINT_32 Hz);
 void    WaitMicroSecond              (UINT_32 usec);  
 void    WaitMiliSecond               (UINT_32 msec);  
 void    WaitSecond                   (UINT_32 sec);
+void    start_user_timer             (void);
+void    end_user_timer               (UINT_32*, UINT_32*);
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 

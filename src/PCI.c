@@ -49,17 +49,17 @@ UINT_32 RegisterPCI(PCI* pci, SATA* sata, EHCI* ehci, XHCI* x)
 
 				if(dev.class_id == 0x01 && dev.subclass_id == 0x06)
 				{
-					//.UINT_32 BAR5 = Read(pci, bus, device, function, FNC_BAR_5);
-					//.printk("    In PCI: AHCI SATA with Bar 5 = ^ found\n", BAR5);
-					//.
-					//.sata->valid            = 1;
-					//.sata->bus              = bus;
-					//.sata->device           = device;
-					//.sata->bar5             = (void*)BAR5;
-					//.sata->abar             = 0;
-					//.sata->sata_port_number = 0;
-					//.
-					//.AhciBegin( sata );
+					UINT_32 BAR5 = Read(pci, bus, device, function, FNC_BAR_5);
+					printk("    In PCI: AHCI SATA with Bar 5 = ^ found\n", BAR5);
+					
+					sata->valid            = 1;
+					sata->bus              = bus;
+					sata->device           = device;
+					sata->bar5             = (void*)BAR5;
+					sata->abar             = 0;
+					sata->sata_port_number = 0;
+					
+					AhciBegin( sata );
 				}
 				if(dev.class_id == 0x0C && dev.subclass_id == 0x03 && dev.interface_id == 0x20)
 				{

@@ -44,7 +44,7 @@ UINT_32 DosStringToDosNamePackage(INT_8* DosPath, DOSNAME* dosNamePackage)
 		else
 		{
 			tmp->name[i] = '\0';
-			tmp->next = (PDOSNAME)Alloc(sizeof(DOSNAME));
+			tmp->next = (DOSNAME*)Alloc(sizeof(DOSNAME), 1, 1);
 			tmp->next->next = 0;
 			tmp = tmp->next;
 			i = 0;
@@ -262,7 +262,7 @@ INT_8* CStringAddressToDosString(INT_8* CStringAddress)
 
 void DosPrint(DOSNAME* dos)
 {
-	PDOSNAME tmp = dos;
+	DOSNAME* tmp = dos;
 	while (tmp->next != 0)
 	{
 		printk((INT_8*)(tmp->name));
@@ -301,14 +301,7 @@ UINT_32 ReleaseDosPackage(DOSNAME* dosNamePackage)
 	}
 	
 	if(tmp->next)
-	{
-		status = Free(tmp->next);
-		if(!status)
-		{
-			panic("Releasing allocated memory failed\n");
-			return 0;
-		}
-	}
+		Free(tmp->next);
 	
 	tmp = tmp->next;
 	if(tmp)
