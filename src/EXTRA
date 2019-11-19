@@ -1,0 +1,87 @@
+	//.BOOL dir = FALSE;
+	//.int gradient = 0;
+	//.int gradient_width = 4;
+	//.for(j=0;j <svga.height; j++)
+	//.{
+	//.	for(i=0; i<4*svga.width; i += 4)
+	//.	{
+	//.		/* my desktop solid color */
+	//.		fb[(j*(svga.width * 4)) + i]     = (0xff >> gradient);
+	//.		fb[(j*(svga.width * 4)) + i + 1] = 0x00;
+	//.		fb[(j*(svga.width * 4)) + i + 2] = (0x66 >> gradient);
+	//.	}
+	//.	
+	//.	if(!dir)
+	//.	{
+	//.		gradient_width--;
+	//.		if(!gradient_width)
+	//.		{
+	//.			gradient++;
+	//.			gradient_width = 4;
+	//.		}
+	//.	}
+	//.	else 
+	//.	{
+	//.		gradient_width--;
+	//.		if(!gradient_width)
+	//.		{
+	//.			gradient--;
+	//.			gradient_width = 4;
+	//.		}
+	//.	}
+	//.	if(gradient == -1 || gradient == 9)
+	//.	{
+	//.		if(dir) dir = FALSE;
+	//.		else    dir = TRUE;
+	//.		if(gradient == -1) gradient = 0;
+	//.		if(gradient == 9)  gradient = 8;
+	//.	}
+	//.}
+
+
+
+
+	//.USB_MOUSE usb_mouse;
+	//.status = RegisterMouse(&usb_mouse);
+	//.if(!status)
+	//.{
+	//.	panic( "USB MOUSE registration failed\n" );
+	//.	return;
+	//.}
+	
+	
+	//UINT_8* PAGE0 = (UINT_8*)( Alloc(3*1024*1024, 1, 1) ); 
+	//
+	//__LiBOS_HexDump((void*)file_buffer, 16, "frame 1");	
+	
+	//UINT_8* PAGE0  = fb;
+	//UINT_8* PAGE1  = (UINT_8*)((void*)(PHYSICAL_ADDRESS(fb) + ( 1024*768*4 ))); 
+	
+	
+	
+	
+	//while(1)
+	//{
+	//	//page_flip(0);
+	//	BINPAPER file1 = PaperOpen("LIBOS_TEST_WITH_LARGE_FILES/fframe_4.imn");
+	//	PaperRead(&file1, PAGE0, 2*1024*1024);
+	//	//.WaitMiliSecond(100);
+	//	//__LiBOS_HexDump((void*)PAGE0, 24, "frame 2");
+	//	//__LiBOS_MemZero((void*)PAGE0, 100);
+	//	
+	//	//page_flip(1024*768*16);
+	//	//__LiBOS_HexDump((void*)PAGE0, 24, "frame 1");
+	//	BINPAPER file2 = PaperOpen("LIBOS_TEST_WITH_LARGE_FILES/fframe_3.imn");
+	//	PaperRead(&file2, PAGE0, 2*1024*1024);
+	//	//.WaitMiliSecond(100);
+	//}
+	
+	
+	//int i = 0;
+	///**/UINT_32 l = 0;
+	///**/UINT_32 h = 0;
+	///**/start_user_timer();
+	//
+	///**/end_user_timer(&h, &l);
+	///**/printk("Timer test: HIGH packet = %, LOW packet = %\n", h, l);
+	//__LiBOS_HexDump ((void*)file_buffer, 34, "Test file reading");
