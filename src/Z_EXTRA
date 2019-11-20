@@ -85,3 +85,22 @@
 	///**/end_user_timer(&h, &l);
 	///**/printk("Timer test: HIGH packet = %, LOW packet = %\n", h, l);
 	//__LiBOS_HexDump ((void*)file_buffer, 34, "Test file reading");
+	
+	extern void _activate_SSE(void);
+ 
+_activate_SSE:
+	mov eax, 0x1
+	cpuid
+	test edx, 0x02000000
+	jnz DONE
+
+ACTIVATE_SSE:
+	mov eax, cr0
+	and ax, 0xFFFB		
+	or ax, 0x2			
+	mov cr0, eax
+	mov eax, cr4
+	or ax, 0x0600		
+	mov cr4, eax
+DONE:
+	ret
