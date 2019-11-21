@@ -104,3 +104,24 @@ ACTIVATE_SSE:
 	mov cr4, eax
 DONE:
 	ret
+
+
+
+
+segment .code
+    fxsave [fxsave_region]
+    mov eax, [fxsave_region + 28]
+    or eax, eax
+    jnz .next
+    mov eax, 0xffbf        ; the default MXCSR_MASK for CPUs that don't support MXCSR_MASK
+.next:
+    mov [mxcsr_mask], eax  ; optional: save MXCSR_MASK for later changes to MXCSR
+    and eax, 0x1f80        ; your desired value of MXCSR goes here
+    mov [mem], eax
+    ldmxcsr [mem]
+
+segment .data
+mem: dd 0
+mxcsr_mask: dd 0
+align 16
+fxsave_region: times 512 db 0
