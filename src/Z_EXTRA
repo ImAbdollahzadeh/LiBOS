@@ -125,3 +125,16 @@ mem: dd 0
 mxcsr_mask: dd 0
 align 16
 fxsave_region: times 512 db 0
+
+
+
+;TEST
+test_sse:
+	push ebp
+    	mov  ebp, esp
+	
+	movaps xmm0, [test_memory]
+	
+	mov  esp, ebp
+    	pop  ebp
+    	ret
