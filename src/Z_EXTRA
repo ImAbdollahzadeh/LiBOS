@@ -87,25 +87,49 @@
 	//__LiBOS_HexDump ((void*)file_buffer, 34, "Test file reading");
 	
 	extern void _activate_SSE(void);
- 
-_activate_SSE:
-	mov eax, 0x1
-	cpuid
-	test edx, 0x02000000
-	jnz DONE
 
-ACTIVATE_SSE:
-	mov eax, cr0
-	and ax, 0xFFFB		
-	or ax, 0x2			
-	mov cr0, eax
-	mov eax, cr4
-	or ax, 0x0600		
-	mov cr4, eax
-DONE:
+;+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+;+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+[BITS 32]
+
+segment .data
+
+align 16
+coeffi : dd 2.0, 3.0, 4.0, 5.0
+
+global _test
+global _activate_sse
+section .text
+
+_test:
+	push   ebp
+	mov    ebp, esp
+	mov    eax, [ebp + 8 ] ;get first  float* pointer
+	mov    esi, [ebp + 12] ;get second float* pointer
+	movaps xmm0, [esi] 
+	addps  xmm0, [coeffi]	
+	movss [eax], xmm0	
+	;movaps [eax], xmm0
+	mov    esp, ebp
+	pop	 ebp
 	ret
 
 
+
+_activate_sse:
+
+	fninit
+	mov eax, cr0
+	and al, ~0x04
+	or al, 0x22
+	mov cr0, eax
+	mov eax, cr4
+	or ax, 0x600
+	mov cr4, eax
+	ret
+
+;+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+;+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 
 
 segment .code
@@ -125,16 +149,3 @@ mem: dd 0
 mxcsr_mask: dd 0
 align 16
 fxsave_region: times 512 db 0
-
-
-
-;TEST
-test_sse:
-	push ebp
-    	mov  ebp, esp
-	
-	movaps xmm0, [test_memory]
-	
-	mov  esp, ebp
-    	pop  ebp
-    	ret
