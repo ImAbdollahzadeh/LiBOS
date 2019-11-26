@@ -193,6 +193,9 @@ void FAULT_HANDLER(REGS* r)
     {
         panic(__exception_messages[r->int_no]);
         panic(" Exception. System Halted!\n");
+		//printk("eax:^, ebx:^, ecx:^, edx:^\n", r->eax, r->ebx, r->ecx, r->edx);
+		//printk("eip:^, cs:^, ss:^, eflags:^\n", r->eip, r->cs, r->ss, r->eflags);
+		//printk("err_code:^\n", r->err_code);
         while(1);
     }
 }

@@ -106,46 +106,45 @@ UINT_32 ReadOperation( HDPARAMS DriveVolume, DESCRIPTOR* descriptor, UINT_8* Buf
 		//.status       = (descriptor_tree_count==1) ? read(&hd->abar->ports[hd->sata_port_number], paperSector, 0, 1, Buffer)
 		//.	                                      : read(&hd->abar->ports[hd->sata_port_number], paperSector, 0, 1, (UINT_8*)&dirent[0]);
 		//.
-		printk("SectorPerCluster: %\n", secpclus);
-		printk("BytesPerSector: %\n", (UINT_32)bps);
-		BOOL __first__ = TRUE;
+		//printk("SectorPerCluster: %\n", secpclus);
+		//printk("BytesPerSector: %\n", (UINT_32)bps);
 		if(descriptor_tree_count==1)
 		{
 			INT_32 SIZE = dirent[which_dirent].size; // file's byte size
-			printk("file size: % bytes\n", (UINT_32)SIZE);
+			//printk("file size: % bytes\n", (UINT_32)SIZE);
 			UINT_32 next_paper_cluster = paperCluster;
-			printk("first cluster:^\n", next_paper_cluster);
+			//printk("first cluster:^\n", next_paper_cluster);
 			UINT_8 fat_buffer[513];
 			UINT_32 n_sector = 0;
 			UINT_8* main_buffer = (UINT_8*)(&Buffer[0]);
+			UINT_32 sector_offset = 0;
 			while(SIZE > 0)
 			{
 				paperSector = data + (secpclus * (next_paper_cluster - 2));
-				UINT_32 sector_offset = 0;
+				sector_offset = 0;
 				
 				while(sector_offset < secpclus)
 				{
-					read(&hd->abar->ports[hd->sata_port_number], (paperSector + sector_offset), 0, 1, main_buffer);
-					main_buffer = (UINT_8*)((void*)(PHYSICAL_ADDRESS(main_buffer) + 512));
-					SIZE -= 512;
-					n_sector++;
-					sector_offset++;
+					read(&hd->abar->ports[hd->sata_port_number], (paperSector + sector_offset), 0, 16, main_buffer);
+					main_buffer = (UINT_8*)((void*)(PHYSICAL_ADDRESS(main_buffer) + (8*1024)));
+					SIZE -= (8*1024);
+					n_sector+=16;
+					sector_offset+=16;
 				}
 
-				printk("% sector read\n", n_sector);
+				//printk("% sector read\n", n_sector);
 				
 				UINT_32 Fat_sector_for_current_cluster = Fat_start + ((next_paper_cluster * 4) / 512);
 				read(&hd->abar->ports[hd->sata_port_number], Fat_sector_for_current_cluster, 0, 1, fat_buffer);
 				
-				UINT_32 Fat_offset_in_sector_for_current_cluster = ((next_paper_cluster * 4) - 1)% 512;//(__first__) ? ((next_paper_cluster * 4) % 512) : (((next_paper_cluster * 4) - 4) % 512);
-				//__first__ = FALSE;
+				UINT_32 Fat_offset_in_sector_for_current_cluster = ((next_paper_cluster * 4) - 1)% 512;
 				UINT_8* tmp_ptr = (UINT_8*)((void*)(&fat_buffer[Fat_offset_in_sector_for_current_cluster]));
-				__LiBOS_HexDump((void*)tmp_ptr, 4, "");
+				//__LiBOS_HexDump((void*)tmp_ptr, 4, "");
 
 				UINT_32 pt = (*(UINT_32*)tmp_ptr) & 0x0FFFFFFF;
 				//SWAP_ENDIANNESS(tmp_ptr, &pt);
 				next_paper_cluster = pt;
-				printk("next cluster:^\n", next_paper_cluster);
+				//printk("next cluster:^\n", next_paper_cluster);
 			}
 		}
 		else
