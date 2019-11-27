@@ -1110,6 +1110,7 @@ global _uv_transform_77
 global _ycc_to_rgb
 global _final_rgb_sorting
 global _activate_sse
+global _short_to_float
 
 ; ......................................................... void _uv_transform_00(float* result, float* Fuv);
 _uv_transform_00:
@@ -1136,7 +1137,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -1156,8 +1157,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -1171,9 +1172,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -1204,7 +1205,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -1224,8 +1225,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -1239,9 +1240,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -1272,7 +1273,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -1292,8 +1293,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -1307,9 +1308,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -1340,7 +1341,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -1360,8 +1361,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -1375,9 +1376,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -1408,7 +1409,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -1428,8 +1429,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -1443,9 +1444,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -1476,7 +1477,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -1496,8 +1497,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -1511,9 +1512,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -1544,7 +1545,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -1564,8 +1565,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -1579,9 +1580,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -1612,7 +1613,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -1632,8 +1633,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -1647,9 +1648,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -1678,7 +1679,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -1698,8 +1699,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -1713,9 +1714,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -1746,7 +1747,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -1766,8 +1767,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -1781,9 +1782,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -1814,7 +1815,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -1834,8 +1835,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -1849,9 +1850,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -1882,7 +1883,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -1902,8 +1903,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -1917,9 +1918,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -1950,7 +1951,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -1970,8 +1971,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -1985,9 +1986,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -2018,7 +2019,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -2038,8 +2039,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -2053,9 +2054,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -2086,7 +2087,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -2106,8 +2107,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -2121,9 +2122,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -2154,7 +2155,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -2174,8 +2175,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -2189,9 +2190,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -2220,7 +2221,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -2240,8 +2241,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -2255,9 +2256,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -2288,7 +2289,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -2308,8 +2309,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -2323,9 +2324,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -2356,7 +2357,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -2376,8 +2377,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -2391,9 +2392,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -2424,7 +2425,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -2444,8 +2445,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -2459,9 +2460,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -2492,7 +2493,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -2512,8 +2513,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -2527,9 +2528,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -2560,7 +2561,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -2580,8 +2581,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -2595,9 +2596,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -2628,7 +2629,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -2648,8 +2649,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -2663,9 +2664,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -2696,7 +2697,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -2716,8 +2717,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -2731,9 +2732,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -2763,7 +2764,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -2783,8 +2784,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -2798,9 +2799,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -2831,7 +2832,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -2851,8 +2852,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -2866,9 +2867,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -2899,7 +2900,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -2919,8 +2920,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -2934,9 +2935,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -2967,7 +2968,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -2987,8 +2988,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -3002,9 +3003,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -3035,7 +3036,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -3055,8 +3056,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -3070,9 +3071,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -3103,7 +3104,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -3123,8 +3124,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -3138,9 +3139,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -3171,7 +3172,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -3191,8 +3192,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -3206,9 +3207,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -3239,7 +3240,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -3259,8 +3260,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -3274,9 +3275,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -3307,7 +3308,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -3327,8 +3328,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -3342,9 +3343,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -3375,7 +3376,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -3395,8 +3396,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -3410,9 +3411,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -3443,7 +3444,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -3463,8 +3464,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -3478,9 +3479,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -3511,7 +3512,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -3531,8 +3532,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -3546,9 +3547,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -3579,7 +3580,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -3599,8 +3600,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -3614,9 +3615,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -3647,7 +3648,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -3667,8 +3668,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -3682,9 +3683,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -3715,7 +3716,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -3735,8 +3736,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -3750,9 +3751,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -3783,7 +3784,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -3803,8 +3804,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -3818,9 +3819,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -3851,7 +3852,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -3871,8 +3872,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -3886,9 +3887,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -3919,7 +3920,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -3939,8 +3940,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -3954,9 +3955,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -3987,7 +3988,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -4007,8 +4008,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -4022,9 +4023,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -4055,7 +4056,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -4075,8 +4076,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -4090,9 +4091,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -4123,7 +4124,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -4143,8 +4144,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -4158,9 +4159,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -4191,7 +4192,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -4211,8 +4212,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -4226,9 +4227,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -4259,7 +4260,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -4279,8 +4280,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -4294,9 +4295,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -4327,7 +4328,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -4347,8 +4348,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -4362,9 +4363,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -4395,7 +4396,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -4415,8 +4416,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -4430,9 +4431,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -4463,7 +4464,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -4483,8 +4484,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -4498,9 +4499,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -4531,7 +4532,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -4551,8 +4552,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -4566,9 +4567,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -4599,7 +4600,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -4619,8 +4620,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -4634,9 +4635,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -4667,7 +4668,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -4687,8 +4688,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -4702,9 +4703,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -4735,7 +4736,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -4755,8 +4756,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -4770,9 +4771,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -4803,7 +4804,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -4823,8 +4824,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -4838,9 +4839,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -4871,7 +4872,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -4891,8 +4892,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -4906,9 +4907,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -4939,7 +4940,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -4959,8 +4960,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -4974,9 +4975,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -5007,7 +5008,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -5027,8 +5028,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -5042,9 +5043,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -5075,7 +5076,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -5095,8 +5096,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -5110,9 +5111,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -5143,7 +5144,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -5163,8 +5164,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -5178,9 +5179,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -5211,7 +5212,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -5231,8 +5232,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -5246,9 +5247,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -5279,7 +5280,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -5299,8 +5300,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -5314,9 +5315,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -5347,7 +5348,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -5367,8 +5368,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -5382,9 +5383,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -5415,7 +5416,7 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss [eax], xmm0
+movss dword [eax], xmm0
 movaps xmm0, [esi+96] 
 movaps xmm1, [esi+112] 
 movaps xmm2, [esi+128] 
@@ -5435,8 +5436,8 @@ addps  xmm1, xmm5
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 movaps xmm0, [esi+192] 
 movaps xmm1, [esi+208] 
 movaps xmm2, [esi+224] 
@@ -5450,9 +5451,9 @@ addps  xmm1, xmm3
 addps  xmm0, xmm1
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-addss  xmm0, [DUMMY]
-addss  xmm0, [eax]
-movss [eax], xmm0
+addss  xmm0, dword [DUMMY]
+addss  xmm0, dword [eax]
+movss dword [eax], xmm0
 mov esp, ebp
 pop	 ebp
 ret
@@ -5549,3 +5550,18 @@ _activate_sse:
 	or ax, 0x600
 	mov cr4, eax
 	ret
+; .........................................................
+
+_short_to_float:
+push     ebp
+push     ebx                      ; this is A LOT critical
+mov      ebp,         esp
+mov      eax,         [ebp + 8 ]  ;get short pointer
+mov      ebx,         [ebp + 12]  ;get float pointer 
+movsx    ecx,         word [eax]
+cvtsi2ss xmm0,        ecx
+movss    dword [ebx], xmm0
+mov      esp,         ebp
+pop      ebx
+pop      ebp
+ret
