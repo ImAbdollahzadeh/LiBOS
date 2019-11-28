@@ -5521,21 +5521,21 @@ ret
 
 _final_rgb_sorting:
 push    ebp
-mov     ebp, esp
-mov     eax, [ebp + 8] ; get 4 packed floats
-pcmpeqd xmm7, xmm7
-movaps  xmm0, [eax]
-movaps  xmm1, xmm0
-cmpps   xmm1, [_000], 5
-andps   xmm0, xmm1
-movaps  xmm1, xmm0
-cmpps   xmm1, [_255], 1
-andps   xmm0, xmm1
-pxor    xmm1, xmm7
-minps   xmm1, [_255]
-addps   xmm0, xmm1
-movaps  [eax],xmm0
-mov     esp,  ebp
+mov     ebp,   esp
+mov     eax,   [ebp + 8] ; get 4 packed floats
+pcmpeqd xmm7,  xmm7
+movaps  xmm0,  [eax]
+movaps  xmm1,  xmm0
+cmpps   xmm1,  [_000], 5
+andps   xmm0,  xmm1
+movaps  xmm1,  xmm0
+cmpps   xmm1,  [_255], 1
+andps   xmm0,  xmm1
+pxor    xmm1,  xmm7
+minps   xmm1,  [_255]
+addps   xmm0,  xmm1
+movaps  [eax], xmm0
+mov     esp,   ebp
 pop     ebp
 ret
 
