@@ -7,6 +7,15 @@
 
 #define vpDebug TRUE
 
+UINT_8*  tmp_video_player_jpg_object_compressed_data             = 0;
+INT_16* tmp_video_player_jpg_object_all_mcus_coefficients        = 0;
+float*   tmp_video_player_jpg_object_all_mcus_coefficients_float = 0;
+float*   tmp_video_player_jpg_object_unordered_YCbCr_mcus        = 0;
+float*   tmp_video_player_jpg_object_r                           = 0;
+float*   tmp_video_player_jpg_object_g                           = 0;
+float*   tmp_video_player_jpg_object_b                           = 0;
+UINT_8*  tmp_video_player_jpg_object_rgb                         = 0;
+	
 static JPG* jjpg = 0;
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -176,7 +185,7 @@ static void idct_coefficient(JPG* jpg, float* Fuv, float* res, float back_dc_val
 {
 	float* result = &(res[0]);
 	Fuv[0] += back_dc_value;
-	
+
 	_uv_transform_00(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
 	_uv_transform_01(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
 	_uv_transform_02(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
@@ -250,25 +259,25 @@ void IDCT(JPG* jpg)
 	UINT_32 i, counter = 0;
 	float* all_mcus_coefficients_float = *(jpg->ptr_to_all_mcus_coefficients_float);
 	float* unordered_YCbCr_mcus        = *(jpg->ptr_to_unordered_YCbCr_mcus);
+
 	// Y component
 	idct_coefficient(jpg, &(all_mcus_coefficients_float[0]),   &(unordered_YCbCr_mcus[0]), 0.0f);
-	idct_coefficient(jpg, &(all_mcus_coefficients_float[64]),  &(unordered_YCbCr_mcus[64]),  *(float*)(&(all_mcus_coefficients_float[0])));
-	idct_coefficient(jpg, &(all_mcus_coefficients_float[128]), &(unordered_YCbCr_mcus[128]), *(float*)(&(all_mcus_coefficients_float[64])));
-	idct_coefficient(jpg, &(all_mcus_coefficients_float[192]), &(unordered_YCbCr_mcus[192]), *(float*)(&(all_mcus_coefficients_float[128])));
+	idct_coefficient(jpg, &(all_mcus_coefficients_float[64]),  &(unordered_YCbCr_mcus[64]),  all_mcus_coefficients_float[0]);
+	idct_coefficient(jpg, &(all_mcus_coefficients_float[128]), &(unordered_YCbCr_mcus[128]), all_mcus_coefficients_float[64]);
+	idct_coefficient(jpg, &(all_mcus_coefficients_float[192]), &(unordered_YCbCr_mcus[192]), all_mcus_coefficients_float[128]);
 	counter = 384;
 
 	for (i = 0; i < jpg->number_of_mcu; i++)
 	{
-		idct_coefficient(jpg, &(all_mcus_coefficients_float[counter]), &(unordered_YCbCr_mcus[counter]), *(float*)(&(all_mcus_coefficients_float[counter - 192])));
+		idct_coefficient(jpg, &(all_mcus_coefficients_float[counter]), &(unordered_YCbCr_mcus[counter]), all_mcus_coefficients_float[counter - 192]);
 		counter += 64;
-		idct_coefficient(jpg, &(all_mcus_coefficients_float[counter]), &(unordered_YCbCr_mcus[counter]), *(float*)(&(all_mcus_coefficients_float[counter - 64])));
+		idct_coefficient(jpg, &(all_mcus_coefficients_float[counter]), &(unordered_YCbCr_mcus[counter]), all_mcus_coefficients_float[counter - 64]);
 		counter += 64;
-		idct_coefficient(jpg, &(all_mcus_coefficients_float[counter]), &(unordered_YCbCr_mcus[counter]), *(float*)(&(all_mcus_coefficients_float[counter - 64])));
+		idct_coefficient(jpg, &(all_mcus_coefficients_float[counter]), &(unordered_YCbCr_mcus[counter]), all_mcus_coefficients_float[counter - 64]);
 		counter += 64;
-		idct_coefficient(jpg, &(all_mcus_coefficients_float[counter]), &(unordered_YCbCr_mcus[counter]), *(float*)(&(all_mcus_coefficients_float[counter - 64])));
+		idct_coefficient(jpg, &(all_mcus_coefficients_float[counter]), &(unordered_YCbCr_mcus[counter]), all_mcus_coefficients_float[counter - 64]);
 		counter += 192;
 	}
-
 
 	// Cb component
 	idct_coefficient(jpg, &(all_mcus_coefficients_float[256]), &(unordered_YCbCr_mcus[256]), 0.0f);
@@ -276,7 +285,7 @@ void IDCT(JPG* jpg)
 
 	for (i = 0; i < jpg->number_of_mcu; i++)
 	{
-		idct_coefficient(jpg, &(all_mcus_coefficients_float[counter]), &(unordered_YCbCr_mcus[counter]), *(float*)(&(all_mcus_coefficients_float[counter - 384])));
+		idct_coefficient(jpg, &(all_mcus_coefficients_float[counter]), &(unordered_YCbCr_mcus[counter]), all_mcus_coefficients_float[counter - 384]);
 		counter += 384;
 	}
 
@@ -286,7 +295,7 @@ void IDCT(JPG* jpg)
 
 	for (i = 0; i < jpg->number_of_mcu; i++)
 	{
-		idct_coefficient(jpg, &(all_mcus_coefficients_float[counter]), &(unordered_YCbCr_mcus[counter]), *(float*)(&(all_mcus_coefficients_float[counter - 384])));
+		idct_coefficient(jpg, &(all_mcus_coefficients_float[counter]), &(unordered_YCbCr_mcus[counter]), all_mcus_coefficients_float[counter - 384]);
 		counter += 384;
 	}
 }
@@ -500,12 +509,9 @@ void decode_yyyy_cc(JPG* jpg)
 
 	} while (j < global_mcu_counter);
 
-	return;
-
-	//.IDCT                      (jpg);
+	IDCT                      (jpg);
 	//.ycc_to_rgb                (jpg);
 	//.construct_final_rgb_values(jpg);
-
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -774,14 +780,14 @@ UINT_32 regiser_video_player(VIDEO_PLAYER* video_player, UINT_8* framebuffer_poi
 	video_player->video_player_id   = 0x1B010100;
 	
 	// allocate the object
-	UINT_8*  tmp_video_player_jpg_object_compressed_data             = (UINT_8*)(Alloc(512*1024, 1, 1));
-	INT_16* tmp_video_player_jpg_object_all_mcus_coefficients        = (INT_16*)(Alloc(6*64*5000*2, 16, 1));
-	float*   tmp_video_player_jpg_object_all_mcus_coefficients_float = (float*) (Alloc(6*64*5000*4, 16, 1));
-	float*   tmp_video_player_jpg_object_unordered_YCbCr_mcus        = (float*) (Alloc(6*64*5000*4, 16, 1));
-	float*   tmp_video_player_jpg_object_r                           = (float*) (Alloc(800*600*3*4, 16, 1));
-	float*   tmp_video_player_jpg_object_g                           = (float*) (Alloc(800*600*3*4, 16, 1));
-	float*   tmp_video_player_jpg_object_b                           = (float*) (Alloc(800*600*3*4, 16, 1));
-	UINT_8*  tmp_video_player_jpg_object_rgb                         = (UINT_8*)(Alloc(1024*768*3, 1, 1));//framebuffer_pointer;
+	tmp_video_player_jpg_object_compressed_data             = (UINT_8*)(Alloc(512*1024, 1, 1));
+	tmp_video_player_jpg_object_all_mcus_coefficients       = (INT_16*)(Alloc(6*64*5000*2, 16, 1));
+	tmp_video_player_jpg_object_all_mcus_coefficients_float = (float*) (Alloc(6*64*5000*4, 16, 1));
+	tmp_video_player_jpg_object_unordered_YCbCr_mcus        = (float*) (Alloc(6*64*5000*4, 16, 1));
+	tmp_video_player_jpg_object_r                           = (float*) (Alloc(800*600*3*4, 16, 1));
+	tmp_video_player_jpg_object_g                           = (float*) (Alloc(800*600*3*4, 16, 1));
+	tmp_video_player_jpg_object_b                           = (float*) (Alloc(800*600*3*4, 16, 1));
+	tmp_video_player_jpg_object_rgb                         = (UINT_8*)(Alloc(1024*768*3, 1, 1));//framebuffer_pointer;
 	
 	__LiBOS_MemZero((void*)(tmp_video_player_jpg_object_compressed_data), (512*1024));
 	__LiBOS_MemZero((void*)(tmp_video_player_jpg_object_all_mcus_coefficients), (6*64*5000*2));

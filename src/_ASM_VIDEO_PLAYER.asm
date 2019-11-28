@@ -5520,41 +5520,40 @@ ret
 ; ......................................................... void _final_rgb_sorting(float* packed_12_rgb_values)
 
 _final_rgb_sorting:
-push ebp
-mov  ebp, esp
-mov eax, [ebp + 8 ]						   ; get 4 packed floats
+push    ebp
+mov     ebp, esp
+mov     eax, [ebp + 8] ; get 4 packed floats
 pcmpeqd xmm7, xmm7
-movaps xmm0, [eax]
-movaps xmm1, xmm0
-cmpps  xmm1, [_000], 5
-andps  xmm0, xmm1
-movaps xmm1, xmm0
-cmpps  xmm1, [_255], 1
-andps  xmm0, xmm1
-pxor   xmm1, xmm7
-minps  xmm1, [_255]
-addps  xmm0, xmm1
-movaps [eax], xmm0
-mov esp, ebp
-pop	 ebp
+movaps  xmm0, [eax]
+movaps  xmm1, xmm0
+cmpps   xmm1, [_000], 5
+andps   xmm0, xmm1
+movaps  xmm1, xmm0
+cmpps   xmm1, [_255], 1
+andps   xmm0, xmm1
+pxor    xmm1, xmm7
+minps   xmm1, [_255]
+addps   xmm0, xmm1
+movaps  [eax],xmm0
+mov     esp,  ebp
+pop     ebp
 ret
 
 ; .........................................................
 _activate_sse:
-	fninit
-	mov eax, cr0
-	and al, ~0x04
-	or al, 0x22
-	mov cr0, eax
-	mov eax, cr4
-	or ax, 0x600
-	mov cr4, eax
-	ret
+fninit
+mov eax, cr0
+and al, ~0x04
+or  al,  0x22
+mov cr0, eax
+mov eax, cr4
+or  ax,  0x600
+mov cr4, eax
+ret
 ; .........................................................
 
 _short_to_float:
 push     ebp
-push     ebx                      ; this is A LOT critical
 mov      ebp,         esp
 mov      eax,         [ebp + 8 ]  ;get short pointer
 mov      ebx,         [ebp + 12]  ;get float pointer 
@@ -5562,6 +5561,7 @@ movsx    ecx,         word [eax]
 cvtsi2ss xmm0,        ecx
 movss    dword [ebx], xmm0
 mov      esp,         ebp
-pop      ebx
 pop      ebp
 ret
+
+; .........................................................
