@@ -5,7 +5,7 @@
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-#define vpDebug TRUE
+#define vpDebug FALSE
 
 UINT_8*  tmp_video_player_jpg_object_compressed_data             = 0;
 INT_16* tmp_video_player_jpg_object_all_mcus_coefficients        = 0;
@@ -14,8 +14,7 @@ float*   tmp_video_player_jpg_object_unordered_YCbCr_mcus        = 0;
 float*   tmp_video_player_jpg_object_r                           = 0;
 float*   tmp_video_player_jpg_object_g                           = 0;
 float*   tmp_video_player_jpg_object_b                           = 0;
-UINT_8*  tmp_video_player_jpg_object_rgb                         = 0;
-	
+UINT_8*  rgb                                                     = 0;
 static JPG* jjpg = 0;
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -379,7 +378,8 @@ void construct_final_rgb_values(JPG* jpg)
 	UINT_32 t = (IMAGE_WIDTH * IMAGE_HEIGHT * 3);
 	UINT_32 tt = t/3;
 	UINT_32 final_counter = 0;
-
+	UINT_32 i;
+	
 	float* r = *(jpg->ptr_to_r);
 	float* g = *(jpg->ptr_to_g);
 	float* b = *(jpg->ptr_to_b);
@@ -393,11 +393,25 @@ void construct_final_rgb_values(JPG* jpg)
 	} while (final_counter < t);
 
 
-	for (UINT_32 i = 0; i < tt; i++)
+	for (i = 0; i < tt; i++)
 	{
-		jpg->rgb[3 * i + 2] = (UINT_8)(r[i]);
-		jpg->rgb[3 * i + 1] = (UINT_8)(g[i]);
-		jpg->rgb[3 * i]     = (UINT_8)(b[i]);
+		rgb[3 * i + 2] = (UINT_8)(r[i]);
+		rgb[3 * i + 1] = (UINT_8)(g[i]);
+		rgb[3 * i]     = (UINT_8)(b[i]);
+	}
+	
+	UINT_32 i_tmp = 0;
+	UINT_32 j_tmp = 0;
+	for(j_tmp=0; j_tmp<600; j_tmp++)
+	{
+		UINT_32 k = 0;
+		for(i_tmp=0; i_tmp<3*800; i_tmp+=3)
+		{
+			jpg->rgb[(j_tmp*(1024 * 4)) + k + i_tmp]     = rgb[(j_tmp * 800*3) + i_tmp];
+			jpg->rgb[(j_tmp*(1024 * 4)) + k + i_tmp + 1] = rgb[(j_tmp * 800*3) + i_tmp + 1];
+			jpg->rgb[(j_tmp*(1024 * 4)) + k + i_tmp + 2] = rgb[(j_tmp * 800*3) + i_tmp + 2];
+			k++;
+		}
 	}
 }
 
@@ -508,10 +522,10 @@ void decode_yyyy_cc(JPG* jpg)
 		j += 4;
 
 	} while (j < global_mcu_counter);
-
+	
 	IDCT                      (jpg);
-	//.ycc_to_rgb                (jpg);
-	//.construct_final_rgb_values(jpg);
+	ycc_to_rgb                (jpg);
+	construct_final_rgb_values(jpg);
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -739,7 +753,7 @@ void populate_jpg_info_from_file(JPG* jpg, UINT_8* buff)
 
 		KILLER_TERMINATING:
 
-			printk("total actual data count byte: %\n", jpg->actual_data_byte_count);
+			//.printk("total actual data count byte: %\n", jpg->actual_data_byte_count);
 			break;
 		}
 
@@ -787,7 +801,7 @@ UINT_32 regiser_video_player(VIDEO_PLAYER* video_player, UINT_8* framebuffer_poi
 	tmp_video_player_jpg_object_r                           = (float*) (Alloc(800*600*3*4, 16, 1));
 	tmp_video_player_jpg_object_g                           = (float*) (Alloc(800*600*3*4, 16, 1));
 	tmp_video_player_jpg_object_b                           = (float*) (Alloc(800*600*3*4, 16, 1));
-	tmp_video_player_jpg_object_rgb                         = (UINT_8*)(Alloc(1024*768*3, 1, 1));//framebuffer_pointer;
+	rgb                                                     = (UINT_8*)(Alloc((1024*768*4),1,1));
 	
 	__LiBOS_MemZero((void*)(tmp_video_player_jpg_object_compressed_data), (512*1024));
 	__LiBOS_MemZero((void*)(tmp_video_player_jpg_object_all_mcus_coefficients), (6*64*5000*2));
@@ -796,7 +810,7 @@ UINT_32 regiser_video_player(VIDEO_PLAYER* video_player, UINT_8* framebuffer_poi
 	__LiBOS_MemZero((void*)(tmp_video_player_jpg_object_r), (800*600*3*4));
 	__LiBOS_MemZero((void*)(tmp_video_player_jpg_object_g), (800*600*3*4));
 	__LiBOS_MemZero((void*)(tmp_video_player_jpg_object_b), (800*600*3*4));
-	__LiBOS_MemZero((void*)(tmp_video_player_jpg_object_rgb), (1024*768*3));
+	__LiBOS_MemZero((void*)(rgb), (1024*768*4));
 	
 	video_player->jpg_object->compressed_data                    =  tmp_video_player_jpg_object_compressed_data;
 	video_player->jpg_object->ptr_to_all_mcus_coefficients       = &tmp_video_player_jpg_object_all_mcus_coefficients;
@@ -805,7 +819,7 @@ UINT_32 regiser_video_player(VIDEO_PLAYER* video_player, UINT_8* framebuffer_poi
 	video_player->jpg_object->ptr_to_r                           = &tmp_video_player_jpg_object_r;
 	video_player->jpg_object->ptr_to_g                           = &tmp_video_player_jpg_object_g;
 	video_player->jpg_object->ptr_to_b                           = &tmp_video_player_jpg_object_b;
-	video_player->jpg_object->rgb                                =  tmp_video_player_jpg_object_rgb;
+	video_player->jpg_object->rgb                                =  framebuffer_pointer;
 	
 	if(vpDebug)
 	{

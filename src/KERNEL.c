@@ -140,33 +140,40 @@ void KERNEL_MAIN_ENTRY(void)
 	
 	//__LiBOS_HexDump((void*)(&buff[32*1024]), 1026, "");
 	//.WaitSecond(5);
-	//.SVGA svga;
-	//.status = RegisterSVGA(&svga);
-	//.if(!status)
-	//.{
-	//.	panic( "SVGA registration failed\n" );
-	//.	return;
-	//.}
-	//.
-	//.clear_screen();
-	//.UINT_8* fb = svga.LFB;
-	//.UINT_32 i = 0, j = 0;
+	SVGA svga;
+	status = RegisterSVGA(&svga);
+	if(!status)
+	{
+		panic( "SVGA registration failed\n" );
+		return;
+	}
+	
+	clear_screen();
+	UINT_8* fb = svga.LFB;
+	UINT_32 i = 0, j = 0;
 	
 	_activate_sse();
 	
+	_STI();
+	
 	VIDEO_PLAYER video_player;
 	
-	status = regiser_video_player(&video_player, 0);
+	status = regiser_video_player(&video_player, fb);
 	if(!status)
 	{
 		panic( "VIDEO_PLAYER registration failed\n" );
 		return;
 	}
 
-	//play(&video_player, "test/__paco.imn");	
+	UINT_32 l = 0;
+	UINT_32 h = 0;
+	//.start_user_timer();
+	
+	play(&video_player, "test/__paco.imn");
+	
+	//.end_user_timer(&h, &l);
+	//.printk("Timer test: HIGH packet = %(sec), LOW packet = %(msec)\n", h, l);
+	//.__LiBOS_Report_binary_image_sections();
 
-	__LiBOS_Report_binary_image_sections();
-
-	_STI();
 	while(1);
 }
