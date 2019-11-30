@@ -17,7 +17,6 @@
 #include "../include/SVGA.h"
 #include "../include/VIDEO_PLAYER.h"
 #include "../include/DOSSPEC.h"
-//#include "../include/SSE_TEST.h"
 
 extern void _LiBOS_text_section_size;
 extern void _LiBOS_data_section_size;
@@ -43,7 +42,7 @@ static void __LiBOS_Report_binary_image_sections(void)
 	
 	printk("text begin=^, text end=^, text size=%\n", (UINT_32)text_bg, (UINT_32)text_en, (UINT_32)text_sz);
 	printk("data begin=^, data end=^, data size=%\n", (UINT_32)data_bg, (UINT_32)data_en, (UINT_32)data_sz);
-	printk("bss begin=^, bss end=^, bss size=%\n", (UINT_32)bss_bg, (UINT_32)bss_en, (UINT_32)bss_sz);
+	printk("bss  begin=^, bss  end=^, bss  size=%\n", (UINT_32)bss_bg,  (UINT_32)bss_en,  (UINT_32)bss_sz);
 }
 
 
@@ -72,16 +71,7 @@ void KERNEL_MAIN_ENTRY(void)
 	//printk("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
 	//printk("    Welcome to IMAN ABDOLLAHZADEH OS        \n");
 	//printk("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
-	
-	//.SVGA svga;
-	//.status = RegisterSVGA(&svga);
-	//.if(!status)
-	//.{
-	//.	panic( "SVGA registration failed\n" );
-	//.	return;
-	//.}
-	//.
-	
+
 	GDT gdt;
 	status = RegisterGDT(&gdt);
 	if(!status)
@@ -134,12 +124,7 @@ void KERNEL_MAIN_ENTRY(void)
 		panic( "FILESYSTEM registration failed\n" );
 		return;
 	}
-	
-	//UINT_8* buff = (UINT_8*)( Alloc((1024*1024), 1, 1) );
-	//__LiBOS_MemZero((void*)buff, 1024*1024);
-	
-	//__LiBOS_HexDump((void*)(&buff[32*1024]), 1026, "");
-	//.WaitSecond(5);
+
 	SVGA svga;
 	status = RegisterSVGA(&svga);
 	if(!status)
@@ -150,7 +135,6 @@ void KERNEL_MAIN_ENTRY(void)
 	
 	clear_screen();
 	UINT_8* fb = svga.LFB;
-	UINT_32 i = 0, j = 0;
 	
 	_activate_sse();
 	
@@ -158,7 +142,7 @@ void KERNEL_MAIN_ENTRY(void)
 	
 	VIDEO_PLAYER video_player;
 	
-	status = regiser_video_player(&video_player, fb);
+	status = regiser_video_player(&video_player, /*0);//*/fb);
 	if(!status)
 	{
 		panic( "VIDEO_PLAYER registration failed\n" );
@@ -167,12 +151,13 @@ void KERNEL_MAIN_ENTRY(void)
 
 	UINT_32 l = 0;
 	UINT_32 h = 0;
-	//.start_user_timer();
+	start_user_timer();
 	
 	play(&video_player, "test/__paco.imn");
 	
-	//.end_user_timer(&h, &l);
-	//.printk("Timer test: HIGH packet = %(sec), LOW packet = %(msec)\n", h, l);
+	end_user_timer(&h, &l);
+	printk("Timer test: HIGH packet = %(sec), LOW packet = %(msec)\n", h, l);
+	
 	//.__LiBOS_Report_binary_image_sections();
 
 	while(1);

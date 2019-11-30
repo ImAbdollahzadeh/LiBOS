@@ -1,5 +1,8 @@
-; NASM Assembly Code by Iman Abdollahzadeh.........................
-;..................................................................
+; ..................................................................................................
+; NASM ASSEMBLY CODE FOR THE ACCELERATION OF __LiBOS_MOVIE_PLAYER AND JPEG DECODER .................
+; ALL RIGHTS RESERVED FOR IMAN ABDOLLAHZADEH                                       .................
+; THE TRANSCRIBED MASM CODE FOR X86 MICROSOFT VISUAL C++ IS AVAILABLE              .................
+; ..................................................................................................
 section .data
 
 align 16
@@ -1113,11 +1116,12 @@ global _activate_sse
 global _short_to_float
 
 ; ......................................................... void _uv_transform_00(float* result, float* Fuv);
+
 _uv_transform_00:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -1184,8 +1188,8 @@ ret
 _uv_transform_01:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -1252,8 +1256,8 @@ ret
 _uv_transform_02:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -1320,8 +1324,8 @@ ret
 _uv_transform_03:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -1388,8 +1392,8 @@ ret
 _uv_transform_04:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -1456,8 +1460,8 @@ ret
 _uv_transform_05:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -1524,8 +1528,8 @@ ret
 _uv_transform_06:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -1592,8 +1596,8 @@ ret
 _uv_transform_07:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -1658,8 +1662,8 @@ ret
 _uv_transform_10:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -1726,8 +1730,8 @@ ret
 _uv_transform_11:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -1794,8 +1798,8 @@ ret
 _uv_transform_12:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -1862,8 +1866,8 @@ ret
 _uv_transform_13:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -1930,8 +1934,8 @@ ret
 _uv_transform_14:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -1998,8 +2002,8 @@ ret
 _uv_transform_15:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -2066,8 +2070,8 @@ ret
 _uv_transform_16:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -2134,8 +2138,8 @@ ret
 _uv_transform_17:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -2200,8 +2204,8 @@ ret
 _uv_transform_20:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -2268,8 +2272,8 @@ ret
 _uv_transform_21:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -2336,8 +2340,8 @@ ret
 _uv_transform_22:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -2404,8 +2408,8 @@ ret
 _uv_transform_23:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -2472,8 +2476,8 @@ ret
 _uv_transform_24:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -2540,8 +2544,8 @@ ret
 _uv_transform_25:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -2608,8 +2612,8 @@ ret
 _uv_transform_26:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -2676,8 +2680,8 @@ ret
 _uv_transform_27:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -2743,8 +2747,8 @@ ret
 _uv_transform_30:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -2811,8 +2815,8 @@ ret
 _uv_transform_31:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -2879,8 +2883,8 @@ ret
 _uv_transform_32:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -2947,8 +2951,8 @@ ret
 _uv_transform_33:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -3015,8 +3019,8 @@ ret
 _uv_transform_34:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -3083,8 +3087,8 @@ ret
 _uv_transform_35:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -3151,8 +3155,8 @@ ret
 _uv_transform_36:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -3219,8 +3223,8 @@ ret
 _uv_transform_37:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -3287,8 +3291,8 @@ ret
 _uv_transform_40:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -3355,8 +3359,8 @@ ret
 _uv_transform_41:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -3423,8 +3427,8 @@ ret
 _uv_transform_42:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -3491,8 +3495,8 @@ ret
 _uv_transform_43:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -3559,8 +3563,8 @@ ret
 _uv_transform_44:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -3627,8 +3631,8 @@ ret
 _uv_transform_45:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -3695,8 +3699,8 @@ ret
 _uv_transform_46:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -3763,8 +3767,8 @@ ret
 _uv_transform_47:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -3831,8 +3835,8 @@ ret
 _uv_transform_50:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -3899,8 +3903,8 @@ ret
 _uv_transform_51:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -3967,8 +3971,8 @@ ret
 _uv_transform_52:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -4035,8 +4039,8 @@ ret
 _uv_transform_53:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -4103,8 +4107,8 @@ ret
 _uv_transform_54:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -4171,8 +4175,8 @@ ret
 _uv_transform_55:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -4239,8 +4243,8 @@ ret
 _uv_transform_56:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -4307,8 +4311,8 @@ ret
 _uv_transform_57:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -4375,8 +4379,8 @@ ret
 _uv_transform_60:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -4443,8 +4447,8 @@ ret
 _uv_transform_61:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -4511,8 +4515,8 @@ ret
 _uv_transform_62:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -4579,8 +4583,8 @@ ret
 _uv_transform_63:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -4647,8 +4651,8 @@ ret
 _uv_transform_64:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -4715,8 +4719,8 @@ ret
 _uv_transform_65:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -4783,8 +4787,8 @@ ret
 _uv_transform_66:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -4851,8 +4855,8 @@ ret
 _uv_transform_67:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -4919,8 +4923,8 @@ ret
 _uv_transform_70:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -4987,8 +4991,8 @@ ret
 _uv_transform_71:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -5055,8 +5059,8 @@ ret
 _uv_transform_72:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -5123,8 +5127,8 @@ ret
 _uv_transform_73:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -5191,8 +5195,8 @@ ret
 _uv_transform_74:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -5259,8 +5263,8 @@ ret
 _uv_transform_75:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -5327,8 +5331,8 @@ ret
 _uv_transform_76:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -5395,8 +5399,8 @@ ret
 _uv_transform_77:
 push   ebp
 mov    ebp, esp
-mov    eax, [ebp + 8 ]						;get result pointer
-mov    esi, [ebp + 12]	     ;get Fuv pointer 
+mov    eax, [ebp + 8 ]  ;get result pointer
+mov    esi, [ebp + 12]  ;get Fuv pointer 
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
@@ -5461,106 +5465,151 @@ ret
 ; ......................................................... void _ycc_to_rgb(float* y, float* cb, float* cr, float* r, float* g, float* b);
 
 _ycc_to_rgb:
-push ebp
-mov  ebp, esp  
-mov eax, [ebp + 8 ]						   ; get first 4, y arrays
-mov ebx, [ebp + 12]	        ; get first 4, cb arrays
-mov ecx, [ebp + 16]	        ; get first 4, cr arrays
-mov esi, [ebp + 20]    ; get r pointer
-mov edi, [ebp + 24]    ; get g pointer	
-mov edx, [ebp + 28]    ; get b pointer	
-movaps xmm0, [eax]   ; y elements
-movaps xmm1, [eax + 16]		   ; y elements
-movaps xmm2, [ebx]   ; cb elements
-movaps xmm3, [ebx + 16]		   ; cb elements
-movaps xmm4, [ecx]   ; cr elements
-movaps xmm5, [ecx + 16]		   ; cr elements
-movaps xmm6, [CONSTANTS_00]    ;
-movaps xmm7, [CONSTANTS_03]    ;
-addps xmm4,  [_128]
-addps xmm5,  [_128]
-addps xmm2,  [_128]
-addps xmm3,  [_128]
-mulps xmm4, xmm6
-mulps xmm5, xmm6
-mulps xmm2, xmm7
-mulps xmm3, xmm7
-addps xmm4, xmm0
-addps xmm5, xmm1
-addps xmm2, xmm0
-addps xmm3, xmm1
-movaps [esi], xmm4   ; save the result from xmm4,5 into r and from xmm2,3 into b
-movaps [esi + 16], xmm5   ; save the result from xmm4,5 into r and from xmm2,3 into b
-movaps [edx], xmm2   ; save the result from xmm4,5 into r and from xmm2,3 into b
-movaps [edx + 16], xmm3   ; save the result from xmm4,5 into r and from xmm2,3 into b
-movaps xmm6, [CONSTANTS_01]    ;
-movaps xmm7, [CONSTANTS_02]    ;
-movaps xmm2, [ebx]   ; cb elements
-movaps xmm3, [ebx + 16]		   ; cb elements
-movaps xmm4, [ecx]   ; cr elements
-movaps xmm5, [ecx + 16]		   ; cr elements
-addps xmm4, [_128]
-addps xmm5, [_128]
-addps xmm2, [_128]
-addps xmm3, [_128]
-mulps xmm4, xmm7
-mulps xmm5, xmm7
-mulps xmm2, xmm6
-mulps xmm3, xmm6
-addps xmm2, xmm4
-addps xmm3, xmm5
-addps xmm0, xmm2
-addps xmm1, xmm3
-movaps [edi], xmm0  ; save the result from xmm0,1 into g
-movaps [edi + 16], xmm1  ; save the result from xmm0,1 into g
-mov esp, ebp
-pop	 ebp
+push   ebp 
+mov    ebp,        esp  
+mov    eax,        [ebp + 8 ]  ; get first 4, y arrays
+mov    ebx,        [ebp + 12] ; get first 4, cb arrays
+mov    ecx,        [ebp + 16] ; get first 4, cr arrays
+mov    esi,        [ebp + 20] ; get r pointer
+mov    edi,        [ebp + 24] ; get g pointer
+mov    edx,        [ebp + 28] ; get b pointer
+movaps xmm0,       [eax]      ; y elements
+movaps xmm1,       [eax + 16] ; y elements
+movaps xmm2,       [ebx]      ; cb elements
+movaps xmm3,       [ebx + 16] ; cb elements
+movaps xmm4,       [ecx]      ; cr elements
+movaps xmm5,       [ecx + 16] ; cr elements
+movaps xmm6,       [CONSTANTS_00]
+movaps xmm7,       [CONSTANTS_03]
+addps  xmm4,       [_128]
+addps  xmm5,       [_128]
+addps  xmm2,       [_128]
+addps  xmm3,       [_128]
+mulps  xmm4,       xmm6
+mulps  xmm5,       xmm6
+mulps  xmm2,       xmm7
+mulps  xmm3,       xmm7
+addps  xmm4,       xmm0
+addps  xmm5,       xmm1
+addps  xmm2,       xmm0
+addps  xmm3,       xmm1
+movaps [esi],      xmm4       ; save the result from xmm4,5 into r and from xmm2,3 into b
+movaps [esi + 16], xmm5       ; save the result from xmm4,5 into r and from xmm2,3 into b
+movaps [edx],      xmm2       ; save the result from xmm4,5 into r and from xmm2,3 into b
+movaps [edx + 16], xmm3       ; save the result from xmm4,5 into r and from xmm2,3 into b
+movaps xmm6,       [CONSTANTS_01] 
+movaps xmm7,       [CONSTANTS_02] 
+movaps xmm2,       [ebx]      ; cb elements
+movaps xmm3,       [ebx + 16] ; cb elements
+movaps xmm4,       [ecx]      ; cr elements
+movaps xmm5,       [ecx + 16] ; cr elements
+addps  xmm4,       [_128]
+addps  xmm5,       [_128]
+addps  xmm2,       [_128]
+addps  xmm3,       [_128]
+mulps  xmm4,       xmm7
+mulps  xmm5,       xmm7
+mulps  xmm2,       xmm6
+mulps  xmm3,       xmm6
+addps  xmm2,       xmm4
+addps  xmm3,       xmm5
+addps  xmm0,       xmm2
+addps  xmm1,       xmm3
+movaps [edi],      xmm0       ; save the result from xmm0,1 into g
+movaps [edi + 16], xmm1       ; save the result from xmm0,1 into g
+mov    esp,        ebp
+pop    ebp
 ret
 
 ; ......................................................... void _final_rgb_sorting(float* packed_12_rgb_values)
 
 _final_rgb_sorting:
 push    ebp
-mov     ebp,   esp
-mov     eax,   [ebp + 8] ; get 4 packed floats
-pcmpeqd xmm7,  xmm7
-movaps  xmm0,  [eax]
-movaps  xmm1,  xmm0
-cmpps   xmm1,  [_000], 5
-andps   xmm0,  xmm1
-movaps  xmm1,  xmm0
-cmpps   xmm1,  [_255], 1
-andps   xmm0,  xmm1
-pxor    xmm1,  xmm7
-minps   xmm1,  [_255]
-addps   xmm0,  xmm1
-movaps  [eax], xmm0
-mov     esp,   ebp
+mov     ebp,      esp
+mov     eax,      [ebp + 8]
+pcmpeqd xmm7,     xmm7
+movaps  xmm0,     [eax]
+movaps  xmm1,     xmm0
+cmpps   xmm1,     [_000], 5
+andps   xmm0,     xmm1
+movaps  xmm1,     xmm0
+cmpps   xmm1,     [_255], 1
+andps   xmm0,     xmm1
+movaps  xmm2,     [eax+16]
+movaps  xmm3,     xmm2
+cmpps   xmm3,     [_000], 5
+andps   xmm2,     xmm3
+movaps  xmm3,     xmm2
+cmpps   xmm3,     [_255], 1
+andps   xmm2,     xmm3
+movaps  xmm4,     [eax+32]
+movaps  xmm5,     xmm4
+cmpps   xmm5,     [_000], 5
+andps   xmm4,     xmm5
+movaps  xmm5,     xmm4
+cmpps   xmm5,     [_255], 1
+andps   xmm4,     xmm5
+pxor    xmm1,     xmm7
+pxor    xmm3,     xmm7
+pxor    xmm5,     xmm7
+minps   xmm1,     [_255]
+minps   xmm3,     [_255]
+minps   xmm5,     [_255]
+addps   xmm0,     xmm1
+addps   xmm2,     xmm3
+addps   xmm4,     xmm5
+movaps  [eax],    xmm0
+movaps  [eax+16], xmm2
+movaps  [eax+32], xmm4
+mov     esp,      ebp
 pop     ebp
 ret
 
 ; .........................................................
+
 _activate_sse:
 fninit
-mov eax, cr0
-and al, ~0x04
-or  al,  0x22
-mov cr0, eax
-mov eax, cr4
-or  ax,  0x600
-mov cr4, eax
+mov    eax, cr0
+and    al, ~0x04
+or     al,  0x22
+mov    cr0, eax
+mov    eax, cr4
+or     ax,  0x600
+mov    cr4, eax
 ret
+
 ; .........................................................
 
 _short_to_float:
 push     ebp
-mov      ebp,         esp
-mov      eax,         [ebp + 8 ]  ;get short pointer
-mov      ebx,         [ebp + 12]  ;get float pointer 
-movsx    ecx,         word [eax]
-cvtsi2ss xmm0,        ecx
-movss    dword [ebx], xmm0
-mov      esp,         ebp
+mov      ebp,            esp
+mov      eax,            [ebp + 8 ]  ;get short pointer
+mov      ebx,            [ebp + 12]  ;get float pointer 
+movsx    ecx,            word [eax]
+movsx    edx,            word [eax+2]
+movsx    esi,            word [eax+4]
+movsx    edi,            word [eax+6]
+cvtsi2ss xmm0,           ecx
+cvtsi2ss xmm1,           edx
+cvtsi2ss xmm2,           esi
+cvtsi2ss xmm3,           edi
+movsx    ecx,            word [eax+8]
+movsx    edx,            word [eax+10]
+movsx    esi,            word [eax+12]
+movsx    edi,            word [eax+14]
+cvtsi2ss xmm4,           ecx
+cvtsi2ss xmm5,           edx
+cvtsi2ss xmm6,           esi
+cvtsi2ss xmm7,           edi
+movss    dword [ebx],    xmm0
+movss    dword [ebx+4],  xmm1
+movss    dword [ebx+8],  xmm2
+movss    dword [ebx+12], xmm3
+movss    dword [ebx+16], xmm4
+movss    dword [ebx+20], xmm5
+movss    dword [ebx+24], xmm6
+movss    dword [ebx+28], xmm7
+mov      esp,            ebp
 pop      ebp
 ret
 

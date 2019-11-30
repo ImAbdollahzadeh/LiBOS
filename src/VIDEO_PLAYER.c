@@ -3,19 +3,19 @@
 #include "../include/PRINT.h"
 #include "../include/FILE.h"
 
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ GLOBAL AND STATIC VARIABLES
 
 #define vpDebug FALSE
 
-UINT_8*  tmp_video_player_jpg_object_compressed_data             = 0;
-INT_16* tmp_video_player_jpg_object_all_mcus_coefficients        = 0;
-float*   tmp_video_player_jpg_object_all_mcus_coefficients_float = 0;
-float*   tmp_video_player_jpg_object_unordered_YCbCr_mcus        = 0;
-float*   tmp_video_player_jpg_object_r                           = 0;
-float*   tmp_video_player_jpg_object_g                           = 0;
-float*   tmp_video_player_jpg_object_b                           = 0;
-UINT_8*  rgb                                                     = 0;
-static JPG* jjpg = 0;
+static UINT_8* tmp_video_player_jpg_object_compressed_data             = 0;
+static INT_16* tmp_video_player_jpg_object_all_mcus_coefficients       = 0;
+static float*  tmp_video_player_jpg_object_all_mcus_coefficients_float = 0;
+static float*  tmp_video_player_jpg_object_unordered_YCbCr_mcus        = 0;
+static float*  tmp_video_player_jpg_object_r                           = 0;
+static float*  tmp_video_player_jpg_object_g                           = 0;
+static float*  tmp_video_player_jpg_object_b                           = 0;
+static UINT_8* rgb                                                     = 0;
+static JPG*    jjpg                                                    = 0;
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
@@ -28,7 +28,7 @@ static Tree* new_node()
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-void assign_htree_values(Tree* node, UINT_8 current_level, UINT_8 target_level, UINT_8* loop_through_numbers, UINT_8 num_leafs, UINT_8* hValues, INT_32 offset)
+static void assign_htree_values(Tree* node, UINT_8 current_level, UINT_8 target_level, UINT_8* loop_through_numbers, UINT_8 num_leafs, UINT_8* hValues, INT_32 offset)
 {
 	UINT_8 looper = *loop_through_numbers;
 
@@ -65,7 +65,7 @@ void assign_htree_values(Tree* node, UINT_8 current_level, UINT_8 target_level, 
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-Tree* construct_htree(void* table)
+static Tree* construct_htree(void* table)
 {
 	Tree* root = new_node();
 
@@ -141,7 +141,7 @@ Tree* construct_htree(void* table)
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-INT_16 get_from_category(UINT_8 cat, UINT_8* byte, INT_8* bit, INT_8** seek_pointer)
+static INT_16 get_from_category(UINT_8 cat, UINT_8* byte, INT_8* bit, INT_8** seek_pointer)
 {
 	INT_16 decoded = 0x0000;
 	UINT_8  bbyte = *byte;
@@ -150,7 +150,7 @@ INT_16 get_from_category(UINT_8 cat, UINT_8* byte, INT_8* bit, INT_8** seek_poin
 	UINT_8 category = cat;
 	UINT_8  global_bit =  0;
 	
-	if (bbit < 0)
+	if (bbit & 0x80)
 	{
 		bbit = 7;
 		ReadOneDirectByte(bbyte, sseek_pointer++);
@@ -164,7 +164,7 @@ INT_16 get_from_category(UINT_8 cat, UINT_8* byte, INT_8* bit, INT_8** seek_poin
 
 		bbit--;
 
-		if (bbit < 0)
+		if (bbit & 0x80)
 		{
 			bbit = 7;
 			ReadOneDirectByte(bbyte, sseek_pointer++);
@@ -253,7 +253,7 @@ static void idct_coefficient(JPG* jpg, float* Fuv, float* res, float back_dc_val
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-void IDCT(JPG* jpg)
+static void IDCT(JPG* jpg)
 {
 	UINT_32 i, counter = 0;
 	float* all_mcus_coefficients_float = *(jpg->ptr_to_all_mcus_coefficients_float);
@@ -301,12 +301,12 @@ void IDCT(JPG* jpg)
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-void ycc_to_rgb(JPG* jpg)
+static void ycc_to_rgb(JPG* jpg)
 {
 	UINT_32 macroblock_counter = 0;
 	UINT_32 counter            = 0;
 	UINT_32 mcus               = jpg->number_of_mcu;
-	UINT_32 mcux               = IMAGE_WIDTH / 16;
+	UINT_32 mcux               = IMAGE_WIDTH >> 4;
 	UINT_32 ccounter           = 0;
 	UINT_32 w                  = 0;
 	UINT_32 h                  = 0;
@@ -373,51 +373,51 @@ void ycc_to_rgb(JPG* jpg)
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-void construct_final_rgb_values(JPG* jpg)
+static void construct_final_rgb_values(JPG* jpg)
 {
-	UINT_32 t = (IMAGE_WIDTH * IMAGE_HEIGHT * 3);
-	UINT_32 tt = t/3;
+	UINT_32 t  = (IMAGE_WIDTH * IMAGE_HEIGHT * 3);
 	UINT_32 final_counter = 0;
-	UINT_32 i;
 	
 	float* r = *(jpg->ptr_to_r);
 	float* g = *(jpg->ptr_to_g);
 	float* b = *(jpg->ptr_to_b);
-	
+
 	do {
 		_final_rgb_sorting(&(r[final_counter]));
 		_final_rgb_sorting(&(g[final_counter]));
 		_final_rgb_sorting(&(b[final_counter]));
 
-		final_counter += 4;
+		final_counter += 12;
 	} while (final_counter < t);
-
-
-	for (i = 0; i < tt; i++)
-	{
-		rgb[3 * i + 2] = (UINT_8)(r[i]);
-		rgb[3 * i + 1] = (UINT_8)(g[i]);
-		rgb[3 * i]     = (UINT_8)(b[i]);
-	}
 	
-	UINT_32 i_tmp = 0;
-	UINT_32 j_tmp = 0;
-	for(j_tmp=0; j_tmp<600; j_tmp++)
+	UINT_32 i = 0;
+	UINT_32 w = 0;
+	UINT_32 h = 0;
+	UINT_32 k = 0;
+	UINT_32 screen_pixels = IMAGE_HEIGHT * IMAGE_WIDTH;
+	UINT_32 tmp = 0;
+	UINT_8* jpg_rgb = jpg->rgb;
+	while(i < screen_pixels)
 	{
-		UINT_32 k = 0;
-		for(i_tmp=0; i_tmp<3*800; i_tmp+=3)
+		jpg_rgb[tmp + 2] = (UINT_8)(r[i]);
+		jpg_rgb[tmp + 1] = (UINT_8)(g[i]);
+		jpg_rgb[tmp    ] = (UINT_8)(b[i]);
+		k++;
+		w += 3;
+		if((w % IMAGE_WIDTH) == 0)
 		{
-			jpg->rgb[(j_tmp*(1024 * 4)) + k + i_tmp]     = rgb[(j_tmp * 800*3) + i_tmp];
-			jpg->rgb[(j_tmp*(1024 * 4)) + k + i_tmp + 1] = rgb[(j_tmp * 800*3) + i_tmp + 1];
-			jpg->rgb[(j_tmp*(1024 * 4)) + k + i_tmp + 2] = rgb[(j_tmp * 800*3) + i_tmp + 2];
-			k++;
+			h+=4096;
+			w = 0;
+			k = 0;
 		}
+		i++;
+		tmp = h + k + w;
 	}
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-void decode_component_trees(void* dc, void* ac, void* q, INT_16* uncompressed, INT_8** seek_pointer, UINT_8* byte, INT_8* bit_position)
+static void decode_component_trees(void* dc, void* ac, void* q, INT_16* uncompressed, INT_8** seek_pointer, UINT_8* byte, INT_8* bit_position)
 {
 	UINT_8* qTable = (UINT_8*)q;
 	UINT_8  value;
@@ -431,7 +431,7 @@ void decode_component_trees(void* dc, void* ac, void* q, INT_16* uncompressed, I
 
 	while (!(node->leaf))
 	{
-		if (*bit_position < 0)
+		if (*bit_position & 0x80)
 		{
 			*bit_position = 7;
 			ReadOneByte(byte, sseek_pointer++);
@@ -441,7 +441,7 @@ void decode_component_trees(void* dc, void* ac, void* q, INT_16* uncompressed, I
 		(*bit_position)--;
 	}
 
-	uncompressed[0] = get_from_category(node->value, byte, bit_position, &sseek_pointer) * qTable[0];
+	uncompressed[0] = get_from_category(node->value, byte, bit_position, &sseek_pointer) * (*qTable);
 
 	bbit_position = *bit_position;
 	bbyte = *byte;
@@ -452,7 +452,7 @@ void decode_component_trees(void* dc, void* ac, void* q, INT_16* uncompressed, I
 
 		while (!(node->leaf))
 		{
-			if (bbit_position < 0)
+			if (bbit_position & 0x80)
 			{
 				bbit_position = 7;
 				ReadOneDirectByte(bbyte, sseek_pointer++);
@@ -470,7 +470,7 @@ void decode_component_trees(void* dc, void* ac, void* q, INT_16* uncompressed, I
 		else
 		{
 			i += (value >> 4);
-			uncompressed[i] = get_from_category((value & 0x0F), &bbyte, &bbit_position, &sseek_pointer) * qTable[i];
+			uncompressed[i] = get_from_category((value & 0x0F), &bbyte, &bbit_position, &sseek_pointer) * *(qTable + i);
 		}
 
 		i++;
@@ -483,7 +483,7 @@ void decode_component_trees(void* dc, void* ac, void* q, INT_16* uncompressed, I
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-void decode_yyyy_cc(JPG* jpg)
+static void decode_yyyy_cc(JPG* jpg)
 {
 	UINT_32 i                           = 0;
 	UINT_8  byte                        = 0;
@@ -513,16 +513,12 @@ void decode_yyyy_cc(JPG* jpg)
 		i++;
 	}
 
-	UINT_32 j = 0;
+	i = 0;
 	do {
-		_short_to_float(&(all_mcus_coefficients[j    ]), &(all_mcus_coefficients_float[j    ]));
-		_short_to_float(&(all_mcus_coefficients[j + 1]), &(all_mcus_coefficients_float[j + 1]));
-		_short_to_float(&(all_mcus_coefficients[j + 2]), &(all_mcus_coefficients_float[j + 2]));
-		_short_to_float(&(all_mcus_coefficients[j + 3]), &(all_mcus_coefficients_float[j + 3]));
-		j += 4;
+		_short_to_float(&(all_mcus_coefficients[i]), &(all_mcus_coefficients_float[i]));
+		i += 8;
+	} while (i < global_mcu_counter);
 
-	} while (j < global_mcu_counter);
-	
 	IDCT                      (jpg);
 	ycc_to_rgb                (jpg);
 	construct_final_rgb_values(jpg);
@@ -530,7 +526,7 @@ void decode_yyyy_cc(JPG* jpg)
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-void populate_jpg_info_from_file(JPG* jpg, UINT_8* buff)
+static void populate_jpg_info_from_file(JPG* jpg, UINT_8* buff)
 {
 	void*   seek_pointer = (void*)buff;
 	UINT_16 next_word = 0x0000;
@@ -668,8 +664,8 @@ void populate_jpg_info_from_file(JPG* jpg, UINT_8* buff)
 				well as q-table for Y and C components.
 			*/
 
-			UINT_32 mcuX = (sof.width / 16) + ((sof.width % 16) ? 1 : 0);
-			UINT_32 mcuY = (sof.height / 16) + ((sof.height % 16) ? 1 : 0);
+			UINT_32 mcuX = (sof.width  >> 4) + ((sof.width  % 16) ? 1 : 0);
+			UINT_32 mcuY = (sof.height >> 4) + ((sof.height % 16) ? 1 : 0);
 
 			jpg->number_of_mcu = mcuX * mcuY;
 		}
@@ -677,7 +673,7 @@ void populate_jpg_info_from_file(JPG* jpg, UINT_8* buff)
 		else if (next_word == JPG_SOS) // compressed data are here
 		{
 			jpg->actual_data_byte_count = 0;
-			jpg->actual_data = (UINT_8*)( Alloc(300000, 1, 1) );
+			jpg->actual_data = (UINT_8*)( Alloc(512000, 1, 1) );
 
 			UINT_8* compressed_actual_data = (UINT_8*)jpg->actual_data;
 
@@ -760,7 +756,7 @@ void populate_jpg_info_from_file(JPG* jpg, UINT_8* buff)
 		else
 			seek_pointer = (void*)(PHYSICAL_ADDRESS(seek_pointer) + 1);
 	}
-	
+
 	decode_yyyy_cc(jpg);
 	jjpg = jpg;
 }
@@ -769,15 +765,13 @@ void populate_jpg_info_from_file(JPG* jpg, UINT_8* buff)
 
 void play(VIDEO_PLAYER* video_player, INT_8* file_address)
 {
-	JPG*    jpg    = video_player->jpg_object;
-	UINT_8* buffer = jpg->compressed_data;
+	JPG*     jpg    = video_player->jpg_object;
+	UINT_8*  buffer = jpg->compressed_data;
+	BINPAPER bp     = PaperOpen(file_address);
 	
-	BINPAPER bp = PaperOpen(file_address);
 	PaperRead(&bp, buffer, (512 * 1024));
 	
 	populate_jpg_info_from_file(jpg, buffer);
-	
-	printk("population success\n");
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -819,7 +813,7 @@ UINT_32 regiser_video_player(VIDEO_PLAYER* video_player, UINT_8* framebuffer_poi
 	video_player->jpg_object->ptr_to_r                           = &tmp_video_player_jpg_object_r;
 	video_player->jpg_object->ptr_to_g                           = &tmp_video_player_jpg_object_g;
 	video_player->jpg_object->ptr_to_b                           = &tmp_video_player_jpg_object_b;
-	video_player->jpg_object->rgb                                =  framebuffer_pointer;
+	video_player->jpg_object->rgb                                =  /*rgb;//*/framebuffer_pointer;
 	
 	if(vpDebug)
 	{
