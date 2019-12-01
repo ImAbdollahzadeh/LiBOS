@@ -126,18 +126,18 @@ UINT_32 ReadOperation( HDPARAMS DriveVolume, DESCRIPTOR* descriptor, UINT_8* Buf
 				while(sector_offset < secpclus)
 				{
 					read(&hd->abar->ports[hd->sata_port_number], (paperSector + sector_offset), 0, 16, main_buffer);
-					main_buffer = (UINT_8*)((void*)(PHYSICAL_ADDRESS(main_buffer) + (8*1024)));
-					SIZE -= (8*1024);
+					main_buffer = (UINT_8*)((void*)(PHYSICAL_ADDRESS(main_buffer) + (8192)));
+					SIZE -= (8192);
 					n_sector+=16;
 					sector_offset+=16;
 				}
 
 				//printk("% sector read\n", n_sector);
 				
-				UINT_32 Fat_sector_for_current_cluster = Fat_start + ((next_paper_cluster * 4) / 512);
+				UINT_32 Fat_sector_for_current_cluster = Fat_start + ((next_paper_cluster << 2) >> 9);
 				read(&hd->abar->ports[hd->sata_port_number], Fat_sector_for_current_cluster, 0, 1, fat_buffer);
 				
-				UINT_32 Fat_offset_in_sector_for_current_cluster = ((next_paper_cluster * 4) - 1)% 512;
+				UINT_32 Fat_offset_in_sector_for_current_cluster = ((next_paper_cluster << 2) - 1) % 512;
 				UINT_8* tmp_ptr = (UINT_8*)((void*)(&fat_buffer[Fat_offset_in_sector_for_current_cluster]));
 				//__LiBOS_HexDump((void*)tmp_ptr, 4, "");
 

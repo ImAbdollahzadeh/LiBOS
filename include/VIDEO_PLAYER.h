@@ -77,6 +77,8 @@ extern void _uv_transform_76(float* result, float* Fuv);
 extern void _uv_transform_77(float* result, float* Fuv);
 extern void _ycc_to_rgb(float* y, float* cb, float* cr, float* r, float* g, float* b);
 extern void _final_rgb_sorting(float* packed);
+extern void _short_to_float(INT_16* s, float* f);
+extern void _float_to_UINT_8(UINT_8* rgb_array, float* r, float* g, float* b);
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
@@ -192,6 +194,7 @@ typedef struct _VIDEO_PLAYER {
 	INT_8*  video_player_name;
 	UINT_32 video_player_id;
 	JPG*    jpg_object;
+	UINT_8  reserved[4];
 } __attribute__ ((packed)) VIDEO_PLAYER;
 
 typedef struct _Tree {

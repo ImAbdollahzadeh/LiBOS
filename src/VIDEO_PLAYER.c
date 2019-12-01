@@ -141,7 +141,7 @@ static Tree* construct_htree(void* table)
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-static INT_16 get_from_category(UINT_8 cat, UINT_8* byte, INT_8* bit, INT_8** seek_pointer)
+static INT_16 decode_node_value_bits(UINT_8 cat, UINT_8* byte, INT_8* bit, INT_8** seek_pointer)
 {
 	INT_16 decoded = 0x0000;
 	UINT_8  bbyte = *byte;
@@ -390,28 +390,25 @@ static void construct_final_rgb_values(JPG* jpg)
 		final_counter += 12;
 	} while (final_counter < t);
 	
-	UINT_32 i = 0;
-	UINT_32 w = 0;
-	UINT_32 h = 0;
-	UINT_32 k = 0;
+	UINT_32 i = 4;
 	UINT_32 screen_pixels = IMAGE_HEIGHT * IMAGE_WIDTH;
-	UINT_32 tmp = 0;
+	UINT_32 tmp = 16;
 	UINT_8* jpg_rgb = jpg->rgb;
+
+	UINT_32 j = 0;
+
+	_float_to_UINT_8(&(jpg_rgb[0]), &(r[0]), &(g[0]), &(b[0]));
 	while(i < screen_pixels)
 	{
-		jpg_rgb[tmp + 2] = (UINT_8)(r[i]);
-		jpg_rgb[tmp + 1] = (UINT_8)(g[i]);
-		jpg_rgb[tmp    ] = (UINT_8)(b[i]);
-		k++;
-		w += 3;
-		if((w % IMAGE_WIDTH) == 0)
+		_float_to_UINT_8(&(jpg_rgb[tmp]), &(r[i]), &(g[i]), &(b[i]));
+		if((i % IMAGE_WIDTH) == 0)
 		{
-			h+=4096;
-			w = 0;
-			k = 0;
+			j++;
+			tmp = (j*4096);
 		}
-		i++;
-		tmp = h + k + w;
+		else
+			tmp += 16;
+		i+=4;
 	}
 }
 
@@ -441,7 +438,7 @@ static void decode_component_trees(void* dc, void* ac, void* q, INT_16* uncompre
 		(*bit_position)--;
 	}
 
-	uncompressed[0] = get_from_category(node->value, byte, bit_position, &sseek_pointer) * (*qTable);
+	uncompressed[0] = decode_node_value_bits(node->value, byte, bit_position, &sseek_pointer) * (*qTable);
 
 	bbit_position = *bit_position;
 	bbyte = *byte;
@@ -470,7 +467,7 @@ static void decode_component_trees(void* dc, void* ac, void* q, INT_16* uncompre
 		else
 		{
 			i += (value >> 4);
-			uncompressed[i] = get_from_category((value & 0x0F), &bbyte, &bbit_position, &sseek_pointer) * *(qTable + i);
+			uncompressed[i] = decode_node_value_bits((value & 0x0F), &bbyte, &bbit_position, &sseek_pointer) * *(qTable + i);
 		}
 
 		i++;

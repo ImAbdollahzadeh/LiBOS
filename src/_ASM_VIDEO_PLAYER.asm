@@ -3,6 +3,13 @@
 ; ALL RIGHTS RESERVED FOR IMAN ABDOLLAHZADEH                                       .................
 ; THE TRANSCRIBED MASM CODE FOR X86 MICROSOFT VISUAL C++ IS AVAILABLE              .................
 ; ..................................................................................................
+section .bss
+
+align 16
+_EAX: resb 16
+_EBX: resb 16
+_ECX: resb 16
+
 section .data
 
 align 16
@@ -1114,7 +1121,7 @@ global _ycc_to_rgb
 global _final_rgb_sorting
 global _activate_sse
 global _short_to_float
-
+global _float_to_UINT_8
 ; ......................................................... void _uv_transform_00(float* result, float* Fuv);
 
 _uv_transform_00:
@@ -5614,3 +5621,44 @@ pop      ebp
 ret
 
 ; .........................................................
+
+_float_to_UINT_8:
+push     ebp
+mov      ebp,          esp
+mov      esi,          [ebp + 8 ]  ;get UINT_8 pointer
+mov      ebx,          [ebp + 12]  ;get r float pointer
+mov      ecx,          [ebp + 16]  ;get g float pointer
+mov      edx,          [ebp + 20]  ;get b float pointer      
+cvtps2dq xmm0,         [edx]
+cvtps2dq xmm1,         [ecx]
+cvtps2dq xmm2,         [ebx]
+movdqa   [_EAX],       xmm0
+movdqa   [_EBX],       xmm1
+movdqa   [_ECX],       xmm2
+mov      al,           byte[_EAX]
+mov      ah,           byte[_EAX+4]
+mov      bl,           byte[_EAX+8]
+mov      bh,           byte[_EAX+12]
+mov      byte[esi],    al
+mov      byte[esi+4],  ah
+mov      byte[esi+8],  bl
+mov      byte[esi+12], bh
+mov      al,           byte[_EBX]
+mov      ah,           byte[_EBX+4]
+mov      bl,           byte[_EBX+8]
+mov      bh,           byte[_EBX+12]
+mov      byte[esi+1],  al
+mov      byte[esi+5],  ah
+mov      byte[esi+9],  bl
+mov      byte[esi+13], bh
+mov      al,           byte[_ECX]
+mov      ah,           byte[_ECX+4]
+mov      bl,           byte[_ECX+8]
+mov      bh,           byte[_ECX+12]
+mov      byte[esi+2],  al
+mov      byte[esi+6],  ah
+mov      byte[esi+10], bl
+mov      byte[esi+14], bh
+mov      esp,          ebp
+pop      ebp
+ret

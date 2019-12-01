@@ -2,27 +2,28 @@ GCCPARAMS  = -m32 -Iinclude -nostdlib -fno-builtin -fno-exceptions -fno-leading-
 LDPARAMS   = -melf_i386
 NASMPARAMS = -f elf
 
-objects =		        obj/LOADER.o            \
-				obj/PRINT.o             \
-				obj/GDT.o               \
-				obj/PORT.o              \
-				obj/IDT.o               \
-				obj/EXTENDEDENTRIES.o   \
-				obj/BIOS_CALL.o         \
-				obj/_ASM_VIDEO_PLAYER.o \
-				obj/VIDEO_PLAYER.o      \
-				obj/TIMER.o             \
-				obj/PCI.o               \
-				obj/AHCI.o              \
-				obj/FILE.o              \
-				obj/FILESYSTEM.o        \
-				obj/DOSSPEC.o           \
-				obj/XHCI.o              \
-				obj/SVGA.o              \
-				obj/KEYBOARD.o          \
-				obj/MOUSE.o             \
-				obj/MEMORY.o            \
-				obj/KERNEL.o
+objects =                       \
+		obj/LOADER.o            \
+		obj/PRINT.o             \
+		obj/GDT.o               \
+		obj/PORT.o              \
+		obj/IDT.o               \
+		obj/EXTENDEDENTRIES.o   \
+		obj/BIOS_CALL.o         \
+		obj/_ASM_VIDEO_PLAYER.o \
+		obj/VIDEO_PLAYER.o      \
+		obj/TIMER.o             \
+		obj/PCI.o               \
+		obj/AHCI.o              \
+		obj/FILE.o              \
+		obj/FILESYSTEM.o        \
+		obj/DOSSPEC.o           \
+		obj/XHCI.o              \
+		obj/SVGA.o              \
+		obj/KEYBOARD.o          \
+		obj/MOUSE.o             \
+		obj/MEMORY.o            \
+		obj/KERNEL.o
 
 %.o: ./src/%.c
 	gcc $(GCCPARAMS) -c -o ./obj/$@ $<
