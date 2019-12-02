@@ -31,3 +31,4 @@ iman_ab2013[at]yahoo[DoT]com<br/>Basically I'm always available
 14. USB Made Simple: A Series of Articles on USB: Copyright © 2006-2008 MQP Electronics Ltd<br/>
 15. USB Device Class Definition for Human Interface Devices (HID) Version 1.11<br/>
 16. VESA BIOS EXTENSION (VBE); Core Functions; Standard Version: 2.0 Document Revision: 1.1<br/>
+17. Modern X86 Assembly Language Programming: 32-bit, 64-bit, SSE, and AVX; by D. Kusswurm<br/>
