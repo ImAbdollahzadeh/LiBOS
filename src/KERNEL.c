@@ -17,6 +17,7 @@
 #include "../include/SVGA.h"
 #include "../include/VIDEO_PLAYER.h"
 #include "../include/DOSSPEC.h"
+#include "../include/WINDOW.h"
 
 extern void _LiBOS_text_section_size;
 extern void _LiBOS_data_section_size;
@@ -136,27 +137,60 @@ void KERNEL_MAIN_ENTRY(void)
 	clear_screen();
 	UINT_8* fb = svga.LFB;
 	
-	_activate_sse();
+	init_desktop();
+	
+	WINDOW wnd;
+    POINT wnd_orig = {50, 50};
+	register_window(&wnd, "first_window", 400, 200, &wnd_orig);    
+    WINDOW wnd2;
+    POINT wnd_orig2 = {80, 70};
+	register_window(&wnd2, "second_window", 200, 100, &wnd_orig2);
+    WINDOW wnd3;
+    POINT wnd_orig3 = {110, 35};
+	register_window(&wnd3, "third_window", 200, 100, &wnd_orig3);    
+    WINDOW wnd4;
+    POINT wnd_orig4 = {430, 240};
+	register_window(&wnd4, "fourth_window", 80, 90, &wnd_orig4);
+	
+	
+	draw_window(&wnd,  fb);
+	draw_window(&wnd2, fb);
+	draw_window(&wnd3, fb);
+	draw_window(&wnd4, fb);
+	
+	
+	
+	
+	
+	USB_MOUSE usb_mouse;
+	status = RegisterMouse(&usb_mouse);
+	if(!status)
+	{
+		panic( "USB MOUSE registration failed\n" );
+		return;
+	}
+	
+	//._activate_sse();
 	
 	_STI();
 	
-	VIDEO_PLAYER video_player;
-	
-	status = regiser_video_player(&video_player, /*0);//*/fb);
-	if(!status)
-	{
-		panic( "VIDEO_PLAYER registration failed\n" );
-		return;
-	}
+	//.VIDEO_PLAYER video_player;
+	//.
+	//.status = regiser_video_player(&video_player, 0);//*/fb);
+	//.if(!status)
+	//.{
+	//.	panic( "VIDEO_PLAYER registration failed\n" );
+	//.	return;
+	//.}
 
-	UINT_32 l = 0;
-	UINT_32 h = 0;
-	start_user_timer();
-	
-	play(&video_player, "test/__paco.imn");
-	
-	end_user_timer(&h, &l);
-	printk("Timer test: HIGH packet = %(sec), LOW packet = %(msec)\n", h, l);
+	//.UINT_32 l = 0;
+	//.UINT_32 h = 0;
+	//.start_user_timer();
+	//.
+	//.play(&video_player, "test/__PDL.imn");
+	//.
+	//.end_user_timer(&h, &l);
+	//.printk("Timer test: HIGH packet = %(sec), LOW packet = %(msec)\n", h, l);
 	
 	//.__LiBOS_report_binary_image_sections();
 
