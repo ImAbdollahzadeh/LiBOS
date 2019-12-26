@@ -134,9 +134,84 @@ UINT_32 RegisterMouse(USB_MOUSE* usb_mouse)
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+void transparency_blit(UINT_8* ms, UINT_8* bc, UINT_8* trg)
+{
+	UINT_32 h = 16;
+	UINT_32* back   = (UINT_32*)bc;
+	UINT_32* up     = (UINT_32*)ms;
+	UINT_32* target = (UINT_32*)trg;
+	UINT_32 i = 0;
+	while(h)
+	{
+		while(i < 16)
+		{
+			if((*up) & (0xFF000000)) 
+			{
+				*target++ = *back++;
+				up++;
+			}
+			else
+			{
+				*target++ = *up++;
+				back++;
+			}
+			i++;
+		}
+		i=0;
+		target = PHYSICAL_ADDRESS(target) + 4032;
+		h--;
+	}
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 void fast_pointer_blitter(INT_8* report_packet, USB_MOUSE* usb_mouse, UINT_8 level)
 {
+	//SVGA* svga = get_svga_instance();
+	//UINT_8* fb = svga->LFB;
+	//UINT_32 width = svga->width;
+	//UINT_32 height = svga->height;
+	//
+	//INT_8 x = report_packet[1];
+	//INT_8 y = report_packet[2];
+	//if(x & 0x80)
+	//	x = -SIGNED_8_BIT(x);
+	//if(y & 0x80)
+	//	y = -SIGNED_8_BIT(y);
+//
+	//UINT_8* target = (UINT_8*)((void*)(&fb[((current_y_pos * width) + (current_x_pos)) << 2]));
+	//
+	//print_mouse_x_y(current_x_pos,current_y_pos);
+	//
+	//if(level == 0)
+	//{
+	//	window_manager(report_packet, lclick_event, current_x_pos, current_y_pos);
+	//	return;
+	//}
+	//
+	//if(level == 2)
+	//{
+	//	window_manager(report_packet, release_event, current_x_pos, current_y_pos);
+	//	return;
+	//}
+//
+	//window_manager(report_packet, move_event, current_x_pos, current_y_pos);
+	//usb_mouse_blit_from_to(usb_mouse->back_pointer, target, 1024, TRUE);
+	//
+	//current_x_pos += (x);                 
+	//current_y_pos += (y); 
+	//
+	//if(current_x_pos <= 0)         current_x_pos = 0; 
+	//if(current_x_pos >= (width-8)) current_x_pos = width-8;
+	//
+	//if(current_y_pos <= 0)          current_y_pos = 0; 
+	//if(current_y_pos >= (height-8)) current_y_pos = height-8;
+//
+	//target = (UINT_8*)((void*)(&fb[4 * ((current_y_pos * width) + (current_x_pos))]));
+	//
+	//usb_mouse_blit_from_to(target, usb_mouse->back_pointer, 1024, FALSE);
+	//transparency_blit(usb_mouse->up_pointer, usb_mouse->back_pointer, target);
+	
 	SVGA* svga = get_svga_instance();
 	UINT_8* fb = svga->LFB;
 	UINT_32 width = svga->width;
@@ -148,19 +223,23 @@ void fast_pointer_blitter(INT_8* report_packet, USB_MOUSE* usb_mouse, UINT_8 lev
 		x = -SIGNED_8_BIT(x);
 	if(y & 0x80)
 		y = -SIGNED_8_BIT(y);
-	
-	UINT_8* target = (UINT_8*)((void*)(&fb[4 * ((current_y_pos * width) + (current_x_pos))]));
+
+	UINT_8* target = (UINT_8*)((void*)(&fb[((current_y_pos * width) + (current_x_pos)) << 2]));
 	
 	print_mouse_x_y(current_x_pos,current_y_pos);
-	if(!level)
+	
+	if(level == 0)
 	{
-		if(report_packet[0] & (1 << 0)) // a.k.a. LEFT CLICK PRESSED
-			window_manager(report_packet, lclick_event, current_x_pos, current_y_pos);
+		window_manager(report_packet, lclick_event, current_x_pos, current_y_pos);
 		return;
 	}
 	
-	window_manager(report_packet, move_event, current_x_pos, current_y_pos);
-	
+	if(level == 2)
+	{
+		window_manager(report_packet, release_event, current_x_pos, current_y_pos);
+		return;
+	}
+
 	usb_mouse_blit_from_to(usb_mouse->back_pointer, target, 1024, TRUE);
 	
 	current_x_pos += (x);                 
@@ -172,14 +251,13 @@ void fast_pointer_blitter(INT_8* report_packet, USB_MOUSE* usb_mouse, UINT_8 lev
 	if(current_y_pos <= 0)          current_y_pos = 0; 
 	if(current_y_pos >= (height-8)) current_y_pos = height-8;
 	
-
-	target = (UINT_8*)((void*)(&fb[4 * ((current_y_pos * width) + (current_x_pos))]));
 	
+	window_manager(report_packet, move_event, current_x_pos, current_y_pos);
+	
+	
+	target = (UINT_8*)((void*)(&fb[4 * ((current_y_pos * width) + (current_x_pos))]));	
 	usb_mouse_blit_from_to(target, usb_mouse->back_pointer, 1024, FALSE);
-	usb_mouse_blit_from_to(target, usb_mouse->up_pointer, 1024, FALSE);
-	usb_mouse_construct_up_mouse_pointer();
-	
-	usb_mouse_blit_from_to(usb_mouse->up_pointer, target, 1024, TRUE);
+	transparency_blit(usb_mouse->up_pointer, usb_mouse->back_pointer, target);
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -188,12 +266,15 @@ void usb_mouse_construct_up_mouse_pointer(void)
 {
 	UINT_32 width = 64;
 	UINT_32 i, j = 0;
+	for(i=0;i<1024;i+=4)
+		usb_mouse_up_pointer[i + 3] = 0xFF;
 	
 	for(i=0; i<12; i+=4)
 	{
 		usb_mouse_up_pointer[(j*width) + i    ] = 0x00;
 		usb_mouse_up_pointer[(j*width) + i + 1] = 0xFF;
 		usb_mouse_up_pointer[(j*width) + i + 2] = 0xFF;
+		usb_mouse_up_pointer[(j*width) + i + 3] = 0x00;
 	}
 	j++;
 	for(i=0; i<20; i+=4)
@@ -201,6 +282,7 @@ void usb_mouse_construct_up_mouse_pointer(void)
 		usb_mouse_up_pointer[(j*width) + i]     = 0x00;
 		usb_mouse_up_pointer[(j*width) + i + 1] = 0xFF;
 		usb_mouse_up_pointer[(j*width) + i + 2] = 0xFF;
+		usb_mouse_up_pointer[(j*width) + i + 3] = 0x00;
 	}
 	j++;
 	for(i=0; i<32; i+=4)
@@ -208,6 +290,7 @@ void usb_mouse_construct_up_mouse_pointer(void)
 		usb_mouse_up_pointer[(j*width) + i]     = 0x00;
 		usb_mouse_up_pointer[(j*width) + i + 1] = 0xFF;
 		usb_mouse_up_pointer[(j*width) + i + 2] = 0xFF;
+		usb_mouse_up_pointer[(j*width) + i + 3] = 0x00;
 	}
 	j++;
 	for(i=4; i<44; i+=4)
@@ -215,6 +298,7 @@ void usb_mouse_construct_up_mouse_pointer(void)
 		usb_mouse_up_pointer[(j*width) + i]     = 0x00;
 		usb_mouse_up_pointer[(j*width) + i + 1] = 0xFF;
 		usb_mouse_up_pointer[(j*width) + i + 2] = 0xFF;
+		usb_mouse_up_pointer[(j*width) + i + 3] = 0x00;
 	}
 	j++;
 	for(i=4; i<56; i+=4)
@@ -222,6 +306,7 @@ void usb_mouse_construct_up_mouse_pointer(void)
 		usb_mouse_up_pointer[(j*width) + i]     = 0x00;
 		usb_mouse_up_pointer[(j*width) + i + 1] = 0xFF;
 		usb_mouse_up_pointer[(j*width) + i + 2] = 0xFF;
+		usb_mouse_up_pointer[(j*width) + i + 3] = 0x00;
 	}
 	j++;
 	for(i=8; i<64; i+=4)
@@ -229,6 +314,7 @@ void usb_mouse_construct_up_mouse_pointer(void)
 		usb_mouse_up_pointer[(j*width) + i]     = 0x00;
 		usb_mouse_up_pointer[(j*width) + i + 1] = 0xFF;
 		usb_mouse_up_pointer[(j*width) + i + 2] = 0xFF;
+		usb_mouse_up_pointer[(j*width) + i + 3] = 0x00;
 	}
 	j++;
 	for(i=8; i<64; i+=4)
@@ -236,6 +322,7 @@ void usb_mouse_construct_up_mouse_pointer(void)
 		usb_mouse_up_pointer[(j*width) + i]     = 0x00;
 		usb_mouse_up_pointer[(j*width) + i + 1] = 0xFF;
 		usb_mouse_up_pointer[(j*width) + i + 2] = 0xFF;
+		usb_mouse_up_pointer[(j*width) + i + 3] = 0x00;
 	}
 	j++;
 	for(i=8; i<60; i+=4)
@@ -243,6 +330,7 @@ void usb_mouse_construct_up_mouse_pointer(void)
 		usb_mouse_up_pointer[(j*width) + i]     = 0x00;
 		usb_mouse_up_pointer[(j*width) + i + 1] = 0xFF;
 		usb_mouse_up_pointer[(j*width) + i + 2] = 0xFF;
+		usb_mouse_up_pointer[(j*width) + i + 3] = 0x00;
 	}
 	j++;
 	for(i=12; i<56; i+=4)
@@ -250,6 +338,7 @@ void usb_mouse_construct_up_mouse_pointer(void)
 		usb_mouse_up_pointer[(j*width) + i]     = 0x00;
 		usb_mouse_up_pointer[(j*width) + i + 1] = 0xFF;
 		usb_mouse_up_pointer[(j*width) + i + 2] = 0xFF;
+		usb_mouse_up_pointer[(j*width) + i + 3] = 0x00;
 	}
 	j++;
 	for(i=12; i<52; i+=4)
@@ -257,6 +346,7 @@ void usb_mouse_construct_up_mouse_pointer(void)
 		usb_mouse_up_pointer[(j*width) + i]     = 0x00;
 		usb_mouse_up_pointer[(j*width) + i + 1] = 0xFF;
 		usb_mouse_up_pointer[(j*width) + i + 2] = 0xFF;
+		usb_mouse_up_pointer[(j*width) + i + 3] = 0x00;
 	}
 	j++;
 	for(i=12; i<48; i+=4)
@@ -264,6 +354,7 @@ void usb_mouse_construct_up_mouse_pointer(void)
 		usb_mouse_up_pointer[(j*width) + i]     = 0x00;
 		usb_mouse_up_pointer[(j*width) + i + 1] = 0xFF;
 		usb_mouse_up_pointer[(j*width) + i + 2] = 0xFF;
+		usb_mouse_up_pointer[(j*width) + i + 3] = 0x00;
 	}
 	j++;
 	for(i=16; i<44; i+=4)
@@ -271,6 +362,7 @@ void usb_mouse_construct_up_mouse_pointer(void)
 		usb_mouse_up_pointer[(j*width) + i]     = 0x00;
 		usb_mouse_up_pointer[(j*width) + i + 1] = 0xFF;
 		usb_mouse_up_pointer[(j*width) + i + 2] = 0xFF;
+		usb_mouse_up_pointer[(j*width) + i + 3] = 0x00;
 	}
 	j++;
 	for(i=16; i<40; i+=4)
@@ -278,6 +370,7 @@ void usb_mouse_construct_up_mouse_pointer(void)
 		usb_mouse_up_pointer[(j*width) + i]     = 0x00;
 		usb_mouse_up_pointer[(j*width) + i + 1] = 0xFF;
 		usb_mouse_up_pointer[(j*width) + i + 2] = 0xFF;
+		usb_mouse_up_pointer[(j*width) + i + 3] = 0x00;
 	}
 	j++;
 	for(i=16; i<36; i+=4)
@@ -285,6 +378,7 @@ void usb_mouse_construct_up_mouse_pointer(void)
 		usb_mouse_up_pointer[(j*width) + i]     = 0x00;
 		usb_mouse_up_pointer[(j*width) + i + 1] = 0xFF;
 		usb_mouse_up_pointer[(j*width) + i + 2] = 0xFF;
+		usb_mouse_up_pointer[(j*width) + i + 3] = 0x00;
 	}
 	j++;
 	for(i=20; i<32; i+=4)
@@ -292,6 +386,7 @@ void usb_mouse_construct_up_mouse_pointer(void)
 		usb_mouse_up_pointer[(j*width) + i]     = 0x00;
 		usb_mouse_up_pointer[(j*width) + i + 1] = 0xFF;
 		usb_mouse_up_pointer[(j*width) + i + 2] = 0xFF;
+		usb_mouse_up_pointer[(j*width) + i + 3] = 0x00;
 	}
 	j++;
 	for(i=20; i<28; i+=4)
@@ -299,6 +394,7 @@ void usb_mouse_construct_up_mouse_pointer(void)
 		usb_mouse_up_pointer[(j*width) + i]     = 0x00;
 		usb_mouse_up_pointer[(j*width) + i + 1] = 0xFF;
 		usb_mouse_up_pointer[(j*width) + i + 2] = 0xFF;
+		usb_mouse_up_pointer[(j*width) + i + 3] = 0x00;
 	}
 	
 }
@@ -308,14 +404,13 @@ void usb_mouse_construct_up_mouse_pointer(void)
 // direction: 0 -> screen to mouse // 1 -> mouse to screen
 void usb_mouse_blit_from_to(UINT_8* from, UINT_8* to, UINT_32 byte, BOOL direction)
 {
-	UINT_32 i, j = 0;
-	UINT_32 width = ( get_svga_instance() )->width;
+	UINT_32 j = 16;
 	UINT_64* src = (UINT_64*)((void*)from);
 	UINT_64* trg = (UINT_64*)((void*)to);
 	
 	if(direction)
 	{
-		while(j < 16)
+		while(j)
 		{
 			*trg++ = *src++;
 			*trg++ = *src++;
@@ -325,12 +420,12 @@ void usb_mouse_blit_from_to(UINT_8* from, UINT_8* to, UINT_32 byte, BOOL directi
 			*trg++ = *src++;
 			*trg++ = *src++;
 			*trg++ = *src++;
-			trg    = (UINT_64*)((void*)(PHYSICAL_ADDRESS(trg) + (4*width) - 64));
-			j++;
+			trg    = (UINT_64*)((void*)(PHYSICAL_ADDRESS(trg) + 4032));
+			j--;
 		}
 		return;
 	}
-	while(j < 16)
+	while(j)
 	{
 		*trg++ = *src++;
 		*trg++ = *src++;
@@ -340,10 +435,8 @@ void usb_mouse_blit_from_to(UINT_8* from, UINT_8* to, UINT_32 byte, BOOL directi
 		*trg++ = *src++;
 		*trg++ = *src++;
 		*trg++ = *src++;
-		src    = (UINT_64*)((void*)(PHYSICAL_ADDRESS(src) + (4*width) - 64));
-		//for(i=0; i<64; i++)
-		//	to[(j*64) + i] = from[(j*4*width) + i];
-		j++;
+		src    = (UINT_64*)((void*)(PHYSICAL_ADDRESS(src) + 4032));
+		j--;
 	}
 }
 

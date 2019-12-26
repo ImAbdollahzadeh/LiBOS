@@ -9,8 +9,10 @@
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ GLOBAL AND STATIC VARIABLES
 
-//static INT_32 current_x_pos   = 0;
-//static INT_32 current_y_pos   = 0;
+#define SIGNED_8_BIT(UNSIGNED_8_BIT) (INT_8)((UINT_8)(UNSIGNED_8_BIT ^ 0xFF))
+
+static INT_32 current_x_pos   = 0;
+static INT_32 current_y_pos   = 0;
 static BOOL this_TRB_to_print = FALSE;
 static BOOL usb_mouse_exist   = FALSE;
 
@@ -1984,12 +1986,19 @@ void xhci_hid_mouse_poll(XHCI* x)
 			signal_from_HID_MOUSE_to_irq = TRUE;
 			xhci_write_doorbell(x, x->usb_device->slot_id, /* INTERRUPT IN EP */ 0x03);
 			ring_doorbel == TRUE;
-			signal_from_HID_MOUSE_to_irq = FALSE;	
+			signal_from_HID_MOUSE_to_irq = FALSE;
 		}
+		
+		if(( buffer & BIT(0) )) // a.k.a. LEFT CLICK PRESSED
+			fast_pointer_blitter( (INT_8*)((void*)buffer_addr), usb_mouse, 0 );
 
-		//mouse_pointer_update( ((INT_8*)((void*)buffer_addr)), (lfb) );
-		if((buffer & 0x0000FF00) || (buffer & 0x00FF0000))
-			fast_pointer_blitter( (INT_8*)((void*)buffer_addr), usb_mouse );
+		if((buffer & 0x0000FF00) || (buffer & 0x00FF0000)) // a.k.a. MOVE
+			fast_pointer_blitter( (INT_8*)((void*)buffer_addr), usb_mouse, 1 );
+		
+		if(!(buffer & BIT(0))) // a.k.a. LEFT CLICK RELEASED
+			fast_pointer_blitter( (INT_8*)((void*)buffer_addr), usb_mouse, 2 );
+		
+		
 		buffer = 0;
 
 		WaitMiliSecond(10);
