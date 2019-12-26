@@ -8,6 +8,7 @@
 enum {
     lclick_event,
     move_event,
+	release_event,
 };
 
 typedef struct _POINT {
@@ -17,7 +18,6 @@ typedef struct _POINT {
 
 typedef struct _RECT {
 	POINT   up_left;
-	POINT   down_right;
 	UINT_32 width;
 	UINT_32 height;   
 } RECT;
