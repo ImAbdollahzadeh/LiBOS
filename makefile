@@ -12,6 +12,7 @@ objects =                       \
 		obj/BIOS_CALL.o         \
 		obj/_ASM_VIDEO_PLAYER.o \
 		obj/VIDEO_PLAYER.o      \
+		obj/WINDOW.o            \
 		obj/TIMER.o             \
 		obj/PCI.o               \
 		obj/AHCI.o              \
@@ -49,6 +50,7 @@ run:
 	@make BIOS_CALL.o
 	@make _ASM_VIDEO_PLAYER.o
 	@make VIDEO_PLAYER.o
+	@make WINDOW.o
 	@make SVGA.o
 	@make IDT.o
 	@make TIMER.o
