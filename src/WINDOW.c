@@ -515,7 +515,7 @@
 //.//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 
-
+/* THIS IS MAIN */
 
 #include "../include/WINDOW.h"
 #include "../include/SVGA.h"
@@ -540,7 +540,8 @@ static UINT_8* LFB = 0;
 #define ALIGN_16(N) (N+15) & (~15) 
 #define ALIGN_8(N) (N+7) & (~7) 
 #define ABSOLUTE(INT) ((INT>0)?INT:-INT)
-void draw_window(WINDOW* wnd, UINT_8* framebuffer);
+void draw_window         (WINDOW* wnd, UINT_8* framebuffer);
+void global_button_effect(void* any_arg);
 
 static void vsync(void)
 {
@@ -703,12 +704,34 @@ void move_handler(WINDOW* wnd, INT_32 delta_x, INT_32 delta_y)
 
 	//sort_list_of_overlapped_windows(); /*TODO*/
 	WINDOW big_rect;
+	WINDOW small_rect;
 	big_rect.rect.up_left.x = (delta_x > 0) ? wnd->rect.up_left.x : wnd->rect.up_left.x + delta_x;
 	big_rect.rect.up_left.y = (delta_y > 0) ? wnd->rect.up_left.y : wnd->rect.up_left.y + delta_y;
 	big_rect.rect.width     = ALIGN_16(wnd->rect.width  + ABSOLUTE(delta_x));
 	big_rect.rect.height    = ALIGN_8(wnd->rect.height + ABSOLUTE(delta_y));
+
+	UINT_32 X  = ALIGN_16(big_rect.rect.up_left.x);
+	
+	if(X > big_rect.rect.up_left.x) 
+	{
+		big_rect.rect.up_left.x = X - 16;
+		big_rect.rect.width += 16;
+	}
+	else 
+		big_rect.rect.up_left.x = X;
 	
 	draw_partial_desktop(&(big_rect.rect));
+	
+	number_of_overlapped_windows = 1;
+	UINT_32 i;
+	for(i = 0; i < number_of_registered_windows; i++)
+	{
+		if( overlap(&big_rect, registered_windows[i]) && (wnd != registered_windows[i]) )
+		{
+			list_of_overlapped_windows[number_of_overlapped_windows] = registered_windows[i];
+			number_of_overlapped_windows++;
+		}
+	}
 	draw_list_of_overlapped_windows(&big_rect);
 	
 	/* UPDATE THE FOCUS WINDOW AND DRAW IT IN THE NEW POSITION */
@@ -739,10 +762,9 @@ BOOL register_window(WINDOW* wnd, const INT_8* name, UINT_32 _width, UINT_32 _he
 	wnd->rect.up_left.x = up_left->x;
 	wnd->rect.up_left.y = up_left->y;
 	
-	wnd->children = 0;
-	wnd->how_many_children = 0;
-	wnd->window_objects    = 0;
-	
+	wnd->children                 = 0;
+	wnd->how_many_children        = 0;
+	wnd->number_of_window_objects = 0;
 	TITLE_BAR title_bar;
 
 	title_bar.window_name_position.x = 0;
@@ -936,7 +958,6 @@ void init_desktop(void)
 	desktop.how_many_children = 0;
 	desktop.title_bar         = 0;
 	desktop.border_frame      = 0;
-	desktop.window_objects    = 0;
 	desktop.buffer            = (UINT_8*)( Alloc((3145728), 1, 1 ));
 	
 	UINT_32 i = 0;
@@ -949,6 +970,94 @@ void init_desktop(void)
 	
 	list_of_overlapped_windows[0] = &desktop;
 	draw_window(&desktop, LFB);
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+static void draw_button(WINDOW* wnd, WINDOW_OBJECT* obj)
+{
+	UINT_32 w4 = wnd->rect.width << 2;
+	UINT_32 h  = wnd->rect.height;
+	
+	UINT_32* trg = (UINT_32*)(wnd->buffer + ((h - 32) * w4) + (w4 - 336));
+	UINT_32 j = 16;
+	UINT_32 i = 0;
+	while(j)
+	{
+		while(i < 32)
+		{
+			*trg++ = 0x00CAD1A4;
+			i++;
+		}
+		i = 0;
+		trg = PHYSICAL_ADDRESS(trg) + ((wnd->rect.width - 32) << 2);
+		j--;
+	}
+	
+	trg = (UINT_32*)(wnd->buffer + ((h - 32) * w4) + (w4 - 336));
+	i = 0;
+	while(i < 32)
+	{
+		*trg = 0x00FFFFFF;
+		*(UINT_32*)(PHYSICAL_ADDRESS(trg) + (w4 << 4)) = 0;
+		trg++;
+		i++;
+	}
+	
+	trg = (UINT_32*)(wnd->buffer + ((h - 17) * w4) + (w4 - 332));
+	i = 0;
+	while(i < 31)
+	{
+		*trg++ = 0x00888888;
+		i++;
+	}
+	
+	j = 16;
+	trg = (UINT_32*)(wnd->buffer + ((h - 32) * w4) + (w4 - 336));
+	while(j)
+	{
+		*trg = 0x00FFFFFF;
+		*(UINT_32*)(PHYSICAL_ADDRESS(trg) + 128) = 0;
+		trg = PHYSICAL_ADDRESS(trg) + w4;
+		j--;
+	}
+	
+	j = 15;
+	trg  = (UINT_32*)(wnd->buffer + ((h - 31) * w4) + (w4 - 212));
+	while(j)
+	{
+		*trg = 0x00888888;
+		trg  = PHYSICAL_ADDRESS(trg) + w4;
+		j--;
+	}
+	
+	obj->upper_left_corner_address = (UINT_8*)(wnd->buffer + ((h - 32) * w4) + (w4 - 336));
+}
+
+BOOL register_object(WINDOW* wnd, WINDOW_OBJECT* obj)
+{
+	if(!wnd)
+		return FALSE;
+	if(!obj)
+		return FALSE;
+	
+	if(obj->object_identifier == OBJECT_BUTTON)
+	{
+		obj->object_handler = &global_button_effect;
+		draw_button(wnd, obj);
+	}
+	
+	wnd->window_objects[wnd->number_of_window_objects] = obj;
+	wnd->number_of_window_objects++;
+	
+	return TRUE;
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+void global_button_effect(void* any_arg)
+{
+
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -994,7 +1103,6 @@ void init_desktop(void)
 //#define ALIGN_16(N) (N+15) & (~15) 
 //#define ABSOLUTE(INT) ((INT>0)?INT:-INT)
 //void draw_window(WINDOW* wnd, UINT_8* framebuffer);
-//
 //
 ////-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 //
@@ -1124,14 +1232,7 @@ void init_desktop(void)
 //
 ////-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 //
-//void sse_copy_current_screen_to_other_screen(void)
-//{
-//	UINT_64* src       = (UINT_64*)current_screen;
-//	UINT_64* dst       = (UINT_64*)other_screen;
-//	UINT_32 i          = 393216; // 384 K BLOCKS
-//	while(i--)
-//		*dst++ = *src++;
-//}
+//extern void _sse_copy_current_screen_to_other_screen(UINT_8* src, UINT_8* trg);
 //
 ////-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 //
@@ -1143,7 +1244,7 @@ void init_desktop(void)
 //	big_rect.rect.width     = ALIGN_16(wnd->rect.width  + ABSOLUTE(delta_x));
 //	big_rect.rect.height    = wnd->rect.height + ABSOLUTE(delta_y);
 //	
-//	sse_copy_current_screen_to_other_screen();
+//	_sse_copy_current_screen_to_other_screen(current_screen, other_screen);
 //	draw_partial_desktop(&(big_rect.rect));
 //	draw_list_of_overlapped_windows(&big_rect);
 //	
@@ -1152,12 +1253,10 @@ void init_desktop(void)
 //	wnd->rect.up_left.y += delta_y;
 //	draw_window(wnd, other_screen);
 //	
-//	page_flip((PHYSICAL_ADDRESS(LFB) - PHYSICAL_ADDRESS(other_screen))  );//>> 5 );
+//	page_flip( (current_screen == LFB) ? (4096 * 768 * 16) : 0 );
 //	UINT_32 swap   = PHYSICAL_ADDRESS(current_screen);
 //	current_screen = (UINT_8*)((void*)(PHYSICAL_ADDRESS(other_screen)));
 //	other_screen   = (UINT_8*)((void*)(swap));
-//	
-//	//blit_off_screen_to_screen(&big_rect);
 //}
 //
 ////-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -1396,5 +1495,5 @@ void init_desktop(void)
 //	draw_window(&desktop, current_screen);
 //	draw_window(&desktop, other_screen);
 //}
-
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//
+////-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
