@@ -11,6 +11,12 @@ enum {
 	release_event,
 };
 
+enum {
+    OBJECT_BUTTON,
+    OBJECT_SLIDEBAR,
+	OBJECT_TEXTFIELD,
+};
+
 typedef struct _POINT {
 	INT_32 x;
 	INT_32 y; 
@@ -24,14 +30,15 @@ typedef struct _RECT {
 
 
 typedef struct _WINDOW_OBJECT {
-	RECT             rect;
-	BOOL             clickable;
+	UINT_8           object_identifier;
+	UINT_8*          upper_left_corner_address;
 	const INT_8*     text;
 	union {
 		BOOL         pressed;
 		UINT_32      slide_bar_distance;
 		const INT_8* text_field_capture_text;
-	}
+	} attributes;
+	void(*object_handler)(void*);
 } WINDOW_OBJECT;
 
 typedef struct _TITLE_BAR {
@@ -54,7 +61,8 @@ typedef struct _WINDOW {
 	UINT_32         how_many_children; 
 	UINT_32         z_order; 
 	UINT_8*         buffer;
-	WINDOW_OBJECT*  window_objects;
+	WINDOW_OBJECT*  window_objects[64];
+	UINT_32         number_of_window_objects;
 } WINDOW;
 
 extern void _sse_blit_off_screen_to_screen(UINT_8* src, UINT_8* trg, UINT_32 blocks_of_16_in_width);
@@ -62,6 +70,7 @@ void        init_desktop(void);
 BOOL        register_window(WINDOW* wnd, const INT_8* name, UINT_32 width, UINT_32 height, POINT* up_left);
 void        draw_window(WINDOW* wnd, UINT_8* framebuffer);
 void        window_manager(INT_8* report_packet, UINT_8 event_type, INT_32 x, INT_32 y, UINT_8* ioctl_payload);
+BOOL        register_object(WINDOW* wnd, WINDOW_OBJECT* obj);
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
