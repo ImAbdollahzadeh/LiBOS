@@ -5,15 +5,19 @@
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
+typedef struct _ALPHANUMERIC {
+	UINT_32 pixels[4*7];
+} ALPHANUMERIC;
+
 enum {
-    lclick_event,
-    move_event,
+	lclick_event,
+	move_event,
 	release_event,
 };
 
 enum {
-    OBJECT_BUTTON,
-    OBJECT_SLIDEBAR,
+	OBJECT_BUTTON,
+	OBJECT_SLIDEBAR,
 	OBJECT_TEXTFIELD,
 };
 
