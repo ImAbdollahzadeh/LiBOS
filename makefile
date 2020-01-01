@@ -11,6 +11,8 @@ objects =                       \
 		obj/EXTENDEDENTRIES.o   \
 		obj/BIOS_CALL.o         \
 		obj/_ASM_VIDEO_PLAYER.o \
+		obj/_ASM_WINDOW.o       \
+		obj/FONT.o              \
 		obj/VIDEO_PLAYER.o      \
 		obj/WINDOW.o            \
 		obj/TIMER.o             \
@@ -49,8 +51,10 @@ run:
 	@make EXTENDEDENTRIES.o
 	@make BIOS_CALL.o
 	@make _ASM_VIDEO_PLAYER.o
+	@make _ASM_WINDOW.o
 	@make VIDEO_PLAYER.o
 	@make WINDOW.o
+	@make FONT.o
 	@make SVGA.o
 	@make IDT.o
 	@make TIMER.o
