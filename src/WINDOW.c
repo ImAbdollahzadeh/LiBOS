@@ -7,6 +7,7 @@
 #include "../include/TIMER.h"
 #include "../include/MOUSE.h"
 #include "../include/IDT.h"
+#include "../include/FONT.h"
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ GLOBAL AND STATIC VARIABLES
 
@@ -286,7 +287,7 @@ BOOL register_window(WINDOW* wnd, const INT_8* name, UINT_32 _width, UINT_32 _he
 	{
 		while(ii < width)
 		{
-			*trg++ = 0x0041707E;
+			*trg++ = LiBOS_WINDOW_TITLEBAR_COLOR;
 			ii++;
 		}
 		ii = 0;
@@ -388,7 +389,8 @@ void window_manager(INT_8* report_packet, UINT_8 event_type, INT_32 x, INT_32 y,
 		    if(focus)
 				return;
 			
-			focus = find_responsive_window(x,y);
+			if( !(focus = find_responsive_window(x,y)) )
+				return;
 			
 			WINDOW_OBJECT* obj   = 0;
 			UINT_32 which_object = 0xFFFFFFFF;
@@ -504,7 +506,7 @@ static void draw_button(WINDOW* wnd, WINDOW_OBJECT* obj)
 	while(j)
 	{
 		while(i--)
-			*trg++ = 0x00CAD1A4;
+			*trg++ = LiBOS_WINDOW_BODY_COLOR;
 		i = 32;
 		trg = PHYSICAL_ADDRESS(trg) + ((wnd->rect.width - 32) << 2);
 		j--;
@@ -522,7 +524,7 @@ static void draw_button(WINDOW* wnd, WINDOW_OBJECT* obj)
 	trg = (UINT_32*)(wnd->buffer + ((h - 17) * w4) + (w4 - 332));
 	i = 31;
 	while(i--)
-		*trg++ = 0x00888888;
+		*trg++ = LiBOS_BUTTON_SHADOW_COLOR;
 	
 	j = 16;
 	trg = (UINT_32*)(wnd->buffer + ((h - 32) * w4) + (w4 - 336));
@@ -538,7 +540,7 @@ static void draw_button(WINDOW* wnd, WINDOW_OBJECT* obj)
 	trg  = (UINT_32*)(wnd->buffer + ((h - 31) * w4) + (w4 - 212));
 	while(j)
 	{
-		*trg = 0x00888888;
+		*trg = LiBOS_BUTTON_SHADOW_COLOR;
 		trg  = PHYSICAL_ADDRESS(trg) + w4;
 		j--;
 	}
@@ -604,8 +606,8 @@ void global_button_effect(INT_32 x, INT_32 y, UINT_32 which_object)
 	i = 31;
 	while(i--)
 	{
-		*buffer = 0x00CAD1A4;
-		*(UINT_32*)(PHYSICAL_ADDRESS(buffer) - (4096 * 14)) = 0x00888888;
+		*buffer = LiBOS_WINDOW_BODY_COLOR;
+		*(UINT_32*)(PHYSICAL_ADDRESS(buffer) - (4096 * 14)) = LiBOS_BUTTON_SHADOW_COLOR;
 		buffer++;
 	}
 	
@@ -645,8 +647,8 @@ void global_button_effect(INT_32 x, INT_32 y, UINT_32 which_object)
 	i = 31;
 	while(i--)
 	{
-		*buffer = 0x00888888;
-		*(UINT_32*)(PHYSICAL_ADDRESS(buffer) - (4096 * 14)) = 0x00CAD1A4;
+		*buffer = LiBOS_BUTTON_SHADOW_COLOR;
+		*(UINT_32*)(PHYSICAL_ADDRESS(buffer) - (4096 * 14)) = LiBOS_WINDOW_BODY_COLOR;
 		buffer++;
 	}
 	
@@ -673,115 +675,6 @@ void global_button_effect(INT_32 x, INT_32 y, UINT_32 which_object)
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-void construct_a(UINT_32* px)
-{
-	UINT_32* trg = px;
-	UINT_32 j;
-	for(j=0;j<28;j++)
-		px[j] = 0xFF000000;
-	
-	UINT_8 i = 4;
-	while(i--)
-	{
-		*trg = 0;
-		*(UINT_32*)(PHYSICAL_ADDRESS(trg) + 48) = 0;
-		trg++;
-	}
-	
-	*(UINT_32*)(PHYSICAL_ADDRESS(px) + 16) = 0;
-	*(UINT_32*)(PHYSICAL_ADDRESS(px) + 24) = 0;
-	*(UINT_32*)(PHYSICAL_ADDRESS(px) + 32) = 0;
-	*(UINT_32*)(PHYSICAL_ADDRESS(px) + 40) = 0;
-}
-
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-void construct_b(UINT_32* px)
-{
-	UINT_32* trg = px;
-	UINT_32 j;
-	for(j=0;j<28;j++)
-		px[j] = 0xFF000000;
-	
-	UINT_8 i = 4;
-	while(i--)
-	{
-		*trg = 0;
-		*(UINT_32*)(PHYSICAL_ADDRESS(trg) + 48) = 0;
-		trg++;
-	}
-	
-	*(UINT_32*)(PHYSICAL_ADDRESS(px) + 16) = 0;
-	*(UINT_32*)(PHYSICAL_ADDRESS(px) + 24) = 0;
-	*(UINT_32*)(PHYSICAL_ADDRESS(px) + 32) = 0;
-	*(UINT_32*)(PHYSICAL_ADDRESS(px) + 40) = 0;
-}
-
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-void construct_c(UINT_32* px)
-{
-	UINT_32* trg = px;
-	UINT_32 j;
-	for(j=0;j<28;j++)
-		px[j] = 0xFF000000;
-	
-	UINT_8 i = 4;
-	while(i--)
-	{
-		*trg = 0;
-		*(UINT_32*)(PHYSICAL_ADDRESS(trg) + 48) = 0;
-		trg++;
-	}
-	
-	*(UINT_32*)(PHYSICAL_ADDRESS(px) + 16) = 0;
-	*(UINT_32*)(PHYSICAL_ADDRESS(px) + 24) = 0;
-	*(UINT_32*)(PHYSICAL_ADDRESS(px) + 32) = 0;
-	*(UINT_32*)(PHYSICAL_ADDRESS(px) + 40) = 0;
-}
-
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-void construct_d(UINT_32* px)
-{
-	UINT_32* trg = px;
-	UINT_32 j;
-	for(j=0;j<28;j++)
-		px[j] = 0xFF000000;
-	
-	UINT_8 i = 4;
-	while(i--)
-	{
-		*trg = 0;
-		*(UINT_32*)(PHYSICAL_ADDRESS(trg) + 48) = 0;
-		trg++;
-	}
-	
-	*(UINT_32*)(PHYSICAL_ADDRESS(px) + 16) = 0;
-	*(UINT_32*)(PHYSICAL_ADDRESS(px) + 24) = 0;
-	*(UINT_32*)(PHYSICAL_ADDRESS(px) + 32) = 0;
-	*(UINT_32*)(PHYSICAL_ADDRESS(px) + 40) = 0;
-}
-
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-
-static UINT_32* alphanumeric_character(UINT_8 ch, ALPHANUMERIC* an)
-{
-	switch (ch)
-	{
-		case 'a': construct_a(an->pixels); break;
-		case 'b': construct_b(an->pixels); break;
-		case 'c': construct_c(an->pixels); break;
-		case 'd': construct_d(an->pixels); break;
-	}
-}
-
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-
-
 
 
 
@@ -1043,7 +936,7 @@ static UINT_32* alphanumeric_character(UINT_8 ch, ALPHANUMERIC* an)
 //	{
 //		while(ii < width)
 //		{
-//			*trg++ = 0x0041707E;
+//			*trg++ = LiBOS_WINDOW_TITLEBAR_COLOR;
 //			ii++;
 //		}
 //		ii = 0;
