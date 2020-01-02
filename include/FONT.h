@@ -6,7 +6,7 @@
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-void draw_font(INT_8 character, WINDOW* wnd, UINT_32 relative_x_on_window, UINT_32 relative_y_on_window);
+void draw_string(const INT_8* string, WINDOW* wnd, UINT_32 x, UINT_32 y, UINT_32 background_color);
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 

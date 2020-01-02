@@ -35,16 +35,16 @@ typedef unsigned int       BOOL;
 #   	define PHYSICAL_ADDRESS(ANY_POINTER) (0x00)
 #   endif
 
-// debuggers definitions
-#	define LiBOS_SPECIAL_GDT_DEBUGGER        FALSE   /* special debugger for high priority GDT stuff        */
-#	define LiBOS_SPECIAL_IDT_DEBUGGER        FALSE   /* special debugger for high priority IDT stuff        */
-#	define LiBOS_SPECIAL_TIMER_DEBUGGER      FALSE   /* special debugger for high priority TIMER stuff      */
-#	define LiBOS_SPECIAL_KEYBOARD_DEBUGGER   FALSE   /* special debugger for high priority KEYBOARD stuff   */
-#	define LiBOS_SPECIAL_XHCI_DEBUGGER       FALSE   /* special debugger for high priority XHCI stuff       */
-#	define LiBOS_SPECIAL_SVGA_DEBUGGER       FALSE   /* special debugger for high priority SVGA stuff       */
-#	define LiBOS_SPECIAL_AHCI_DEBUGGER       FALSE   /* special debugger for high priority AHCI stuff       */
-#	define LiBOS_SPECIAL_FILESYSTEM_DEBUGGER FALSE   /* special debugger for high priority FILESYSTEM stuff */
-#	define LiBOS_SPECIAL_USB_MOUSE_DEBUGGER  FALSE   /* special debugger for high priority USB_MOUSE stuff  */
+// LiBOS_CORE_COLORS
+
+enum {
+	LiBOS_MOUSE_COLOR           = 0x00619218,
+	LiBOS_WINDOW_BODY_COLOR     = 0x00CAD1A4,
+	LiBOS_WINDOW_TITLEBAR_COLOR = 0x0041707E,
+	LiBOS_BUTTON_SHADOW_COLOR   = 0x00888888,
+};
+
+
 
 // memzero function implementation
 static void __LiBOS_MemZero(void* address, UINT_32 bytes)
