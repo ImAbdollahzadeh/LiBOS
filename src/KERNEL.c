@@ -18,6 +18,7 @@
 #include "../include/VIDEO_PLAYER.h"
 #include "../include/DOSSPEC.h"
 #include "../include/WINDOW.h"
+#include "../include/FONT.h"
 
 extern void _LiBOS_text_section_size;
 extern void _LiBOS_data_section_size;
@@ -142,25 +143,28 @@ void KERNEL_MAIN_ENTRY(void)
 	WINDOW wnd;
     POINT wnd_orig = {50, 50};
 	register_window(&wnd, "first_window", 400, 200, &wnd_orig);    
+	const char* test  = "ImanAbdollahzadeh";
+	const char* test2 = "abcdefghijklmnopqrstuvwxyz";
+	draw_string(test,  &wnd, 20, 180, LiBOS_WINDOW_BODY_COLOR);
+	draw_string(test2, &wnd, 20, 160, LiBOS_WINDOW_BODY_COLOR);
+	
     WINDOW wnd2;
     POINT wnd_orig2 = {80, 70};
 	register_window(&wnd2, "second_window", 200, 100, &wnd_orig2);
     WINDOW wnd3;
     POINT wnd_orig3 = {110, 35};
-	register_window(&wnd3, "third_window", 200, 100, &wnd_orig3);    
+	WINDOW_OBJECT obj;
+	obj.object_identifier = OBJECT_BUTTON;
+	register_window(&wnd3, "third_window", 200, 100, &wnd_orig3); 
+	register_object(&wnd3, &obj);
     WINDOW wnd4;
     POINT wnd_orig4 = {430, 240};
 	register_window(&wnd4, "fourth_window", 80, 90, &wnd_orig4);
 	
-	
-	draw_window(&wnd,  fb);
+	draw_window(&wnd , fb);
 	draw_window(&wnd2, fb);
 	draw_window(&wnd3, fb);
 	draw_window(&wnd4, fb);
-	
-	
-	
-	
 	
 	USB_MOUSE usb_mouse;
 	status = RegisterMouse(&usb_mouse);
