@@ -26,6 +26,7 @@ enum ATTRIBUTE {
     ATT_r_plus,
     ATT_r,
     ATT_MEMORY_IMM,
+	ATT_REG_REG,
 };
 
 typedef struct _OPCODE {
