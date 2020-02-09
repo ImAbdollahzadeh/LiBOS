@@ -1135,8 +1135,253 @@ EXIT_POSITION2:
 					} // end of if
 				} // end of if 
 			} // end of if 
+			
 		} // end of for 
 	}
+	else if(tp->mod1 == 'o' && tp->mod2 == 'o' && tp->mod3 == 'o') // a.k.a. MOV REG, REG
+	{
+		unsigned char prefix = 0;
+		unsigned char opc	= 0;
+		unsigned char modrm  = 0;
+		enum ATTRIBUTE attribute   = ATT_REG_REG;
+	
+		int j;
+		for(j=0;j<sizeof_opcodes;j++)
+		{
+			if( _strcmp(tp->str1, opcodes[j].mnemonic) )
+			{
+				if( attribute == opcodes[j].attribute )
+				{
+					opc = opcodes[j].base_binary_code;
+					modrm |= ((1<<7) | (1<<6)); //register
+					if( _strcmp(tp->str2, "eax") )
+					{
+						modrm |= IMM_EAX;
+					}
+					else if( _strcmp(tp->str2, "ecx") )
+					{
+						modrm |= IMM_ECX;
+					}
+					else if( _strcmp(tp->str2, "edx") )
+					{
+						modrm |= IMM_EDX;
+					}
+					else if( _strcmp(tp->str2, "ebx") )
+					{
+						modrm |= IMM_EBX;
+					}
+					else if( _strcmp(tp->str2, "esp") )
+					{
+						modrm |= IMM_ESP;
+					}
+					else if( _strcmp(tp->str2, "ebp") )
+					{
+						modrm |= IMM_EBP;
+					}
+					else if( _strcmp(tp->str2, "esi") )
+					{
+						modrm |= IMM_ESI;
+					}
+					else if( _strcmp(tp->str2, "edi") )
+					{
+						modrm |= IMM_EDI;
+					}
+					else if( _strcmp(tp->str2, "ax") )
+					{
+						prefix = 0x66;
+						modrm |= IMM_AX;
+					}
+					else if( _strcmp(tp->str2, "bx") )
+					{
+						prefix = 0x66;
+						modrm |= IMM_BX;
+					}
+					else if( _strcmp(tp->str2, "cx") )
+					{
+						prefix = 0x66;
+						modrm |= IMM_CX;
+					}
+					else if( _strcmp(tp->str2, "dx") )
+					{
+						prefix = 0x66;
+						modrm |= IMM_DX;
+					}
+					else if( _strcmp(tp->str2, "sp") )
+					{
+						prefix = 0x66;
+						modrm |= IMM_SP;
+					}
+					else if( _strcmp(tp->str2, "bp") )
+					{
+						prefix = 0x66;
+						modrm |= IMM_BP;
+					}
+					else if( _strcmp(tp->str2, "si") )
+					{
+						prefix = 0x66;
+						modrm |= IMM_SI;
+					}
+					else if( _strcmp(tp->str2, "di") )
+					{
+						prefix = 0x66;
+						modrm |= IMM_DI;
+					}
+					else if( _strcmp(tp->str2, "al") )
+					{
+						opc &= ~(1<<0);
+						modrm |= IMM_AL;
+					}
+					else if( _strcmp(tp->str2, "cl") )
+					{
+						opc &= ~(1<<0);
+						modrm |= IMM_CL;
+					}
+					else if( _strcmp(tp->str2, "dl") )
+					{
+						opc &= ~(1<<0);
+						modrm |= IMM_DL;
+					}
+					else if( _strcmp(tp->str2, "bl") )
+					{
+						opc &= ~(1<<0);
+						modrm |= IMM_BL;
+					}
+					else if( _strcmp(tp->str2, "ah") )
+					{
+						opc &= ~(1<<0);
+						modrm |= IMM_AH;
+					}
+					else if( _strcmp(tp->str2, "ch") )
+					{
+						opc &= ~(1<<0);
+						modrm |= IMM_CH;
+					}
+					else if( _strcmp(tp->str2, "dh") )
+					{
+						opc &= ~(1<<0);
+						modrm |= IMM_DH;
+					}
+					else if( _strcmp(tp->str2, "bh") )
+					{
+						opc &= ~(1<<0);
+						modrm |= IMM_BH;
+					}
+					else {}
+					
+					if( _strcmp(tp->str3, "eax") )
+					{
+						modrm |= MODRM_REG(IMM_EAX);
+					}
+					else if( _strcmp(tp->str3, "ecx") )
+					{
+						modrm |= MODRM_REG(IMM_ECX);
+					}
+					else if( _strcmp(tp->str3, "edx") )
+					{
+						modrm |= MODRM_REG(IMM_EDX);
+					}
+					else if( _strcmp(tp->str3, "ebx") )
+					{
+						modrm |= MODRM_REG(IMM_EBX);
+					}
+					else if( _strcmp(tp->str3, "esp") )
+					{
+						modrm |= MODRM_REG(IMM_ESP);
+					}
+					else if( _strcmp(tp->str3, "ebp") )
+					{
+						modrm |= MODRM_REG(IMM_EBP);
+					}
+					else if( _strcmp(tp->str3, "esi") )
+					{
+						modrm |= MODRM_REG(IMM_ESI);
+					}
+					else if( _strcmp(tp->str3, "edi") )
+					{
+						modrm |= MODRM_REG(IMM_EDI);
+					}
+					else if( _strcmp(tp->str3, "ax") )
+					{
+						prefix = 0x66;
+						modrm |= MODRM_REG(IMM_AX);
+					}
+					else if( _strcmp(tp->str3, "bx") )
+					{
+						prefix = 0x66;
+						modrm |= MODRM_REG(IMM_BX);
+					}
+					else if( _strcmp(tp->str3, "cx") )
+					{
+						prefix = 0x66;
+						modrm |= MODRM_REG(IMM_CX);
+					}
+					else if( _strcmp(tp->str3, "dx") )
+					{
+						prefix = 0x66;
+						modrm |= MODRM_REG(IMM_DX);
+					}
+					else if( _strcmp(tp->str3, "sp") )
+					{
+						prefix = 0x66;
+						modrm |= MODRM_REG(IMM_SP);
+					}
+					else if( _strcmp(tp->str3, "bp") )
+					{
+						prefix = 0x66;
+						modrm |= MODRM_REG(IMM_BP);
+					}
+					else if( _strcmp(tp->str3, "si") )
+					{
+						prefix = 0x66;
+						modrm |= MODRM_REG(IMM_SI);
+					}
+					else if( _strcmp(tp->str3, "di") )
+					{
+						prefix = 0x66;
+						modrm |= MODRM_REG(IMM_DI);
+					}
+					else if( _strcmp(tp->str3, "al") )
+					{
+						modrm |= MODRM_REG(IMM_AL);
+					}
+					else if( _strcmp(tp->str3, "cl") )
+					{
+						modrm |= MODRM_REG(IMM_CL);
+					}
+					else if( _strcmp(tp->str3, "dl") )
+					{
+						modrm |= MODRM_REG(IMM_DL);
+					}
+					else if( _strcmp(tp->str3, "bl") )
+					{
+						modrm |= MODRM_REG(IMM_BL);
+					}
+					else if( _strcmp(tp->str3, "ah") )
+					{
+						modrm |= MODRM_REG(IMM_AH);
+					}
+					else if( _strcmp(tp->str3, "ch") )
+					{
+						modrm |= MODRM_REG(IMM_CH);
+					}
+					else if( _strcmp(tp->str3, "dh") )
+					{
+						modrm |= MODRM_REG(IMM_DH);
+					}
+					else if( _strcmp(tp->str3, "bh") )
+					{
+						modrm |= MODRM_REG(IMM_BH);
+					}
+					else {}
+					
+					if(prefix)
+						printf("prefix: 0x%x, ", prefix);
+					printf("opcode: 0x%x, ", opc);
+					printf("modrm: 0x%x, ", modrm);
+				} // end of if 
+			} // end of if 
+		} // end of for 
+	} // end of if
 	printf("\n");
 }
 

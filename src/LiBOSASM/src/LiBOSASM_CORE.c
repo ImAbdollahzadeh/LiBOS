@@ -38,6 +38,7 @@ OPCODE opcodes[] = {
 	{"mov", ATT_r,		  0x8B},
 	{"mov", ATT_MEMORY_IMM, 0xC7},
 	{"mov", ATT_REG_REG,	0x89},
+	{"add", ATT_REG_REG,	0x01},
 };
 unsigned int sizeof_opcodes = sizeof(opcodes) / sizeof(OPCODE);
 

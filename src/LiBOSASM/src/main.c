@@ -27,6 +27,7 @@ int main(void)
 		"\tmov BYTE[esp+0x28], 0x16\n"
 		"\tmov WORD[ebp+0x00124585], esp\n"
 		"\tmov esp, ebp\n"
+		"\tadd esp, ebp\n"
 		"\tpop ebp\n"
 		"\tret\n";
 	printf("%u lines\n", lines = how_many_lines(file));
