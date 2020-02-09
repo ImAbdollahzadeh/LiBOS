@@ -1,0 +1,1860 @@
+#include  <stdio.h>
+
+unsigned int string_length(const char*);
+
+typedef struct _SYMBOLIC_LABEL {
+    char* string;
+    void* address;
+} SYMBOLIC_LABEL;
+
+static SYMBOLIC_LABEL table_of_labels[0xFFFF];
+static unsigned int table_of_labels_count = 0;
+
+static unsigned char hex_table_codes[] = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
+const char* global_lookup_table[] = {
+    "mov", "cmp", "add", "sub", "mul", "div", 
+    "imul", "idiv", "inc", "dec", "shr", "shl", 
+    "lea", "rep", "repe", "repne", "jmp", "call", 
+    "push", "pop", "je", "jne", "ret", "iret", 
+    "eax", "ax", "ah", "al", "ebx", "bx", "bh", "bl",
+    "ecx", "cx", "ch", "cl", "edx", "dx", "dh", "dl",
+    "esi", "si", "edi", "di", "eip", "ip", "ebp", "bp",
+    "esp", "sp", "ss", "cs", "ds", "es", "fs", "gs", 
+    "eflags", "flags", "pushf", "popf", 
+};
+unsigned int lookup_table_entries = sizeof(global_lookup_table) / sizeof(const char*);
+
+const char* global_mem_table[] = {
+    "[", "]", "byte", "BYTE", "word", "WORD", 
+    "dword", "DWORD", "xmmword", "XMMWORD", "qword", "QWORD",
+};
+unsigned int mem_table_entries = sizeof(global_mem_table) / sizeof(const char*);
+
+unsigned int in_opcodes(const char* str)
+{
+    unsigned int i = 0;
+    unsigned int length = 0, ret = 1;
+    char* trg = 0;
+    char* src = str;
+    while(i < lookup_table_entries)
+    {
+        trg    = global_lookup_table[i];
+        length = string_length(global_lookup_table[i]);
+        
+        while(length--)
+        {
+            if(*src++ != *trg++)
+                ret = 0;
+        }
+        if(ret)
+            return 1;
+        i++;
+        src = str;
+        ret = 1;
+    }
+    return 0;
+}
+
+unsigned int memory_operands(const char* str)
+{
+    unsigned int i = 2;
+    unsigned int length = 0;
+    unsigned int mem_ret = 1;
+    unsigned int directive_ret = 0;
+    char* trg = 0;
+    char* src = str;
+
+    while(i < mem_table_entries)
+    {
+        trg    = global_mem_table[i];
+        length = string_length(global_mem_table[i]);
+        
+        while(length--)
+        {
+            if(*src++ != *trg++)
+                mem_ret = 0;
+        }
+        if(mem_ret)
+            goto DIRECTIVE_CHECKS;
+        i++;
+        src = str;
+        mem_ret = 1;
+    }
+    mem_ret = 0;
+DIRECTIVE_CHECKS:    
+    trg    = global_mem_table[0];
+    length = string_length(str);
+    while(length--)
+    {
+        if(*trg++ == *src++)
+            directive_ret = 1;
+    }
+    if(!directive_ret)
+        return 0;
+    
+    trg = global_mem_table[1];
+    length = string_length(str);
+    while(length--)
+    {
+        if(*trg++ == *src++)
+            directive_ret = 1;
+    }
+    if(!directive_ret)
+        return 0;
+    
+    if(directive_ret && mem_ret)
+        return 1;
+    if(directive_ret && !mem_ret)
+        return 2;
+    return 0;
+}
+
+unsigned int is_immediate(const char* str)
+{
+    unsigned int length = string_length(str);
+    char* src = str;
+    while(length--)
+    {
+        if(*src++ == '0')
+        {
+            if(*src++ == 'x')
+                return 1;
+        }    
+    }
+
+    src = str;
+    while(*src != '\0')
+        src++;
+    
+    if(*(src - 1) == 'h' || *(src - 1) == 'H')
+        return 1;
+    
+    return 0;
+}
+
+unsigned int is_label(const char* str)
+{
+    unsigned int length = string_length(str);
+    if(str[length - 1] == ':')
+        return 1;    
+    return 0;
+}
+
+typedef struct _TRIPLE_PACKET {
+    char str1[128];
+    char str2[128];
+    char str3[128];
+    unsigned char mod1;
+    unsigned char mod2;
+    unsigned char mod3;
+} TRIPLE_PACKET;
+
+void map_machine_codes(TRIPLE_PACKET* tp)
+{
+    char* s = tp->str1;
+    if(*s != '!')
+    {
+        if( in_opcodes(s) )
+        {
+            //printf("o");
+            tp->mod1 = 'o';
+        }
+        else if( memory_operands(s) == 1 )
+        {
+            //printf("%c", 'M');
+            tp->mod1 = 'M';
+        }
+        else if( memory_operands(s) == 2 )
+        {
+            //printf("%c", 'D');
+            tp->mod1 = 'D';
+        }
+        else if( is_immediate(s) )
+        {
+            //printf("%c", 'I');
+            tp->mod1 = 'I';
+        }
+        else if( is_label(s) )
+        {
+            //printf("%c", 'L');
+            tp->mod1 = 'L';
+            table_of_labels[table_of_labels_count].string = s;
+            table_of_labels[table_of_labels_count].address = 0;
+            table_of_labels_count++;
+        }
+        else
+        {
+            //printf("%c", '.');
+            tp->mod1 = '.';
+        }
+            
+    }
+    s += 128;
+    if(*s != '!')
+    {
+        if( in_opcodes(s) )
+        {
+            //printf("o");
+            tp->mod2 = 'o';
+        }
+        else if( memory_operands(s) == 1 )
+        {
+            //printf("%c", 'M');
+            tp->mod2 = 'M';
+        }
+        else if( memory_operands(s) == 2 )
+        {
+            //printf("%c", 'D');
+            tp->mod2 = 'D';
+        }
+        else if( is_immediate(s) )
+        {
+            //printf("%c", 'I');
+            tp->mod2 = 'I';
+        }
+        else
+        {
+            //printf("%c", '.');
+            tp->mod2 = '.';
+        }
+    }
+    s += 128;
+    if(*s != '!')
+    {
+        if( in_opcodes(s) )
+        {
+            //printf("o");
+            tp->mod3 = 'o';
+        }
+        else if( memory_operands(s) == 1 )
+        {
+            //printf("%c", 'M');
+            tp->mod3 = 'M';
+        }
+        else if( memory_operands(s) == 2 )
+        {
+            //printf("%c", 'D');
+            tp->mod3 = 'D';
+        }
+        else if( is_immediate(s) )
+        {
+            //printf("%c", 'I');
+            tp->mod3 = 'I';
+        }
+        else
+        {
+            //printf("%c", '.');
+            tp->mod3 = '.';
+        }
+    }
+    //printf("\n");
+}
+
+unsigned int how_many_lines(const char* file)
+{
+    char* p = file;
+    unsigned int sz = 0, lines = 0;
+    while(*p++)
+        sz++;
+    p = file;
+    while(sz--)
+    {
+        if(*p == '\n')
+            lines++;
+        p++;        
+    }
+    return lines;
+}
+
+TRIPLE_PACKET* alloc_units(unsigned int lines)
+{
+    return (TRIPLE_PACKET*)malloc(lines * sizeof(TRIPLE_PACKET));    
+}
+
+unsigned int string_length(const char* s)
+{
+    unsigned int ret = 0;
+    char* p = s;
+    while(*p++)
+        ret++;
+    return ret;
+}
+
+void _stub(TRIPLE_PACKET* tp, unsigned int counter, char* tmp)
+{
+    char* ptr = tp->str1;
+    if(*ptr == '!')
+    {
+        while(counter--)
+            *ptr++ = *tmp++;
+    }
+    else if(*(ptr + 128) == '!')
+    {
+        ptr += 128;
+        while(counter--)
+            *ptr++ = *tmp++;
+    }
+    else
+    {
+        ptr += 256;
+        while(counter--)
+            *ptr++ = *tmp++;
+    }
+}
+
+void lex(TRIPLE_PACKET* tp, const char* line)
+{
+    //printf("*** %s\n\n", line);
+    unsigned int size = string_length(line), counter = 0;
+    tp->str1[0] = tp->str2[0] = tp->str3[0] = '!';    
+    char tmp[128], *f = line;
+    while(*f)
+    {
+        if(*f == '\t')
+            f++;
+        else
+        {
+            if(*f == '[')
+            {
+                while(*f != ']')
+                {
+                    if(*f == '\t' || *f == ',')
+                        f++;
+                    else
+                    {
+                        tmp[counter] = *f++;
+                        counter++;
+                    }
+                }
+                tmp[counter] = ']';
+                counter++;
+                tmp[counter] = '\0';            
+                _stub(tp, counter, tmp);
+                counter = 0;
+                f++;
+            }
+            else
+            {
+                while(*f != ' ')
+                {
+                    if(*f == '\t' || *f == ',')
+                        f++;
+                    else
+                    {
+                        if(*f == '\0')
+                        {
+                            tmp[counter] = '\0';
+                            _stub(tp, counter, tmp);
+                            goto FINALIZE;
+                        } 
+                        tmp[counter] = *f++;
+                        counter++;
+                    }
+                }     
+                tmp[counter] = '\0';
+                _stub(tp, counter, tmp);
+                counter = 0;
+                f++;
+            }
+        }
+    }
+FINALIZE:
+    //printf("%s %s %s => ", tp->str1, tp->str2, tp->str3);
+    map_machine_codes(tp);    
+}
+
+
+enum ATTRIBUTE {
+    ATT_DIGIT,
+    ATT_r_plus,
+    ATT_r,
+    ATT_MEMORY_IMM,
+};
+
+enum REG_32 {
+    IMM_EAX,
+    IMM_ECX,
+    IMM_EDX,
+    IMM_EBX,
+    IMM_ESP,
+    IMM_EBP,
+    IMM_ESI,
+    IMM_EDI
+};
+
+enum REG_16 {
+    IMM_AX,
+    IMM_CX,
+    IMM_DX,
+    IMM_BX,
+    IMM_SP,
+    IMM_BP,
+    IMM_SI,
+    IMM_DI
+};
+
+enum REG_8 {
+    IMM_AL,
+    IMM_CL,
+    IMM_DL,
+    IMM_BL,
+    IMM_AH,
+    IMM_CH,
+    IMM_DH,
+    IMM_BH
+};
+
+enum MOD_RM {
+    MEM_TO_REG   = (1<<1),
+    REG_TO_MEM   = ~(1<<1),
+    _16_32       = (1<<0),
+    _8           = ~(1<<0),
+    MODRM_DISP32 = 0x05
+};
+
+#define MODRM_REG(R) ((R)<<3)
+
+typedef struct _OPCODE {
+    char* mnemonic;
+    enum ATTRIBUTE attribute;
+    unsigned char base_binary_code;
+} OPCODE;
+
+static OPCODE opcodes[] = {
+    {"mov", ATT_r_plus, 0xB8},
+    {"add", ATT_DIGIT,  0x00},
+    {"mov", ATT_r,      0x8B},
+    {"mov", ATT_MEMORY_IMM, 0xC7},
+};
+static unsigned int sizeof_opcodes = sizeof(opcodes) / sizeof(OPCODE);
+
+unsigned int _strcmp(const char* instruction_name, char* trg)
+{
+    unsigned int instruction_size = 0, target_size = 0;
+    char* src = instruction_name;
+    char* target = trg;
+    
+    while(*src++) 
+        instruction_size++;
+    
+    while(*target++) 
+        target_size++;
+    
+    src    = instruction_name;
+    target = trg;
+    
+    if(instruction_size != target_size)
+        return 0;
+    
+    while(instruction_size--)
+    {
+        if(*src++ != *target++)
+            return 0;
+    }
+    return 1;
+}
+
+unsigned int _contain(char* string, const char* substring)
+{
+    unsigned int substring_size = 0;
+    unsigned int    string_size = 0;
+    char* src = substring;
+    char* trg = string;
+    
+    while(*src++) 
+        substring_size++;
+    
+    while(*trg++) 
+        string_size++;
+    
+    src = substring;
+    trg = string;
+    
+    if(!substring_size || !string_size)
+        return 0;
+    
+    unsigned int states = string_size - substring_size;
+    unsigned int sliding_counter = 0;
+    unsigned int alias_substring_size = substring_size;
+    unsigned int found = 1;
+    while(states)
+    {
+        trg = &string[sliding_counter];
+        while(alias_substring_size--)
+        {
+            if(*src++ != *trg++)
+                found = 0;
+        }        
+        
+        if(found)
+            return 1;
+        states--;
+        sliding_counter++;
+        src = substring;
+        alias_substring_size = substring_size;
+        found = 1;
+    }
+    
+    return 0;
+}
+
+static unsigned int which_entry_from_hex_table(char ch)
+{
+    unsigned int _entry = 0;
+    while(_entry < 0x10)
+    {
+        if(ch == hex_table_codes[_entry])
+            return _entry;
+        _entry++;
+    }
+    return 0xFFFFFFFF;
+}
+
+static unsigned int __pow(unsigned int base, unsigned int power)
+{
+    unsigned int ret = 1;
+    while(power)
+    {
+        ret *= base;
+        power--;
+    }
+    return ret;
+}
+
+static unsigned int immediate32_string_to_hex(const char* s)
+{
+    unsigned int ret = 0;
+    ret |= ( which_entry_from_hex_table(s[8]) * __pow(16, 7) );
+    ret |= ( which_entry_from_hex_table(s[9]) * __pow(16, 6) );
+    ret |= ( which_entry_from_hex_table(s[6]) * __pow(16, 5) );
+    ret |= ( which_entry_from_hex_table(s[7]) * __pow(16, 4) );
+    ret |= ( which_entry_from_hex_table(s[4]) * __pow(16, 3) );
+    ret |= ( which_entry_from_hex_table(s[5]) * __pow(16, 2) );
+    ret |= ( which_entry_from_hex_table(s[2]) * __pow(16, 1) );
+    ret |= ( which_entry_from_hex_table(s[3]) * __pow(16, 0) );
+    //printf("0x%x ---", ret);
+    return ret;
+}
+
+static unsigned short immediate16_string_to_hex(const char* s)
+{
+    unsigned int ret = 0;
+    ret |= ( which_entry_from_hex_table(s[4]) * __pow(16, 3) );
+    ret |= ( which_entry_from_hex_table(s[5]) * __pow(16, 2) );
+    ret |= ( which_entry_from_hex_table(s[2]) * __pow(16, 1) );
+    ret |= ( which_entry_from_hex_table(s[3]) * __pow(16, 0) );
+    //printf("0x%x ---", ret);
+    return (unsigned short)ret;
+}
+
+static unsigned char immediate8_string_to_hex(const char* s)
+{
+    unsigned int ret = 0;
+    ret |= ( which_entry_from_hex_table(s[2]) * __pow(16, 1) );
+    ret |= ( which_entry_from_hex_table(s[3]) * __pow(16, 0) );
+    //printf("0x%x ---", ret);
+    return (unsigned char)ret;
+}
+
+static void encode_u32(const char* s, char* src)
+{
+    src[0] = s[8];
+    src[1] = s[9];
+    src[2] = s[6];
+    src[3] = s[7];
+    src[4] = s[4];
+    src[5] = s[5];
+    src[6] = s[2];
+    src[7] = s[3];
+}
+
+static void encode_u16(const char* s, char* src)
+{
+    src[0] = s[4];
+    src[1] = s[5];
+    src[2] = s[2];
+    src[3] = s[3];
+}
+
+static void encode_u8(const char* s, char* src)
+{
+    src[0] = s[2];
+    src[1] = s[3];
+}
+
+static void extract_from_memory_displacement_as_address(const char* s, char* dspl)
+{
+    unsigned int i;
+    for(i=0;i<8;i++)
+        dspl[i] = '0';
+    
+    unsigned char tmp[10];
+    unsigned int sz = string_length(s);
+    i = 0;
+    while(i < sz)
+    {
+        if(s[i] == '[')
+        {
+            i++;
+            unsigned int j = 0;
+            while(s[i] != ']')
+            {
+                tmp[j] = s[i];
+                j++;
+                i++;
+            }
+            break;
+        }
+        i++;
+    }
+    
+    if(tmp[0] == '0' && tmp[1] == 'x')
+    {
+        dspl[0] = tmp[8];
+        dspl[1] = tmp[9];
+        dspl[2] = tmp[6];
+        dspl[3] = tmp[7];
+        dspl[4] = tmp[4];
+        dspl[5] = tmp[5];
+        dspl[6] = tmp[2];
+        dspl[7] = tmp[3];
+    }
+}
+
+static void extract_from_memory_displacement8(const char* s, char* dspl)
+{
+    unsigned int i;
+    for(i=0;i<2;i++)
+        dspl[i] = '0';
+    
+    unsigned char tmp[10];
+    unsigned int sz = string_length(s);
+    i = 0;
+    while(i < sz)
+    {
+        if(s[i] == '+')
+        {
+            i++;
+            unsigned int j = 0;
+            while(s[i] != ']')
+            {
+                tmp[j] = s[i];
+                j++;
+                i++;
+            }
+            break;
+        }
+        i++;
+    }
+    
+    if(tmp[0] == '0' && tmp[1] == 'x')
+    {
+        dspl[0] = tmp[2];
+        dspl[1] = tmp[3];
+    }
+}
+
+static void extract_from_memory_displacement32(const char* s, char* dspl)
+{
+    unsigned int i;
+    for(i=0;i<8;i++)
+        dspl[i] = '0';
+    
+    unsigned char tmp[10];
+    unsigned int sz = string_length(s);
+    i = 0;
+    while(i < sz)
+    {
+        if(s[i] == '+')
+        {
+            i++;
+            unsigned int j = 0;
+            while(s[i] != ']')
+            {
+                tmp[j] = s[i];
+                j++;
+                i++;
+            }
+            break;
+        }
+        i++;
+    }
+    
+    if(tmp[0] == '0' && tmp[1] == 'x')
+    {
+        dspl[0] = tmp[8];
+        dspl[1] = tmp[9];
+        dspl[2] = tmp[6];
+        dspl[3] = tmp[7];
+        dspl[4] = tmp[4];
+        dspl[5] = tmp[5];
+        dspl[6] = tmp[2];
+        dspl[7] = tmp[3];
+    }
+}
+
+static void convert_add(TRIPLE_PACKET* tp){ printf("in add\n");}
+static void convert_sub(TRIPLE_PACKET* tp){}
+static void convert_mov(TRIPLE_PACKET* tp)
+{
+    if(tp->mod1 == 'o' && tp->mod2 == 'o' && tp->mod3 == 'I')
+    {
+        unsigned char prefix = 0;
+        unsigned char opc    = 0;
+        unsigned char immediate32[8];
+        unsigned char immediate16[4];
+        unsigned char immediate8 [2];
+        
+        unsigned char  which_immediate = 0; // BIT(1) : 32, BIT(2) : 16, and BIT(3) : 8
+        enum ATTRIBUTE attribute   = ATT_r_plus;
+    
+        int j;
+        for(j=0;j<sizeof_opcodes;j++)
+        {
+            if( _strcmp(tp->str1, opcodes[j].mnemonic) )
+            {
+                if( attribute == opcodes[j].attribute )
+                {
+                    opc = opcodes[j].base_binary_code;
+                    if( _strcmp(tp->str2, "eax") )
+                    {
+                        opc |= IMM_EAX;
+                        which_immediate |= (1<<1);
+                        encode_u32(tp->str3, immediate32);
+                    }
+                    else if( _strcmp(tp->str2, "ecx") )
+                    {
+                        opc |= IMM_ECX;
+                        which_immediate |= (1<<1);
+                        encode_u32(tp->str3, immediate32);
+                    }
+                    else if( _strcmp(tp->str2, "edx") )
+                    {
+                        opc |= IMM_EDX;
+                        which_immediate |= (1<<1);
+                        encode_u32(tp->str3, immediate32);
+                    }
+                    else if( _strcmp(tp->str2, "ebx") )
+                    {
+                        opc |= IMM_EBX;
+                        which_immediate |= (1<<1);
+                        encode_u32(tp->str3, immediate32);
+                    }
+                    else if( _strcmp(tp->str2, "esp") )
+                    {
+                        opc |= IMM_ESP;
+                        which_immediate |= (1<<1);
+                        encode_u32(tp->str3, immediate32);
+                    }
+                    else if( _strcmp(tp->str2, "ebp") )
+                    {
+                        opc |= IMM_EBP;
+                        which_immediate |= (1<<1);
+                        encode_u32(tp->str3, immediate32);
+                    }
+                    else if( _strcmp(tp->str2, "esi") )
+                    {
+                        opc |= IMM_ESI;
+                        which_immediate |= (1<<1);
+                        encode_u32(tp->str3, immediate32);
+                    }
+                    else if( _strcmp(tp->str2, "edi") )
+                    {
+                        opc |= IMM_EDI;
+                        which_immediate |= (1<<1);
+                        encode_u32(tp->str3, immediate32);
+                    }
+                    else if( _strcmp(tp->str2, "ax") )
+                    {
+                        prefix = 0x66;
+                        opc |= IMM_AX;
+                        which_immediate |= (1<<2);
+                        encode_u16(tp->str3, immediate16);
+                    }
+                    else if( _strcmp(tp->str2, "bx") )
+                    {
+                        prefix = 0x66;
+                        opc |= IMM_BX;
+                        which_immediate |= (1<<2);
+                        encode_u16(tp->str3, immediate16);
+                    }
+                    else if( _strcmp(tp->str2, "cx") )
+                    {
+                        prefix = 0x66;
+                        opc |= IMM_CX;
+                        which_immediate |= (1<<2);
+                        encode_u16(tp->str3, immediate16);
+                    }
+                    else if( _strcmp(tp->str2, "dx") )
+                    {
+                        prefix = 0x66;
+                        opc |= IMM_DX;
+                        which_immediate |= (1<<2);
+                        encode_u16(tp->str3, immediate16);
+                    }
+                    else if( _strcmp(tp->str2, "sp") )
+                    {
+                        prefix = 0x66;
+                        opc |= IMM_SP;
+                        which_immediate |= (1<<2);
+                        encode_u16(tp->str3, immediate16);
+                    }
+                    else if( _strcmp(tp->str2, "bp") )
+                    {
+                        prefix = 0x66;
+                        opc |= IMM_BP;
+                        which_immediate |= (1<<2);
+                        encode_u16(tp->str3, immediate16);
+                    }
+                    else if( _strcmp(tp->str2, "si") )
+                    {
+                        prefix = 0x66;
+                        opc |= IMM_SI;
+                        which_immediate |= (1<<2);
+                        encode_u16(tp->str3, immediate16);
+                    }
+                    else if( _strcmp(tp->str2, "di") )
+                    {
+                        prefix = 0x66;
+                        opc |= IMM_DI;
+                        which_immediate |= (1<<2);
+                        encode_u16(tp->str3, immediate16);
+                    }
+                    else if( _strcmp(tp->str2, "al") )
+                    {
+                        opc -= 8;
+                        opc |= IMM_AL;
+                        which_immediate |= (1<<3);
+                        encode_u8(tp->str3, immediate8);
+                    }
+                    else if( _strcmp(tp->str2, "cl") )
+                    {
+                        opc -= 8;
+                        opc |= IMM_CL;
+                        which_immediate |= (1<<3);
+                        encode_u8(tp->str3, immediate8);
+                    }
+                    else if( _strcmp(tp->str2, "dl") )
+                    {
+                        opc -= 8;
+                        opc |= IMM_DL;
+                        which_immediate |= (1<<3);
+                        encode_u8(tp->str3, immediate8);
+                    }
+                    else if( _strcmp(tp->str2, "bl") )
+                    {
+                        opc -= 8;
+                        opc |= IMM_BL;
+                        which_immediate |= (1<<3);
+                        encode_u8(tp->str3, immediate8);
+                    }
+                    else if( _strcmp(tp->str2, "ah") )
+                    {
+                        opc -= 8;
+                        opc |= IMM_AH;
+                        which_immediate |= (1<<3);
+                        encode_u8(tp->str3, immediate8);
+                    }
+                    else if( _strcmp(tp->str2, "ch") )
+                    {
+                        opc -= 8;
+                        opc |= IMM_CH;
+                        which_immediate |= (1<<3);
+                        encode_u8(tp->str3, immediate8);
+                    }
+                    else if( _strcmp(tp->str2, "dh") )
+                    {
+                        opc -= 8;
+                        opc |= IMM_DH;
+                        which_immediate |= (1<<3);
+                        encode_u8(tp->str3, immediate8);
+                    }
+                    else if( _strcmp(tp->str2, "bh") )
+                    {
+                        opc -= 8;
+                        opc |= IMM_BH;
+                        which_immediate |= (1<<3);
+                        encode_u8(tp->str3, immediate8);
+                    }
+                    else {}
+                    
+                    if(prefix)
+                        printf("prefix: 0x%x, ", prefix);
+                    printf("opcode: 0x%x, ", opc);
+                    if(which_immediate)
+                    {
+                        switch(which_immediate)
+                        {
+                            case 0x2: 
+                                printf("imm: %c%c %c%c %c%c %c%c\n", 
+                                       immediate32[0], immediate32[1], immediate32[2], immediate32[3],
+                                       immediate32[4], immediate32[5], immediate32[6], immediate32[7]);
+                            
+                                //immediate32_string_to_hex(tp->str3);
+                                break;
+                            case 0x4:
+                                printf("imm: %c%c %c%c\n", 
+                                       immediate16[0], immediate16[1], immediate16[2], immediate16[3]);
+                                break;
+                            case 0x8:
+                                printf("imm: %c%c\n", immediate8[0], immediate8[1]);
+                                break;
+                        } // end of switch
+                    } // end of if
+                } // end of if 
+            } // end of if 
+        } // end of for 
+    } // end of if
+    else if(tp->mod1 == 'o' && tp->mod2 == 'o' && tp->mod3 == 'M')
+    {
+        //printf("MEM\n");
+        unsigned char prefix = 0;
+        unsigned char opc    = 0;
+        unsigned char modrm  = 0;
+        unsigned char sib    = 0;
+        unsigned char displacement32[8];
+        unsigned char displacement16[4];
+        unsigned char displacement8[2];
+        unsigned char  which_displacement = 0; // BIT(1) : 32, BIT(2) : 16, and BIT(3) : 8
+        enum ATTRIBUTE attribute = ATT_r;
+    
+        int j;
+        for(j=0;j<sizeof_opcodes;j++)
+        {
+            if( _strcmp(tp->str1, opcodes[j].mnemonic) )
+            {
+                if( attribute == opcodes[j].attribute )
+                {
+                    opc = opcodes[j].base_binary_code;
+                    if( _strcmp(tp->str2, "eax") )
+                    {
+                        opc |= (MEM_TO_REG | _16_32);
+                        modrm |= (MODRM_REG(IMM_EAX) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str2, "ecx") )
+                    {
+                        opc |= (MEM_TO_REG | _16_32);
+                        modrm |= (MODRM_REG(IMM_ECX) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str2, "edx") )
+                    {
+                        opc |= (MEM_TO_REG | _16_32);
+                        modrm |= (MODRM_REG(IMM_EDX) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str2, "ebx") )
+                    {
+                        opc |= (MEM_TO_REG | _16_32);
+                        modrm |= (MODRM_REG(IMM_EBX) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str2, "esp") )
+                    {
+                        opc |= (MEM_TO_REG | _16_32);
+                        modrm |= (MODRM_REG(IMM_ESP) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str2, "ebp") )
+                    {
+                        opc |= (MEM_TO_REG | _16_32);
+                        modrm |= (MODRM_REG(IMM_EBP) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str2, "esi") )
+                    {
+                        opc |= (MEM_TO_REG | _16_32);
+                        modrm |= (MODRM_REG(IMM_ESI) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str2, "edi") )
+                    {
+                        opc |= (MEM_TO_REG | _16_32);
+                        modrm |= (MODRM_REG(IMM_EDI) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str2, "ax") )
+                    {
+                        prefix = 0x66;
+                        opc |= (MEM_TO_REG | _16_32);
+                        modrm |= (MODRM_REG(IMM_AX) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str2, "cx") )
+                    {
+                        prefix = 0x66;
+                        opc |= (MEM_TO_REG | _16_32);
+                        modrm |= (MODRM_REG(IMM_CX) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str2, "dx") )
+                    {
+                        prefix = 0x66;
+                        opc |= (MEM_TO_REG | _16_32);
+                        modrm |= (MODRM_REG(IMM_DX) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str2, "bx") )
+                    {
+                        prefix = 0x66;
+                        opc |= (MEM_TO_REG | _16_32);
+                        modrm |= (MODRM_REG(IMM_BX) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str2, "sp") )
+                    {
+                        prefix = 0x66;
+                        opc |= (MEM_TO_REG | _16_32);
+                        modrm |= (MODRM_REG(IMM_SP) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str2, "bp") )
+                    {
+                        prefix = 0x66;
+                        opc |= (MEM_TO_REG | _16_32);
+                        modrm |= (MODRM_REG(IMM_BP) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str2, "si") )
+                    {
+                        prefix = 0x66;
+                        opc |= (MEM_TO_REG | _16_32);
+                        modrm |= (MODRM_REG(IMM_SI) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str2, "di") )
+                    {
+                        prefix = 0x66;
+                        opc |= (MEM_TO_REG | _16_32);
+                        modrm |= (MODRM_REG(IMM_DI) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str2, "al") )
+                    {
+                        opc &= _8;
+                        opc |= MEM_TO_REG;
+                        modrm |= (MODRM_REG(IMM_AL) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str2, "cl") )
+                    {
+                        opc &= _8;
+                        opc |= MEM_TO_REG;
+                        modrm |= (MODRM_REG(IMM_CL) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str2, "dl") )
+                    {
+                        opc &= _8;
+                        opc |= MEM_TO_REG;
+                        modrm |= (MODRM_REG(IMM_CL) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str2, "bl") )
+                    {
+                        opc &= _8;
+                        opc |= MEM_TO_REG;
+                        modrm |= (MODRM_REG(IMM_BL) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str2, "ah") )
+                    {
+                        opc &= _8;
+                        opc |= MEM_TO_REG;
+                        modrm |= (MODRM_REG(IMM_AH) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str2, "ch") )
+                    {
+                        opc &= _8;
+                        opc |= MEM_TO_REG;
+                        modrm |= (MODRM_REG(IMM_CH) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str2, "dh") )
+                    {
+                        opc &= _8;
+                        opc |= MEM_TO_REG;
+                        modrm |= (MODRM_REG(IMM_DH) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str2, "bh") )
+                    {
+                        opc &= _8;
+                        opc |= MEM_TO_REG;
+                        modrm |= (MODRM_REG(IMM_BH) | MODRM_DISP32);
+                    }
+                    else {}
+                    
+                    if( _contain(tp->str3, "+") ) // now it MUST have a register along
+                    {
+                        modrm &= 0x38; //00111000
+                        modrm |= (1<<7); // now with mode [MEMORY+DISP32]
+                        if( _contain(tp->str3, "eax") )
+                        {
+                            modrm |= IMM_EAX;
+                        }
+                        if( _contain(tp->str3, "ecx") )
+                        {
+                            modrm |= IMM_ECX;
+                        }
+                        if( _contain(tp->str3, "edx") )
+                        {
+                            modrm |= IMM_EDX;
+                        }
+                        if( _contain(tp->str3, "ebx") )
+                        {
+                            modrm |= IMM_EBX;
+                        }
+                        if( _contain(tp->str3, "esp") )
+                        {
+                            modrm &= ~(0x07);
+                            modrm |= 0x04;   // now SIB selected
+                            
+                            // SIB fields:
+                            // scale  index  base
+                            // --   | ---  | ---
+                            // [EBX+EDI*scale] an scale is either of 1,2,4,8. Here EBX is base, and EDI is index
+                            // for us: [ESP] -> [0+ESP*1]
+                            sib   |= ((IMM_ESP << 3) | IMM_ESP);
+                        }
+                        if( _contain(tp->str3, "ebp") )
+                        {
+                            modrm |= IMM_EBP;
+                        }
+                        if( _contain(tp->str3, "esi") )
+                        {
+                            modrm |= IMM_ESI;
+                        }
+                        if( _contain(tp->str3, "edi") )
+                        {
+                            modrm |= IMM_EDI;
+                        }
+                        
+                        extract_from_memory_displacement32(tp->str3, displacement32);
+                        which_displacement = (1<<1);
+                    }
+                    
+                    else if( _contain(tp->str3, "0x") ) // a bare address
+                    {
+                        extract_from_memory_displacement_as_address(tp->str3, displacement32);
+                        which_displacement = (1<<1);                            
+                    }
+                    
+                    else // there is only REG r a LABEL
+                    {
+                        modrm &= 0x38; //00111000. Now with mode [MEMORY]
+                        
+                        if( _contain(tp->str3, "eax") )
+                        {
+                            modrm |= IMM_EAX;
+                            goto EXIT_POSITION;
+                        }
+                        if( _contain(tp->str3, "ecx") )
+                        {
+                            modrm |= IMM_ECX;
+                            goto EXIT_POSITION;
+                        }
+                        if( _contain(tp->str3, "edx") )
+                        {
+                            modrm |= IMM_EDX;
+                            goto EXIT_POSITION;
+                        }
+                        if( _contain(tp->str3, "ebx") )
+                        {
+                            modrm |= IMM_EBX;
+                            goto EXIT_POSITION;
+                        }
+                        if( _contain(tp->str3, "esp") )
+                        {
+                            modrm &= ~(0x07);
+                            modrm |= 0x04;   // now SIB selected
+                            
+                            // SIB fields:
+                            // scale  index  base
+                            // --   | ---  | ---
+                            // [EBX+EDI*scale] an scale is either of 1,2,4,8. Here EBX is base, and EDI is index
+                            // for us: [ESP] -> [0+ESP*1]
+                            sib   |= ((IMM_ESP << 3) | IMM_ESP);
+                            goto EXIT_POSITION;
+                        }
+                        if( _contain(tp->str3, "ebp") )
+                        {
+                            modrm |= (1<<6); // now the mode is [MEMORY+DISP8]
+                            modrm |= 0x05;   // now ebp selected
+                            displacement8[0] = '0';
+                            displacement8[1] = '0';
+                            which_displacement = (1<<3);
+                            goto EXIT_POSITION;
+                        }
+                        if( _contain(tp->str3, "esi") )
+                        {
+                            modrm |= IMM_ESI;
+                            goto EXIT_POSITION;
+                        }
+                        if( _contain(tp->str3, "edi") )
+                        {
+                            modrm |= IMM_EDI;
+                            goto EXIT_POSITION;
+                        }
+                        
+                        // therefore there is a LABEL
+                        modrm |= 0x05;
+                        extract_from_memory_displacement_as_address(tp->str3, displacement32);
+                        which_displacement = (1<<1);
+                    }
+EXIT_POSITION:                                                
+                    if(prefix)
+                        printf("prefix: 0x%x, ", prefix);
+                    printf("opcode: 0x%x, ", opc);
+                    printf("modrm: 0x%x, ", modrm);
+                    if(sib)
+                        printf("sib: 0x%x, ", sib);
+                    switch(which_displacement)
+                    {
+                        case 0x1:
+                            printf("\n");
+                            break;
+                        case 0x2: 
+                            printf("displacement: %c%c %c%c %c%c %c%c\n", 
+                                   displacement32[0], displacement32[1], displacement32[2], displacement32[3],
+                                   displacement32[4], displacement32[5], displacement32[6], displacement32[7]);
+                            break;
+                        case 0x4:
+                            printf("displacement: %c%c %c%c\n", 
+                                   displacement16[0], displacement16[1], displacement16[2], displacement16[3]);
+                            break;
+                        case 0x8:
+                            printf("displacement: %c%c\n", displacement8[0], displacement8[1]);
+                            break;
+                    } // end of switch
+                } // end of if 
+            } // end of if 
+        } // end of for
+    } // end of if
+    else if(tp->mod1 == 'o' && tp->mod2 == 'M' && tp->mod3 == 'o')
+    {
+        //printf("MEM\n");
+        unsigned char prefix = 0;
+        unsigned char opc    = 0;
+        unsigned char modrm  = 0;
+        unsigned char sib    = 0;
+        unsigned char displacement32[8];
+        unsigned char displacement16[8];
+        unsigned char which_displacement  = 0;
+        unsigned char displacement8[8];
+        enum ATTRIBUTE attribute = ATT_r;
+    
+        int j;
+        for(j=0;j<sizeof_opcodes;j++)
+        {
+            if( _strcmp(tp->str1, opcodes[j].mnemonic) )
+            {
+                if( attribute == opcodes[j].attribute )
+                {
+                    opc = opcodes[j].base_binary_code;
+                    if( _strcmp(tp->str3, "eax") )
+                    {
+                        opc |= _16_32;
+                        opc &= ~MEM_TO_REG;
+                        modrm |= (MODRM_REG(IMM_EAX) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str3, "ecx") )
+                    {
+                        opc |= _16_32;
+                        opc &= ~MEM_TO_REG;
+                        modrm |= (MODRM_REG(IMM_ECX) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str3, "edx") )
+                    {
+                        opc |= _16_32;
+                        opc &= ~MEM_TO_REG;
+                        modrm |= (MODRM_REG(IMM_EDX) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str3, "ebx") )
+                    {
+                        opc |= _16_32;
+                        opc &= ~MEM_TO_REG;
+                        modrm |= (MODRM_REG(IMM_EBX) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str3, "esp") )
+                    {
+                        opc |= _16_32;
+                        opc &= ~MEM_TO_REG;
+                        modrm |= (MODRM_REG(IMM_ESP) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str3, "ebp") )
+                    {
+                        opc |= _16_32;
+                        opc &= ~MEM_TO_REG;
+                        modrm |= (MODRM_REG(IMM_EBP) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str3, "esi") )
+                    {
+                        opc |= _16_32;
+                        opc &= ~MEM_TO_REG;
+                        modrm |= (MODRM_REG(IMM_ESI) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str3, "edi") )
+                    {
+                        opc |= _16_32;
+                        opc &= ~MEM_TO_REG;
+                        modrm |= (MODRM_REG(IMM_EDI) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str3, "ax") )
+                    {
+                        prefix = 0x66;
+                        opc |= _16_32;
+                        opc &= ~MEM_TO_REG;
+                        modrm |= (MODRM_REG(IMM_AX) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str3, "cx") )
+                    {
+                        prefix = 0x66;
+                        opc |= _16_32;
+                        opc &= ~MEM_TO_REG;
+                        modrm |= (MODRM_REG(IMM_CX) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str3, "dx") )
+                    {
+                        prefix = 0x66;
+                        opc |= _16_32;
+                        opc &= ~MEM_TO_REG;
+                        modrm |= (MODRM_REG(IMM_DX) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str3, "bx") )
+                    {
+                        prefix = 0x66;
+                        opc |= _16_32;
+                        opc &= ~MEM_TO_REG;
+                        modrm |= (MODRM_REG(IMM_BX) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str3, "sp") )
+                    {
+                        prefix = 0x66;
+                        opc |= _16_32;
+                        opc &= ~MEM_TO_REG;
+                        modrm |= (MODRM_REG(IMM_SP) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str3, "bp") )
+                    {
+                        prefix = 0x66;
+                        opc |= _16_32;
+                        opc &= ~MEM_TO_REG;
+                        modrm |= (MODRM_REG(IMM_BP) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str3, "si") )
+                    {
+                        prefix = 0x66;
+                        opc |= _16_32;
+                        opc &= ~MEM_TO_REG;
+                        modrm |= (MODRM_REG(IMM_SI) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str3, "di") )
+                    {
+                        prefix = 0x66;
+                        opc |= _16_32;
+                        opc &= ~MEM_TO_REG;
+                        modrm |= (MODRM_REG(IMM_DI) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str3, "al") )
+                    {
+                        opc &= _8;
+                        opc |= REG_TO_MEM;
+                        modrm |= (MODRM_REG(IMM_AL) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str3, "cl") )
+                    {
+                        opc &= _8;
+                        opc |= REG_TO_MEM;
+                        modrm |= (MODRM_REG(IMM_CL) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str3, "dl") )
+                    {
+                        opc &= _8;
+                        opc |= REG_TO_MEM;
+                        modrm |= (MODRM_REG(IMM_CL) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str3, "bl") )
+                    {
+                        opc &= _8;
+                        opc |= REG_TO_MEM;
+                        modrm |= (MODRM_REG(IMM_BL) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str3, "ah") )
+                    {
+                        opc &= _8;
+                        opc |= REG_TO_MEM;
+                        modrm |= (MODRM_REG(IMM_AH) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str3, "ch") )
+                    {
+                        opc &= _8;
+                        opc |= REG_TO_MEM;
+                        modrm |= (MODRM_REG(IMM_CH) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str3, "dh") )
+                    {
+                        opc &= _8;
+                        opc |= REG_TO_MEM;
+                        modrm |= (MODRM_REG(IMM_DH) | MODRM_DISP32);
+                    }
+                    else if( _strcmp(tp->str3, "bh") )
+                    {
+                        opc &= _8;
+                        opc |= REG_TO_MEM;
+                        modrm |= (MODRM_REG(IMM_BH) | MODRM_DISP32);
+                    }
+                    else {}
+                    
+                    if( _contain(tp->str2, "+") ) // now it MUST have a register along
+                    {
+                        modrm &= 0x38; //00111000
+                        modrm |= (1<<7); // now with mode [MEMORY+DISP32]
+                        if( _contain(tp->str2, "eax") )
+                        {
+                            modrm |= IMM_EAX;
+                        }
+                        if( _contain(tp->str2, "ecx") )
+                        {
+                            modrm |= IMM_ECX;
+                        }
+                        if( _contain(tp->str2, "edx") )
+                        {
+                            modrm |= IMM_EDX;
+                        }
+                        if( _contain(tp->str2, "ebx") )
+                        {
+                            modrm |= IMM_EBX;
+                        }
+                        if( _contain(tp->str2, "esp") )
+                        {
+                            modrm &= ~(0x07);
+                            modrm |= 0x04;   // now SIB selected
+                            
+                            // SIB fields:
+                            // scale  index  base
+                            // --   | ---  | ---
+                            // [EBX+EDI*scale] an scale is either of 1,2,4,8. Here EBX is base, and EDI is index
+                            // for us: [ESP] -> [0+ESP*1]
+                            sib   |= ((IMM_ESP << 3) | IMM_ESP);
+                        }
+                        if( _contain(tp->str2, "ebp") )
+                        {
+                            modrm |= IMM_EBP;
+                        }
+                        if( _contain(tp->str2, "esi") )
+                        {
+                            modrm |= IMM_ESI;
+                        }
+                        if( _contain(tp->str2, "edi") )
+                        {
+                            modrm |= IMM_EDI;
+                        }
+                        
+                        extract_from_memory_displacement32(tp->str2, displacement32);
+                        which_displacement = (1<<1);
+                    }
+                    
+                    else if( _contain(tp->str2, "0x") ) // a bare address
+                    {
+                        extract_from_memory_displacement_as_address(tp->str2, displacement32);
+                        which_displacement = (1<<1);                            
+                    }
+                    
+                    else // there is only REG r a LABEL
+                    {
+                        modrm &= 0x38; //00111000. Now with mode [MEMORY]
+                        
+                        if( _contain(tp->str2, "eax") )
+                        {
+                            modrm |= IMM_EAX;
+                            goto EXIT_POSITION2;
+                        }
+                        if( _contain(tp->str2, "ecx") )
+                        {
+                            modrm |= IMM_ECX;
+                            goto EXIT_POSITION2;
+                        }
+                        if( _contain(tp->str2, "edx") )
+                        {
+                            modrm |= IMM_EDX;
+                            goto EXIT_POSITION2;
+                        }
+                        if( _contain(tp->str2, "ebx") )
+                        {
+                            modrm |= IMM_EBX;
+                            goto EXIT_POSITION2;
+                        }
+                        if( _contain(tp->str2, "esp") )
+                        {
+                            modrm &= ~(0x07);
+                            modrm |= 0x04;   // now SIB selected
+                            
+                            // SIB fields:
+                            // scale  index  base
+                            // --   | ---  | ---
+                            // [EBX+EDI*scale] an scale is either of 1,2,4,8. Here EBX is base, and EDI is index
+                            // for us: [ESP] -> [0+ESP*1]
+                            sib   |= ((IMM_ESP << 3) | IMM_ESP);
+                            goto EXIT_POSITION2;
+                        }
+                        if( _contain(tp->str2, "ebp") )
+                        {
+                            modrm |= (1<<6); // now the mode is [MEMORY+DISP8]
+                            modrm |= 0x05;   // now ebp selected
+                            displacement8[0] = '0';
+                            displacement8[1] = '0';
+                            which_displacement = (1<<3);
+                            goto EXIT_POSITION2;
+                        }
+                        if( _contain(tp->str2, "esi") )
+                        {
+                            modrm |= IMM_ESI;
+                            goto EXIT_POSITION2;
+                        }
+                        if( _contain(tp->str2, "edi") )
+                        {
+                            modrm |= IMM_EDI;
+                            goto EXIT_POSITION2;
+                        }
+                        
+                        // therefore there is a LABEL
+                        modrm |= 0x05;
+                        extract_from_memory_displacement_as_address(tp->str2, displacement32);
+                        which_displacement = (1<<1);
+                    }
+EXIT_POSITION2:                                                
+                    if(prefix)
+                        printf("prefix: 0x%x, ", prefix);
+                    printf("opcode: 0x%x, ", opc);
+                    printf("modrm: 0x%x, ", modrm);
+                    if(sib)
+                        printf("sib: 0x%x, ", sib);
+                    switch(which_displacement)
+                    {
+                        case 0x1:
+                            printf("\n");
+                            break;
+                        case 0x2: 
+                            printf("displacement: %c%c %c%c %c%c %c%c\n", 
+                                   displacement32[0], displacement32[1], displacement32[2], displacement32[3],
+                                   displacement32[4], displacement32[5], displacement32[6], displacement32[7]);
+                            break;
+                        case 0x4:
+                            printf("displacement: %c%c %c%c\n", 
+                                   displacement16[0], displacement16[1], displacement16[2], displacement16[3]);
+                            break;
+                        case 0x8:
+                            printf("displacement: %c%c\n", displacement8[0], displacement8[1]);
+                            break;
+                    } // end of switch
+                } // end of if 
+            } // end of if 
+        } // end of for
+    }
+    else if(tp->mod1 == 'o' && tp->mod2 == 'M' && tp->mod3 == 'I')
+    {
+        //printf("MEM+IMM\n");
+        unsigned char prefix = 0;
+        unsigned char opc    = 0;
+        unsigned char modrm  = 0;
+        unsigned char sib    = 0;
+        unsigned char immediate32[8];
+        unsigned char immediate16[4];
+        unsigned char immediate8 [2];
+        unsigned char displacement32[8];
+        unsigned char displacement16[4];
+        unsigned char displacement8[2];
+        
+        unsigned char  which_immediate    = 0; // BIT(1) : 32, BIT(2) : 16, and BIT(3) : 8
+        unsigned char  which_displacement = 0; // BIT(1) : 32, BIT(2) : 16, and BIT(3) : 8
+        
+        enum ATTRIBUTE attribute   = ATT_MEMORY_IMM;
+    
+        int j;
+        for(j=0;j<sizeof_opcodes;j++)
+        {
+            if( _strcmp(tp->str1, opcodes[j].mnemonic) )
+            {
+                if( attribute == opcodes[j].attribute )
+                {
+                    opc = opcodes[j].base_binary_code;
+                    if( _contain(tp->str2, "DWORD[") )
+                    {
+                        which_immediate |= (1<<1);
+                        encode_u32(tp->str3, immediate32);
+                        if( _contain(tp->str2, "eax") )
+                        {
+                            modrm |= IMM_EAX;
+                        }
+                        if( _contain(tp->str2, "ecx") )
+                        {
+                            modrm |= IMM_ECX;
+                        }
+                        if( _contain(tp->str2, "edx") )
+                        {
+                            modrm |= IMM_EDX;
+                        }
+                        if( _contain(tp->str2, "ebx") )
+                        {
+                            modrm |= IMM_EBX;
+                        }
+                        if( _contain(tp->str2, "esp") )
+                        {
+                            modrm |= 0x04;   // now SIB selected
+                            
+                            // SIB fields:
+                            // scale  index  base
+                            // --   | ---  | ---
+                            // [EBX+EDI*scale] an scale is either of 1,2,4,8. Here EBX is base, and EDI is index
+                            // for us: [ESP] -> [0+ESP*1]
+                            sib   |= ((IMM_ESP << 3) | IMM_ESP);
+                        }
+                        if( _contain(tp->str2, "ebp") )
+                        {
+                            modrm |= (1<<6); // now the mode is [MEMORY+DISP8]
+                            modrm |= 0x05;   // now ebp selected
+                            displacement8[0] = '0';
+                            displacement8[1] = '0';
+                            which_displacement = (1<<3);
+                        }
+                        if( _contain(tp->str2, "esi") )
+                        {
+                            modrm |= IMM_ESI;
+                        }
+                        if( _contain(tp->str2, "edi") )
+                        {
+                            modrm |= IMM_EDI;
+                        }
+                        
+                        if( _contain(tp->str2, "+") ) // it has a displacement
+                        {
+                            // for now suppose only 8-bit displacement
+                            extract_from_memory_displacement8(tp->str2, displacement8);
+                            which_displacement = (1<<3);
+                        }
+                    }
+                    
+                    else if( _contain(tp->str2, "WORD[") && (!_contain(tp->str2, "DWORD[")) )
+                    {
+                        which_immediate |= (1<<2);
+                        encode_u16(tp->str3, immediate16);
+                        prefix = 0x66;
+                        if( _contain(tp->str2, "eax") )
+                        {
+                            modrm |= IMM_EAX;
+                        }
+                        if( _contain(tp->str2, "ecx") )
+                        {
+                            modrm |= IMM_ECX;
+                        }
+                        if( _contain(tp->str2, "edx") )
+                        {
+                            modrm |= IMM_EDX;
+                        }
+                        if( _contain(tp->str2, "ebx") )
+                        {
+                            modrm |= IMM_EBX;
+                        }
+                        if( _contain(tp->str2, "esp") )
+                        {
+                            modrm |= 0x04;   // now SIB selected
+                            
+                            // SIB fields:
+                            // scale  index  base
+                            // --   | ---  | ---
+                            // [EBX+EDI*scale] an scale is either of 1,2,4,8. Here EBX is base, and EDI is index
+                            // for us: [ESP] -> [0+ESP*1]
+                            sib   |= ((IMM_ESP << 3) | IMM_ESP);
+                        }
+                        if( _contain(tp->str2, "ebp") )
+                        {
+                            modrm |= (1<<6); // now the mode is [MEMORY+DISP8]
+                            modrm |= 0x05;   // now ebp selected
+                            displacement8[0] = '0';
+                            displacement8[1] = '0';
+                            which_displacement = (1<<3);
+                        }
+                        if( _contain(tp->str2, "esi") )
+                        {
+                            modrm |= IMM_ESI;
+                        }
+                        if( _contain(tp->str2, "edi") )
+                        {
+                            modrm |= IMM_EDI;
+                        }
+                        
+                        if( _contain(tp->str2, "+") ) // it has a displacement
+                        {
+                            modrm |= (1<<6); // now the mode is [MEMORY+DISP8]
+                            
+                            // for now suppose only 8-bit displacement
+                            extract_from_memory_displacement8(tp->str2, displacement8);
+                            which_displacement = (1<<3);
+                        }
+                    }
+                    
+                    else if( _contain(tp->str2, "BYTE[") )
+                    {
+                        which_immediate |= (1<<3);
+                        opc &= ~(1<<0);
+                        encode_u8(tp->str3, immediate8);
+                        if( _contain(tp->str2, "eax") )
+                        {
+                            modrm |= IMM_EAX;
+                        }
+                        if( _contain(tp->str2, "ecx") )
+                        {
+                            modrm |= IMM_ECX;
+                        }
+                        if( _contain(tp->str2, "edx") )
+                        {
+                            modrm |= IMM_EDX;
+                        }
+                        if( _contain(tp->str2, "ebx") )
+                        {
+                            modrm |= IMM_EBX;
+                        }
+                        if( _contain(tp->str2, "esp") )
+                        {
+                            modrm |= 0x04;   // now SIB selected
+                            
+                            // SIB fields:
+                            // scale  index  base
+                            // --   | ---  | ---
+                            // [EBX+EDI*scale] an scale is either of 1,2,4,8. Here EBX is base, and EDI is index
+                            // for us: [ESP] -> [0+ESP*1]
+                            sib   |= ((IMM_ESP << 3) | IMM_ESP);
+                        }
+                        if( _contain(tp->str2, "ebp") )
+                        {
+                            modrm |= (1<<6); // now the mode is [MEMORY+DISP8]
+                            modrm |= 0x05;   // now ebp selected
+                            displacement8[0] = '0';
+                            displacement8[1] = '0';
+                            which_displacement = (1<<3);
+                        }
+                        if( _contain(tp->str2, "esi") )
+                        {
+                            modrm |= IMM_ESI;
+                        }
+                        if( _contain(tp->str2, "edi") )
+                        {
+                            modrm |= IMM_EDI;
+                        }
+                        
+                        if( _contain(tp->str2, "+") ) // it has a displacement
+                        {
+                            modrm |= (1<<6); // now the mode is [MEMORY+DISP8]
+                            
+                            // for now suppose only 8-bit displacement
+                            extract_from_memory_displacement8(tp->str2, displacement8);
+                            which_displacement = (1<<3);
+                        }
+                    }
+                    
+                    else {}
+                    
+                    if(prefix)
+                        printf("prefix: 0x%x, ", prefix);
+                    printf("opcode: 0x%x, ", opc);
+                    printf("modrm: 0x%x, ", modrm);
+                    if(sib)
+                        printf("sib: 0x%x, ", sib);
+                    switch(which_displacement)
+                    {
+                        case 0x2: 
+                            printf("displacement: %c%c %c%c %c%c %c%c, ", 
+                                   displacement32[0], displacement32[1], displacement32[2], displacement32[3],
+                                   displacement32[4], displacement32[5], displacement32[6], displacement32[7]);
+                            break;
+                        case 0x4:
+                            printf("displacement: %c%c %c%c, ", 
+                                   displacement16[0], displacement16[1], displacement16[2], displacement16[3]);
+                            break;
+                        case 0x8:
+                            printf("displacement: %c%c, ", displacement8[0], displacement8[1]);
+                            break;
+                    } // end of switch
+                    
+                    if(which_immediate)
+                    {
+                        switch(which_immediate)
+                        {
+                            case 0x2: 
+                                printf("imm: %c%c %c%c %c%c %c%c\n", 
+                                       immediate32[0], immediate32[1], immediate32[2], immediate32[3],
+                                       immediate32[4], immediate32[5], immediate32[6], immediate32[7]);
+                            
+                                //immediate32_string_to_hex(tp->str3);
+                                break;
+                            case 0x4:
+                                printf("imm: %c%c %c%c\n", 
+                                       immediate16[0], immediate16[1], immediate16[2], immediate16[3]);
+                                break;
+                            case 0x8:
+                                printf("imm: %c%c\n", immediate8[0], immediate8[1]);
+                                break;
+                        } // end of switch
+                    } // end of if
+                } // end of if 
+            } // end of if 
+        } // end of for 
+    }
+}
+
+static void convert_instructions_line_by_line(TRIPLE_PACKET* tp, unsigned int counts)
+{
+    unsigned int i = 0;
+    while(i < counts)
+    {
+        if( _strcmp(tp[i].str1, "mov") )
+			convert_mov(&tp[i]);
+        else if( _strcmp(tp[i].str1, "add") )
+			convert_add(&tp[i]);
+        else if( _strcmp(tp[i].str1, "sub") )
+			convert_sub(&tp[i]);   
+        
+        i++;
+    }
+}
+
+void dump_table_of_labels(void)
+{
+    unsigned int i;
+    for(i=0;i<table_of_labels_count;i++)
+    {
+        printf("%u: string: %s, address: 0x%x\n", i, table_of_labels[i].string, table_of_labels[i].address);
+    }
+}
+
+int main(void)
+{
+    unsigned int lines = 0;
+    unsigned int j;
+    const char* file = 
+        "[BITS 32]\n"
+        "[ORG 0x9400]\n"
+        "section .text\n"
+        "global _start\n"
+        "global vid_pl\n"
+        "_start:\n"
+        "\tpush ebp\n"
+        "\tmov ebp, esp\n"
+        "\tmov  WORD[memory_libos], cx\n"
+        "\tadd  WORD[memory_libos], cx\n"
+        "\tmov dh,  BYTE[memory_libos]\n"
+        "\tmov ebp, DWORD[0xA0AB9856]\n"
+        "\tmov dh,  BYTE[ebp]\n"
+        "\tmov dx,  WORD[memory_libos]\n"
+        "\tmov edi, 0xAABBCCDD\n"
+        "\tmov bx, 0x45FF\n"
+        "\tmov ch, 0x7E\n"
+        "\tmov BYTE[esp+0x28], 0x16\n"
+        "\tmov WORD[ebp+0x00124585], esp\n"
+        "\tmov esp, ebp\n"
+        "\tpop ebp\n"
+        "\tret\n";
+    printf("%u lines\n", lines = how_many_lines(file));
+    TRIPLE_PACKET* tp = alloc_units(lines);
+    
+    char p[128];
+    char*  f = file;
+    unsigned int counter = 0;
+    for(j=0; j<lines; j++)
+    {
+        while(*f != '\n')
+        {
+            p[counter] = *f++;
+            counter++;
+        }
+        p[counter] = '\0';
+        lex(&tp[j], p);
+        counter = 0;
+        f++;
+    }
+    
+    //printf(file);
+    
+    convert_instructions_line_by_line(tp, lines);
+    //dump_table_of_labels();
+}
