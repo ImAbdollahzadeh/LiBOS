@@ -3,6 +3,10 @@
 
 //....................................................................................................................................
 
+unsigned int ProgramCounter = 0;
+unsigned int parse_level    = 0xFF;
+//....................................................................................................................................
+
 SYMBOLIC_LABEL table_of_labels[0xFFFF];
 unsigned int table_of_labels_count = 0;
 
@@ -98,11 +102,12 @@ unsigned int memory_operands(const char* str)
 	}
 	mem_ret = 0;
 DIRECTIVE_CHECKS:	
+	src = str;
 	trg	= global_mem_table[0];
 	length = string_length(str);
 	while(length--)
 	{
-		if(*trg++ == *src++)
+		if(*trg == *src++)
 			directive_ret = 1;
 	}
 	if(!directive_ret)
@@ -112,7 +117,7 @@ DIRECTIVE_CHECKS:
 	length = string_length(str);
 	while(length--)
 	{
-		if(*trg++ == *src++)
+		if(*trg == *src++)
 			directive_ret = 1;
 	}
 	if(!directive_ret)
@@ -370,20 +375,33 @@ void dump_table_of_labels(void)
 
 //....................................................................................................................................
 
-void convert_instructions_line_by_line(TRIPLE_PACKET* tp, unsigned int counts)
+void parse_1_or__convert_instructions_line_by_line(TRIPLE_PACKET* tp, unsigned int counts)
 {
+	parse_level = PARSE_LEVEL_1;
+	
 	unsigned int i = 0;
 	while(i < counts)
 	{
 		if( _strcmp(tp[i].str1, "mov") )
-			convert_mov_instruction(&tp[i]);
+			convert_mov_instruction(&tp[i], &ProgramCounter);
 		else if( _strcmp(tp[i].str1, "add") )
-			convert_add_instruction(&tp[i]);
+			convert_add_instruction(&tp[i], &ProgramCounter);
 		else if( _strcmp(tp[i].str1, "sub") )
-			convert_sub_instruction(&tp[i]);   
+			convert_sub_instruction(&tp[i], &ProgramCounter);   
+		else if( _strcmp(tp[i].str1, "jmp") )
+			convert_jmp_instruction(&tp[i], &ProgramCounter);
+		else if( tp[i].mod1 == 'L' )
+			handle_labels(&tp[i], &ProgramCounter);
 		
 		i++;
 	}
+}
+
+//....................................................................................................................................
+
+unsigned int get_parse_level(void)
+{
+	return parse_level;
 }
 
 //....................................................................................................................................
@@ -398,6 +416,97 @@ unsigned int get_sizeof_opcodes(void)
 OPCODE* get_opcodes(void)
 {
 	return opcodes;
+}
+
+//....................................................................................................................................
+
+unsigned int get_table_of_labels_count(void)
+{
+	return table_of_labels_count;
+}
+
+//....................................................................................................................................
+
+SYMBOLIC_LABEL* get_table_of_labels(void)
+{
+	return table_of_labels;
+}
+
+//....................................................................................................................................
+
+void parse_0(const char* file, TRIPLE_PACKET** tp, unsigned int* lines, char* p)
+{
+	unsigned int j;
+	
+	parse_level = PARSE_LEVEL_0;
+	
+	printf("%u lines\n", *lines = how_many_lines(file));
+	*tp = alloc_units(*lines);
+
+	TRIPLE_PACKET* tmp = *tp;
+	char* f = file;
+	unsigned int counter = 0;
+	for(j=0; j<*lines; j++)
+	{
+		while(*f != '\n')
+		{
+			p[counter] = *f++;
+			counter++;
+		}
+		p[counter] = '\0';
+		lex(&tmp[j], p);
+		counter = 0;
+		f++;
+	}
+}
+
+//....................................................................................................................................
+
+void parse_2(TRIPLE_PACKET* tp, unsigned int counts)
+{
+	parse_level = PARSE_LEVEL_2;
+	
+	unsigned int i = 0;
+	while(i < counts)
+	{
+		if( _strcmp(tp[i].str1, "mov") )
+			convert_mov_instruction(&tp[i], &ProgramCounter);
+		else if( _strcmp(tp[i].str1, "add") )
+			convert_add_instruction(&tp[i], &ProgramCounter);
+		else if( _strcmp(tp[i].str1, "sub") )
+			convert_sub_instruction(&tp[i], &ProgramCounter);   
+		else if( _strcmp(tp[i].str1, "jmp") )
+			convert_jmp_instruction(&tp[i], &ProgramCounter);
+		else if( tp[i].mod1 == 'L' )
+			handle_labels(&tp[i], &ProgramCounter);
+		
+		i++;
+	}
+}
+
+//....................................................................................................................................
+
+void handle_labels(TRIPLE_PACKET* tp, unsigned int* PC)
+{
+	char* label = tp->str1;
+ 	unsigned int i;
+	unsigned int    table_of_labels_count = get_table_of_labels_count();
+	SYMBOLIC_LABEL* table_of_labels       = get_table_of_labels();
+	
+ 	for(i=0; i < table_of_labels_count; i++)
+ 	{
+ 	    if( _strcmp(label, table_of_labels[i].string) )
+ 	    {
+ 	        table_of_labels[i].address = *PC;
+ 	    }
+ 	}
+}
+
+//....................................................................................................................................
+
+void zero_programCounter(void)
+{
+	ProgramCounter = 0;
 }
 
 //....................................................................................................................................

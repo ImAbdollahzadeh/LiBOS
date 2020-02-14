@@ -76,22 +76,36 @@ enum MOD_RM {
     MODRM_DISP32 = 0x05
 };
 
+enum PARSE_LEVEL {
+    PARSE_LEVEL_0,
+	PARSE_LEVEL_1,
+	PARSE_LEVEL_2,
+};
+
 //....................................................................................................................................
 
-unsigned int   in_opcodes                        (const char* str);
-unsigned int   memory_operands                   (const char* str);
-unsigned int   is_immediate                      (const char* str);
-unsigned int   is_label                          (const char* str);
-void           map_machine_codes                 (TRIPLE_PACKET* tp);
-TRIPLE_PACKET* alloc_units                       (unsigned int lines);
-void           _stub                             (TRIPLE_PACKET* tp, unsigned int counter, char* tmp);
-void           lex                               (TRIPLE_PACKET* tp, const char* line);
-void           dump_table_of_labels              (void);
-unsigned int   get_sizeof_opcodes                (void);
-OPCODE*        get_opcodes                       (void);
-void           convert_instructions_line_by_line (TRIPLE_PACKET* tp, unsigned int counts);
-void           convert_mov_instruction           (TRIPLE_PACKET* tp);
-void           convert_add_instruction           (TRIPLE_PACKET* tp);
-void           convert_sub_instruction           (TRIPLE_PACKET* tp);
+unsigned int    in_opcodes                                    (const char* str);
+unsigned int    memory_operands                               (const char* str);
+unsigned int    is_immediate                                  (const char* str);
+unsigned int    is_label                                      (const char* str);
+void            map_machine_codes                             (TRIPLE_PACKET* tp);
+TRIPLE_PACKET*  alloc_units                                   (unsigned int lines);
+void            _stub                                         (TRIPLE_PACKET* tp, unsigned int counter, char* tmp);
+void            lex                                           (TRIPLE_PACKET* tp, const char* line);
+void            dump_table_of_labels                          (void);
+unsigned int    get_sizeof_opcodes                            (void);
+OPCODE*         get_opcodes                                   (void);
+unsigned int    get_table_of_labels_count                     (void);
+SYMBOLIC_LABEL* get_table_of_labels                           (void);
+void            parse_1_or__convert_instructions_line_by_line (TRIPLE_PACKET* tp, unsigned int counts);
+void            convert_mov_instruction                       (TRIPLE_PACKET* tp, unsigned int* PC);
+void            convert_add_instruction                       (TRIPLE_PACKET* tp, unsigned int* PC);
+void            convert_sub_instruction                       (TRIPLE_PACKET* tp, unsigned int* PC);
+void            convert_jmp_instruction                       (TRIPLE_PACKET* tp, unsigned int* PC);
+void            parse_0                                       (const char* file, TRIPLE_PACKET** tp, unsigned int* lines, char* p);
+void            parse_2                                       (TRIPLE_PACKET* tp, unsigned int counts);
+void            handle_labels                                 (TRIPLE_PACKET* tp, unsigned int* PC);
+void            zero_programCounter                           (void);
+unsigned int    get_parse_level                               (void);
 
 #endif // !__LIBOSASM__H__

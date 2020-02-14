@@ -3,11 +3,16 @@
 
 //....................................................................................................................................
 
-void convert_mov_instruction(TRIPLE_PACKET* tp)
+void convert_mov_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 {
 	printf("MOV DECODING\n\t");
+	
+	unsigned int pl             = get_parse_level();
 	unsigned int sizeof_opcodes = get_sizeof_opcodes();
-	OPCODE* opcodes = get_opcodes();
+	OPCODE*     opcodes         = get_opcodes();
+	
+	if( (pl == 0xFF) || (!pl) )
+		return;
 	
 	if(tp->mod1 == 'o' && tp->mod2 == 'o' && tp->mod3 == 'I')
 	{
@@ -191,8 +196,13 @@ void convert_mov_instruction(TRIPLE_PACKET* tp)
 					else {}
 					
 					if(prefix)
+					{
 						printf("prefix: 0x%x, ", prefix);
+						*PC = *PC + 1;
+					}
 					printf("opcode: 0x%x, ", opc);
+					*PC = *PC + 1;
+					
 					if(which_immediate)
 					{
 						switch(which_immediate)
@@ -201,15 +211,17 @@ void convert_mov_instruction(TRIPLE_PACKET* tp)
 								printf("imm: %c%c %c%c %c%c %c%c\n", 
 									   immediate32[0], immediate32[1], immediate32[2], immediate32[3],
 									   immediate32[4], immediate32[5], immediate32[6], immediate32[7]);
-							
+								*PC = *PC + 4;
 								//immediate32_string_to_hex(tp->str3);
 								break;
 							case 0x4:
 								printf("imm: %c%c %c%c\n", 
 									   immediate16[0], immediate16[1], immediate16[2], immediate16[3]);
+								*PC = *PC + 2;
 								break;
 							case 0x8:
 								printf("imm: %c%c\n", immediate8[0], immediate8[1]);
+								*PC = *PC + 1;
 								break;
 						} // end of switch
 					} // end of if
@@ -495,11 +507,22 @@ void convert_mov_instruction(TRIPLE_PACKET* tp)
 					}
 EXIT_POSITION:												
 					if(prefix)
+					{
 						printf("prefix: 0x%x, ", prefix);
+						*PC = *PC + 1;
+					}
 					printf("opcode: 0x%x, ", opc);
+					*PC = *PC + 1;
+					
+					
 					printf("modrm: 0x%x, ", modrm);
+					*PC = *PC + 1;
+					
 					if(sib)
+					{
 						printf("sib: 0x%x, ", sib);
+						*PC = *PC + 1;
+					}
 					switch(which_displacement)
 					{
 						case 0x1:
@@ -509,13 +532,16 @@ EXIT_POSITION:
 							printf("displacement: %c%c %c%c %c%c %c%c\n", 
 								   displacement32[0], displacement32[1], displacement32[2], displacement32[3],
 								   displacement32[4], displacement32[5], displacement32[6], displacement32[7]);
+							*PC = *PC + 4;
 							break;
 						case 0x4:
 							printf("displacement: %c%c %c%c\n", 
 								   displacement16[0], displacement16[1], displacement16[2], displacement16[3]);
+							*PC = *PC + 2;
 							break;
 						case 0x8:
 							printf("displacement: %c%c\n", displacement8[0], displacement8[1]);
+							*PC = *PC + 1;
 							break;
 					} // end of switch
 				} // end of if 
@@ -816,11 +842,21 @@ EXIT_POSITION:
 					}
 EXIT_POSITION2:												
 					if(prefix)
+					{
 						printf("prefix: 0x%x, ", prefix);
+						*PC = *PC + 1;
+					}
 					printf("opcode: 0x%x, ", opc);
+					*PC = *PC + 1;
+					
 					printf("modrm: 0x%x, ", modrm);
+					*PC = *PC + 1;
+					
 					if(sib)
+					{
 						printf("sib: 0x%x, ", sib);
+						*PC = *PC + 1;
+					}
 					switch(which_displacement)
 					{
 						case 0x1:
@@ -830,13 +866,16 @@ EXIT_POSITION2:
 							printf("displacement: %c%c %c%c %c%c %c%c\n", 
 								   displacement32[0], displacement32[1], displacement32[2], displacement32[3],
 								   displacement32[4], displacement32[5], displacement32[6], displacement32[7]);
+							*PC = *PC + 4;
 							break;
 						case 0x4:
 							printf("displacement: %c%c %c%c\n", 
 								   displacement16[0], displacement16[1], displacement16[2], displacement16[3]);
+							*PC = *PC + 2;
 							break;
 						case 0x8:
 							printf("displacement: %c%c\n", displacement8[0], displacement8[1]);
+							*PC = *PC + 1;
 							break;
 					} // end of switch
 				} // end of if 
@@ -1047,24 +1086,37 @@ EXIT_POSITION2:
 					else {}
 					
 					if(prefix)
+					{
 						printf("prefix: 0x%x, ", prefix);
+						*PC = *PC + 1;
+					}
 					printf("opcode: 0x%x, ", opc);
+					*PC = *PC + 1;
+					
 					printf("modrm: 0x%x, ", modrm);
+					*PC = *PC + 1;
+					
 					if(sib)
+					{
 						printf("sib: 0x%x, ", sib);
+						*PC = *PC + 1;
+					}
 					switch(which_displacement)
 					{
 						case 0x2: 
 							printf("displacement: %c%c %c%c %c%c %c%c, ", 
 								   displacement32[0], displacement32[1], displacement32[2], displacement32[3],
 								   displacement32[4], displacement32[5], displacement32[6], displacement32[7]);
+							*PC = *PC + 4;
 							break;
 						case 0x4:
 							printf("displacement: %c%c %c%c, ", 
 								   displacement16[0], displacement16[1], displacement16[2], displacement16[3]);
+							*PC = *PC + 2;
 							break;
 						case 0x8:
 							printf("displacement: %c%c, ", displacement8[0], displacement8[1]);
+							*PC = *PC + 1;
 							break;
 					} // end of switch
 					
@@ -1076,15 +1128,18 @@ EXIT_POSITION2:
 								printf("imm: %c%c %c%c %c%c %c%c\n", 
 									   immediate32[0], immediate32[1], immediate32[2], immediate32[3],
 									   immediate32[4], immediate32[5], immediate32[6], immediate32[7]);
+								*PC = *PC + 4;
 							
 								//immediate32_string_to_hex(tp->str3);
 								break;
 							case 0x4:
 								printf("imm: %c%c %c%c\n", 
 									   immediate16[0], immediate16[1], immediate16[2], immediate16[3]);
+								*PC = *PC + 2;
 								break;
 							case 0x8:
 								printf("imm: %c%c\n", immediate8[0], immediate8[1]);
+								*PC = *PC + 1;
 								break;
 						} // end of switch
 					} // end of if
@@ -1329,9 +1384,16 @@ EXIT_POSITION2:
 					else {}
 					
 					if(prefix)
+					{
 						printf("prefix: 0x%x, ", prefix);
+						*PC = *PC + 1;
+					}
 					printf("opcode: 0x%x, ", opc);
+					*PC = *PC + 1;
+					
 					printf("modrm: 0x%x, ", modrm);
+					*PC = *PC + 1;
+					
 				} // end of if 
 			} // end of if 
 		} // end of for 

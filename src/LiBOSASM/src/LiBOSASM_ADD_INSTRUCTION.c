@@ -3,9 +3,14 @@
 
 //....................................................................................................................................
 
-void convert_add_instruction(TRIPLE_PACKET* tp)
+void convert_add_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 {
 	printf("ADD DECODING\n\t");
+	
+	unsigned int pl = get_parse_level();
+	if( (pl == 0xFF) || (!pl) )
+		return;
+	
 	unsigned int sizeof_opcodes = get_sizeof_opcodes();
 	OPCODE* opcodes = get_opcodes();
 	

@@ -6,6 +6,9 @@ int main(void)
 	printf("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n\n\n");
 	unsigned int lines = 0;
 	unsigned int j;
+	TRIPLE_PACKET* tp = 0;
+	char p[128];
+	
 	const char* file = 
 		"[BITS 32]\n"
 		"[ORG 0x9400]\n"
@@ -26,35 +29,26 @@ int main(void)
 		"\tadd edx, 0xDDCCBB56\n"
 		"\tmov BYTE[esp+0x28], 0x16\n"
 		"\tmov WORD[ebp+0x00124585], esp\n"
+		"\tjmp _THIRD_AND_LAST@@_LABEL:\n"
 		"\tmov esp, ebp\n"
+		"__SECOND_LABEL:\n"
+		"\tjmp __SECOND_LABEL:\n"
 		"\tadd esp, ebp\n"
 		"\tpop ebp\n"
+		"_THIRD_AND_LAST@@_LABEL:\n"
 		"\tret\n";
-	printf("%u lines\n", lines = how_many_lines(file));
-	TRIPLE_PACKET* tp = alloc_units(lines);
 	
-	char p[128];
-	char*  f = file;
-	unsigned int counter = 0;
-	for(j=0; j<lines; j++)
-	{
-		while(*f != '\n')
-		{
-			p[counter] = *f++;
-			counter++;
-		}
-		p[counter] = '\0';
-		lex(&tp[j], p);
-		counter = 0;
-		f++;
-	}
+	parse_0(file, &tp, &lines, p);
 	
 	//printf(file);
 	
-	convert_instructions_line_by_line(tp, lines);
-
-	//dump_table_of_labels();
+	parse_1_or__convert_instructions_line_by_line(tp, lines);
+	dump_table_of_labels();
+	zero_programCounter();
+	printf("\n\n\n-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
 	
+	parse_2(tp, lines);
+	dump_table_of_labels();
 	printf("\n\n\n-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
 }
 

@@ -3,7 +3,7 @@
 
 //....................................................................................................................................
 
-void convert_sub_instruction(TRIPLE_PACKET* tp)
+void convert_sub_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 {
 
 }
