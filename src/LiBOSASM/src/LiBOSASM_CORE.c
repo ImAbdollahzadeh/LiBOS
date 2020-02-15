@@ -5,6 +5,7 @@
 
 unsigned int ProgramCounter = 0;
 unsigned int parse_level    = 0xFF;
+
 //....................................................................................................................................
 
 SYMBOLIC_LABEL table_of_labels[0xFFFF];
@@ -390,6 +391,16 @@ void parse_1_or__convert_instructions_line_by_line(TRIPLE_PACKET* tp, unsigned i
 			convert_sub_instruction(&tp[i], &ProgramCounter);   
 		else if( _strcmp(tp[i].str1, "jmp") )
 			convert_jmp_instruction(&tp[i], &ProgramCounter);
+		else if( _strcmp(tp[i].str1, "je") )
+			convert_je_instruction(&tp[i], &ProgramCounter);
+		else if( _strcmp(tp[i].str1, "jne") )
+			convert_jne_instruction(&tp[i], &ProgramCounter);
+		else if( _strcmp(tp[i].str1, "jz") )
+			convert_jz_instruction(&tp[i], &ProgramCounter);
+		else if( _strcmp(tp[i].str1, "jnz") )
+			convert_jnz_instruction(&tp[i], &ProgramCounter);
+		else if( _strcmp(tp[i].str1, "cmp") )
+			convert_cmp_instruction(&tp[i], &ProgramCounter);
 		else if( tp[i].mod1 == 'L' )
 			handle_labels(&tp[i], &ProgramCounter);
 		
@@ -477,6 +488,16 @@ void parse_2(TRIPLE_PACKET* tp, unsigned int counts)
 			convert_sub_instruction(&tp[i], &ProgramCounter);   
 		else if( _strcmp(tp[i].str1, "jmp") )
 			convert_jmp_instruction(&tp[i], &ProgramCounter);
+		else if( _strcmp(tp[i].str1, "je") )
+			convert_je_instruction(&tp[i], &ProgramCounter);
+		else if( _strcmp(tp[i].str1, "jne") )
+			convert_jne_instruction(&tp[i], &ProgramCounter);
+		else if( _strcmp(tp[i].str1, "jz") )
+			convert_jz_instruction(&tp[i], &ProgramCounter);
+		else if( _strcmp(tp[i].str1, "jnz") )
+			convert_jnz_instruction(&tp[i], &ProgramCounter);
+		else if( _strcmp(tp[i].str1, "cmp") )
+			convert_cmp_instruction(&tp[i], &ProgramCounter);
 		else if( tp[i].mod1 == 'L' )
 			handle_labels(&tp[i], &ProgramCounter);
 		
@@ -497,7 +518,7 @@ void handle_labels(TRIPLE_PACKET* tp, unsigned int* PC)
  	{
  	    if( _strcmp(label, table_of_labels[i].string) )
  	    {
- 	        table_of_labels[i].address = *PC;
+ 	        table_of_labels[i].address = (void*)(*PC);
  	    }
  	}
 }
@@ -507,6 +528,56 @@ void handle_labels(TRIPLE_PACKET* tp, unsigned int* PC)
 void zero_programCounter(void)
 {
 	ProgramCounter = 0;
+}
+
+//....................................................................................................................................
+
+
+unsigned int get_programCounter(void)
+{
+	return ProgramCounter;
+}
+
+//....................................................................................................................................
+
+void image_file_make(TRIPLE_PACKET* tp, unsigned int counts, IMAGE_FILE_MEMORY* image_file_memory)
+{
+	unsigned int i = 0;
+	char tmp[128];
+	while(i < counts)
+	{
+		if( tp[i].mod1 == 'D' )
+		{
+			if( _contain(tp[i].str1, "ORIGIN") )
+			{
+				/*there should be 0x inside it otherwise an error */
+				char* c = tp[i].str1;
+				while(*c != '0')
+					c++;
+
+				if( *c == '0' && *(c+1) == 'x' )
+				{
+					unsigned int cnt = 0;
+					while(*c != ']')
+					{
+						tmp[cnt] = *c++;
+						cnt++;
+					}
+					tmp[cnt] = '\0';
+					break;
+				}
+			}
+		}
+		i++;
+	}
+	image_file_memory->physical_origin = (void*)( address_string_to_hex(tmp) );
+}
+
+//....................................................................................................................................
+
+void dump_image_file_memory(IMAGE_FILE_MEMORY* image_file_memory)
+{
+	printf("ORIGIN: 0x%x, SIZE: %u bytes\n", image_file_memory->physical_origin, image_file_memory->total_sizeof_image);
 }
 
 //....................................................................................................................................

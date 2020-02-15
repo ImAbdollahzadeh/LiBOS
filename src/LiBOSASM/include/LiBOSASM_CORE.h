@@ -12,6 +12,12 @@ typedef struct _SYMBOLIC_LABEL {
     void* address;
 } SYMBOLIC_LABEL;
 
+typedef struct _IMAGE_FILE_MEMORY {
+    void*        physical_origin;
+	unsigned int total_sizeof_image;
+	
+} IMAGE_FILE_MEMORY;
+
 typedef struct _TRIPLE_PACKET {
     char str1[128];
     char str2[128];
@@ -102,10 +108,20 @@ void            convert_mov_instruction                       (TRIPLE_PACKET* tp
 void            convert_add_instruction                       (TRIPLE_PACKET* tp, unsigned int* PC);
 void            convert_sub_instruction                       (TRIPLE_PACKET* tp, unsigned int* PC);
 void            convert_jmp_instruction                       (TRIPLE_PACKET* tp, unsigned int* PC);
+void            convert_jnz_instruction                       (TRIPLE_PACKET* tp, unsigned int* PC);
+void            convert_jz_instruction                        (TRIPLE_PACKET* tp, unsigned int* PC);
+void            convert_cmp_instruction                       (TRIPLE_PACKET* tp, unsigned int* PC);
+void            convert_jne_instruction                       (TRIPLE_PACKET* tp, unsigned int* PC);
+void            convert_je_instruction                        (TRIPLE_PACKET* tp, unsigned int* PC);
+void            convert_xor_instruction                       (TRIPLE_PACKET* tp, unsigned int* PC);
+void            convert_pop_instruction                       (TRIPLE_PACKET* tp, unsigned int* PC);
+void            convert_push_instruction                      (TRIPLE_PACKET* tp, unsigned int* PC);
 void            parse_0                                       (const char* file, TRIPLE_PACKET** tp, unsigned int* lines, char* p);
 void            parse_2                                       (TRIPLE_PACKET* tp, unsigned int counts);
 void            handle_labels                                 (TRIPLE_PACKET* tp, unsigned int* PC);
 void            zero_programCounter                           (void);
+unsigned int    get_programCounter                            (void);
 unsigned int    get_parse_level                               (void);
+void            image_file_make                               (TRIPLE_PACKET* tp, unsigned int counts, IMAGE_FILE_MEMORY* image_file_memory);
 
 #endif // !__LIBOSASM__H__

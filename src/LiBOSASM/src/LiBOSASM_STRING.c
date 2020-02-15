@@ -325,3 +325,20 @@ void extract_from_memory_displacement32(const char* s, char* dspl)
 }
 
 //....................................................................................................................................
+
+unsigned int address_string_to_hex(const char* s)
+{
+    unsigned int ret = 0;
+    ret |= ( which_entry_from_hex_table(s[2]) * __pow(16, 7) );
+    ret |= ( which_entry_from_hex_table(s[3]) * __pow(16, 6) );
+    ret |= ( which_entry_from_hex_table(s[4]) * __pow(16, 5) );
+    ret |= ( which_entry_from_hex_table(s[5]) * __pow(16, 4) );
+    ret |= ( which_entry_from_hex_table(s[6]) * __pow(16, 3) );
+    ret |= ( which_entry_from_hex_table(s[7]) * __pow(16, 2) );
+    ret |= ( which_entry_from_hex_table(s[8]) * __pow(16, 1) );
+    ret |= ( which_entry_from_hex_table(s[9]) * __pow(16, 0) );
+    //printf("0x%x ---", ret);
+    return ret;
+}
+
+//....................................................................................................................................
