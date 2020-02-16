@@ -88,6 +88,18 @@ enum PARSE_LEVEL {
 	PARSE_LEVEL_2,
 };
 
+enum SINGLET_INSTRUCTION_IDS {
+    SINGLET_INSTRUCTION_ID_RET = (1<<0),
+    SINGLET_INSTRUCTION_ID_CLD = (1<<1),
+    SINGLET_INSTRUCTION_ID_STD = (1<<2),
+    SINGLET_INSTRUCTION_ID_NOP = (1<<3),
+    SINGLET_INSTRUCTION_ID_HLT = (1<<4),
+    SINGLET_INSTRUCTION_ID_STI = (1<<5),
+    SINGLET_INSTRUCTION_ID_CLI = (1<<6),
+};
+
+typedef void(*singlet_instructions_handler)(TRIPLE_PACKET* tp, unsigned int* PC);
+
 //....................................................................................................................................
 
 unsigned int    in_opcodes                                    (const char* str);
@@ -116,6 +128,7 @@ void            convert_je_instruction                        (TRIPLE_PACKET* tp
 void            convert_xor_instruction                       (TRIPLE_PACKET* tp, unsigned int* PC);
 void            convert_pop_instruction                       (TRIPLE_PACKET* tp, unsigned int* PC);
 void            convert_push_instruction                      (TRIPLE_PACKET* tp, unsigned int* PC);
+void            convert_singlets_instruction                  (TRIPLE_PACKET* tp, unsigned int id, unsigned int* PC);
 void            parse_0                                       (const char* file, TRIPLE_PACKET** tp, unsigned int* lines, char* p);
 void            parse_2                                       (TRIPLE_PACKET* tp, unsigned int counts);
 void            handle_labels                                 (TRIPLE_PACKET* tp, unsigned int* PC);

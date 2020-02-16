@@ -376,6 +376,40 @@ void dump_table_of_labels(void)
 
 //....................................................................................................................................
 
+void _selection_stub(TRIPLE_PACKET* tp)
+{
+	if( _strcmp(tp->str1, "mov") )
+		convert_mov_instruction(tp, &ProgramCounter);
+	else if( _strcmp(tp->str1, "add") )
+		convert_add_instruction(tp, &ProgramCounter);
+	else if( _strcmp(tp->str1, "sub") )
+		convert_sub_instruction(tp, &ProgramCounter);   
+	else if( _strcmp(tp->str1, "jmp") )
+		convert_jmp_instruction(tp, &ProgramCounter);
+	else if( _strcmp(tp->str1, "je") )
+		convert_je_instruction(tp, &ProgramCounter);
+	else if( _strcmp(tp->str1, "jne") )
+		convert_jne_instruction(tp, &ProgramCounter);
+	else if( _strcmp(tp->str1, "jz") )
+		convert_jz_instruction(tp, &ProgramCounter);
+	else if( _strcmp(tp->str1, "jnz") )
+		convert_jnz_instruction(tp, &ProgramCounter);
+	else if( _strcmp(tp->str1, "cmp") )
+		convert_cmp_instruction(tp, &ProgramCounter);
+	else if( _strcmp(tp->str1, "cld") )
+		convert_singlets_instruction(tp, SINGLET_INSTRUCTION_ID_CLD, &ProgramCounter);
+	else if( _strcmp(tp->str1, "std") )
+		convert_singlets_instruction(tp, SINGLET_INSTRUCTION_ID_STD, &ProgramCounter);
+	else if( _strcmp(tp->str1, "ret") )
+		convert_singlets_instruction(tp, SINGLET_INSTRUCTION_ID_RET, &ProgramCounter);
+	else if( tp->mod1 == 'L' )
+		handle_labels(tp, &ProgramCounter);
+	
+	else {}
+}
+
+//....................................................................................................................................
+
 void parse_1_or__convert_instructions_line_by_line(TRIPLE_PACKET* tp, unsigned int counts)
 {
 	parse_level = PARSE_LEVEL_1;
@@ -383,27 +417,7 @@ void parse_1_or__convert_instructions_line_by_line(TRIPLE_PACKET* tp, unsigned i
 	unsigned int i = 0;
 	while(i < counts)
 	{
-		if( _strcmp(tp[i].str1, "mov") )
-			convert_mov_instruction(&tp[i], &ProgramCounter);
-		else if( _strcmp(tp[i].str1, "add") )
-			convert_add_instruction(&tp[i], &ProgramCounter);
-		else if( _strcmp(tp[i].str1, "sub") )
-			convert_sub_instruction(&tp[i], &ProgramCounter);   
-		else if( _strcmp(tp[i].str1, "jmp") )
-			convert_jmp_instruction(&tp[i], &ProgramCounter);
-		else if( _strcmp(tp[i].str1, "je") )
-			convert_je_instruction(&tp[i], &ProgramCounter);
-		else if( _strcmp(tp[i].str1, "jne") )
-			convert_jne_instruction(&tp[i], &ProgramCounter);
-		else if( _strcmp(tp[i].str1, "jz") )
-			convert_jz_instruction(&tp[i], &ProgramCounter);
-		else if( _strcmp(tp[i].str1, "jnz") )
-			convert_jnz_instruction(&tp[i], &ProgramCounter);
-		else if( _strcmp(tp[i].str1, "cmp") )
-			convert_cmp_instruction(&tp[i], &ProgramCounter);
-		else if( tp[i].mod1 == 'L' )
-			handle_labels(&tp[i], &ProgramCounter);
-		
+		_selection_stub(&tp[i]);
 		i++;
 	}
 }
@@ -480,27 +494,7 @@ void parse_2(TRIPLE_PACKET* tp, unsigned int counts)
 	unsigned int i = 0;
 	while(i < counts)
 	{
-		if( _strcmp(tp[i].str1, "mov") )
-			convert_mov_instruction(&tp[i], &ProgramCounter);
-		else if( _strcmp(tp[i].str1, "add") )
-			convert_add_instruction(&tp[i], &ProgramCounter);
-		else if( _strcmp(tp[i].str1, "sub") )
-			convert_sub_instruction(&tp[i], &ProgramCounter);   
-		else if( _strcmp(tp[i].str1, "jmp") )
-			convert_jmp_instruction(&tp[i], &ProgramCounter);
-		else if( _strcmp(tp[i].str1, "je") )
-			convert_je_instruction(&tp[i], &ProgramCounter);
-		else if( _strcmp(tp[i].str1, "jne") )
-			convert_jne_instruction(&tp[i], &ProgramCounter);
-		else if( _strcmp(tp[i].str1, "jz") )
-			convert_jz_instruction(&tp[i], &ProgramCounter);
-		else if( _strcmp(tp[i].str1, "jnz") )
-			convert_jnz_instruction(&tp[i], &ProgramCounter);
-		else if( _strcmp(tp[i].str1, "cmp") )
-			convert_cmp_instruction(&tp[i], &ProgramCounter);
-		else if( tp[i].mod1 == 'L' )
-			handle_labels(&tp[i], &ProgramCounter);
-		
+		_selection_stub(&tp[i]);
 		i++;
 	}
 }
