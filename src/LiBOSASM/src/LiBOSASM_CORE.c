@@ -5,6 +5,7 @@
 
 unsigned int ProgramCounter = 0;
 unsigned int parse_level    = 0xFF;
+unsigned char output_buffer[16*1024 /* for nor 16 KiB */];
 
 //....................................................................................................................................
 
@@ -572,6 +573,26 @@ void image_file_make(TRIPLE_PACKET* tp, unsigned int counts, IMAGE_FILE_MEMORY* 
 void dump_image_file_memory(IMAGE_FILE_MEMORY* image_file_memory)
 {
 	printf("ORIGIN: 0x%x, SIZE: %u bytes\n", image_file_memory->physical_origin, image_file_memory->total_sizeof_image);
+}
+
+//....................................................................................................................................
+
+unsigned char* get_output_buffer(void)
+{
+	return output_buffer;
+}
+
+//....................................................................................................................................
+
+void dump_output_beffer(void)
+{
+	unsigned int count = get_programCounter(), i;
+	unsigned char* out = get_output_buffer();
+	
+	printf("DUMP OUTPUT BUFFER -+-+-+--+-+-+-+-+\n");
+	for(i = 0; i < count; i++)
+		printf("%x ", out[i]);
+	printf("\n-+-+-+-+-+-+-+-+-+-+-+-+--+-+-+-+-+\n");
 }
 
 //....................................................................................................................................

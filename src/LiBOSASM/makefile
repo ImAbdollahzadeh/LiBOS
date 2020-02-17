@@ -1,4 +1,4 @@
-GCCPARAMS = -Iinclude -Wno-discarded-qualifiers -Wno-implicit-function-declaration -Wno-format
+GCCPARAMS = -Iinclude -Wno-discarded-qualifiers -Wno-implicit-function-declaration -Wno-format -Wno-int-to-pointer-cast -Wno-int-conversion
 objects   =                     \
 LiBOSASM_CORE.o                 \
 main.o                          \
@@ -33,7 +33,24 @@ MERGE:
 	@rm LiBOSASM_PUSH_INSTRUCTION.o
 	@rm ./final.o
 
-run: 
+run:
+ifeq ($(readme),1)
+	@echo LiBOSASM_readme:
+	@cat ./ReadMe
+endif
+ifeq ($(readme),true)
+	@echo LiBOSASM_readme:
+	@cat ./ReadMe
+endif
+ifeq ($(licence),1)
+	@echo LiBOSASM_licence:
+	@cat ./Licence
+endif
+ifeq ($(licence),true)
+	@echo LiBOSASM_licence:
+	@cat ./Licence
+endif
+	@echo --	code	--
 	@make --no-print-directory LiBOSASM_CORE.o
 	@make --no-print-directory main.o
 	@make --no-print-directory LiBOSASM_STRING.o

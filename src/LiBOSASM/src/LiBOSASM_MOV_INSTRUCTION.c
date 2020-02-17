@@ -8,6 +8,7 @@ void convert_mov_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 	if( get_parse_level() == PARSE_LEVEL_2 )
 		printf("MOV DECODING\n\t");
 	
+	unsigned char* chp          = get_output_buffer();
 	unsigned int pl             = get_parse_level();
 	unsigned int sizeof_opcodes = get_sizeof_opcodes();
 	OPCODE*     opcodes         = get_opcodes();
@@ -15,7 +16,7 @@ void convert_mov_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 	if( (pl == 0xFF) || (!pl) )
 		return;
 	
-	if(tp->mod1 == 'o' && tp->mod2 == 'o' && tp->mod3 == 'I')
+	if(tp->mod1 == 'o' && tp->mod2 == 'o' && tp->mod3 == 'I') // A.K.A. mov reg, imm
 	{
 		unsigned char prefix = 0;
 		unsigned char opc	= 0;
@@ -200,10 +201,12 @@ void convert_mov_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 					{
 						if( pl == PARSE_LEVEL_2 )
 							printf("prefix: 0x%x, ", prefix);
+						chp[*PC+0] = prefix;
 						*PC = *PC + 1;
 					}
 					if( pl == PARSE_LEVEL_2 )
 						printf("opcode: 0x%x, ", opc);
+					chp[*PC+0] = opc;
 					*PC = *PC + 1;
 					
 					if(which_immediate)
@@ -215,6 +218,10 @@ void convert_mov_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 									printf("imm: %c%c %c%c %c%c %c%c\n", 
 									   immediate32[0], immediate32[1], immediate32[2], immediate32[3],
 									   immediate32[4], immediate32[5], immediate32[6], immediate32[7]);
+								chp[*PC+0] = byte_string_to_byte(immediate32[0], immediate32[1]);
+								chp[*PC+1] = byte_string_to_byte(immediate32[2], immediate32[3]);
+								chp[*PC+2] = byte_string_to_byte(immediate32[4], immediate32[5]);
+								chp[*PC+3] = byte_string_to_byte(immediate32[6], immediate32[7]);
 								*PC = *PC + 4;
 								//immediate32_string_to_hex(tp->str3);
 								break;
@@ -222,11 +229,14 @@ void convert_mov_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 								if( pl == PARSE_LEVEL_2 )
 									printf("imm: %c%c %c%c\n", 
 									   immediate16[0], immediate16[1], immediate16[2], immediate16[3]);
+								chp[*PC+0] = byte_string_to_byte(immediate16[0], immediate16[1]);
+								chp[*PC+1] = byte_string_to_byte(immediate16[2], immediate16[3]);
 								*PC = *PC + 2;
 								break;
 							case 0x8:
 								if( pl == PARSE_LEVEL_2 )
 									printf("imm: %c%c\n", immediate8[0], immediate8[1]);
+								chp[*PC+0] = byte_string_to_byte(immediate8[0], immediate8[1]);
 								*PC = *PC + 1;
 								break;
 						} // end of switch
@@ -235,7 +245,7 @@ void convert_mov_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 			} // end of if 
 		} // end of for 
 	} // end of if
-	else if(tp->mod1 == 'o' && tp->mod2 == 'o' && tp->mod3 == 'M')
+	else if(tp->mod1 == 'o' && tp->mod2 == 'o' && tp->mod3 == 'M') // A.K.A. mov reg, mem
 	{
 		//printf("MEM\n");
 		unsigned char prefix = 0;
@@ -516,20 +526,24 @@ EXIT_POSITION:
 					{
 						if( pl == PARSE_LEVEL_2 )
 							printf("prefix: 0x%x, ", prefix);
+						chp[*PC+0] = prefix;
 						*PC = *PC + 1;
 					}
 					if( pl == PARSE_LEVEL_2 )
 						printf("opcode: 0x%x, ", opc);
+					chp[*PC+0] = opc;
 					*PC = *PC + 1;
 
 					if( pl == PARSE_LEVEL_2 )
 						printf("modrm: 0x%x, ", modrm);
+					chp[*PC+0] = modrm;
 					*PC = *PC + 1;
-					
+
 					if(sib)
 					{
 						if( pl == PARSE_LEVEL_2 )
 							printf("sib: 0x%x, ", sib);
+						chp[*PC+0] = sib;
 						*PC = *PC + 1;
 					}
 					switch(which_displacement)
@@ -543,17 +557,24 @@ EXIT_POSITION:
 								printf("displacement: %c%c %c%c %c%c %c%c\n", 
 								   displacement32[0], displacement32[1], displacement32[2], displacement32[3],
 								   displacement32[4], displacement32[5], displacement32[6], displacement32[7]);
+							chp[*PC+0] = byte_string_to_byte(displacement32[0], displacement32[1]);
+							chp[*PC+1] = byte_string_to_byte(displacement32[2], displacement32[3]);
+							chp[*PC+2] = byte_string_to_byte(displacement32[4], displacement32[5]);
+							chp[*PC+3] = byte_string_to_byte(displacement32[6], displacement32[7]);
 							*PC = *PC + 4;
 							break;
 						case 0x4:
 							if( pl == PARSE_LEVEL_2 )
 								printf("displacement: %c%c %c%c\n", 
 								   displacement16[0], displacement16[1], displacement16[2], displacement16[3]);
+							chp[*PC+0] = byte_string_to_byte(displacement16[0], displacement16[1]);
+							chp[*PC+1] = byte_string_to_byte(displacement16[2], displacement16[3]);
 							*PC = *PC + 2;
 							break;
 						case 0x8:
 							if( pl == PARSE_LEVEL_2 )
 								printf("displacement: %c%c\n", displacement8[0], displacement8[1]);
+							chp[*PC+0] = byte_string_to_byte(displacement8[0], displacement8[1]);
 							*PC = *PC + 1;
 							break;
 					} // end of switch
@@ -561,7 +582,7 @@ EXIT_POSITION:
 			} // end of if 
 		} // end of for
 	} // end of if
-	else if(tp->mod1 == 'o' && tp->mod2 == 'M' && tp->mod3 == 'o')
+	else if(tp->mod1 == 'o' && tp->mod2 == 'M' && tp->mod3 == 'o') // A.K.A. mov mem, reg
 	{
 		//printf("MEM\n");
 		unsigned char prefix = 0;
@@ -858,20 +879,24 @@ EXIT_POSITION2:
 					{
 						if( pl == PARSE_LEVEL_2 )
 							printf("prefix: 0x%x, ", prefix);
+						chp[*PC+0] = prefix;
 						*PC = *PC + 1;
 					}
 					if( pl == PARSE_LEVEL_2 )
 						printf("opcode: 0x%x, ", opc);
+					chp[*PC+0] = opc;
 					*PC = *PC + 1;
 					
 					if( pl == PARSE_LEVEL_2 )
 						printf("modrm: 0x%x, ", modrm);
+					chp[*PC+0] = modrm;
 					*PC = *PC + 1;
 					
 					if(sib)
 					{
 						if( pl == PARSE_LEVEL_2 )
 							printf("sib: 0x%x, ", sib);
+						chp[*PC+0] = sib;
 						*PC = *PC + 1;
 					}
 					switch(which_displacement)
@@ -884,17 +909,24 @@ EXIT_POSITION2:
 								printf("displacement: %c%c %c%c %c%c %c%c\n", 
 								   displacement32[0], displacement32[1], displacement32[2], displacement32[3],
 								   displacement32[4], displacement32[5], displacement32[6], displacement32[7]);
+							chp[*PC+0] = byte_string_to_byte(displacement32[0], displacement32[1]);
+							chp[*PC+1] = byte_string_to_byte(displacement32[2], displacement32[3]);
+							chp[*PC+2] = byte_string_to_byte(displacement32[4], displacement32[5]);
+							chp[*PC+3] = byte_string_to_byte(displacement32[6], displacement32[7]);
 							*PC = *PC + 4;
 							break;
 						case 0x4:
 							if( pl == PARSE_LEVEL_2 )
 								printf("displacement: %c%c %c%c\n", 
 								   displacement16[0], displacement16[1], displacement16[2], displacement16[3]);
+							chp[*PC+0] = byte_string_to_byte(displacement16[0], displacement16[1]);
+							chp[*PC+1] = byte_string_to_byte(displacement16[2], displacement16[3]);
 							*PC = *PC + 2;
 							break;
 						case 0x8:
 							if( pl == PARSE_LEVEL_2 )
 								printf("displacement: %c%c\n", displacement8[0], displacement8[1]);
+							chp[*PC+0] = byte_string_to_byte(displacement8[0], displacement8[1]);
 							*PC = *PC + 1;
 							break;
 					} // end of switch
@@ -902,7 +934,7 @@ EXIT_POSITION2:
 			} // end of if 
 		} // end of for
 	}
-	else if(tp->mod1 == 'o' && tp->mod2 == 'M' && tp->mod3 == 'I')
+	else if(tp->mod1 == 'o' && tp->mod2 == 'M' && tp->mod3 == 'I') // A.K.A. mov mem, imm
 	{
 		//printf("MEM+IMM\n");
 		unsigned char prefix = 0;
@@ -1109,20 +1141,24 @@ EXIT_POSITION2:
 					{
 						if( pl == PARSE_LEVEL_2 )
 							printf("prefix: 0x%x, ", prefix);
+						chp[*PC+0] = prefix;
 						*PC = *PC + 1;
 					}
 					if( pl == PARSE_LEVEL_2 )
 						printf("opcode: 0x%x, ", opc);
+					chp[*PC+0] = opc;
 					*PC = *PC + 1;
 					
 					if( pl == PARSE_LEVEL_2 )
 						printf("modrm: 0x%x, ", modrm);
+					chp[*PC+0] = modrm;
 					*PC = *PC + 1;
 					
 					if(sib)
 					{
 						if( pl == PARSE_LEVEL_2 )
 							printf("sib: 0x%x, ", sib);
+						chp[*PC+0] = sib;
 						*PC = *PC + 1;
 					}
 					switch(which_displacement)
@@ -1132,17 +1168,24 @@ EXIT_POSITION2:
 								printf("displacement: %c%c %c%c %c%c %c%c, ", 
 								   displacement32[0], displacement32[1], displacement32[2], displacement32[3],
 								   displacement32[4], displacement32[5], displacement32[6], displacement32[7]);
+							chp[*PC+0] = byte_string_to_byte(displacement32[0], displacement32[1]);
+							chp[*PC+1] = byte_string_to_byte(displacement32[2], displacement32[3]);
+							chp[*PC+2] = byte_string_to_byte(displacement32[4], displacement32[5]);
+							chp[*PC+3] = byte_string_to_byte(displacement32[6], displacement32[7]);
 							*PC = *PC + 4;
 							break;
 						case 0x4:
 							if( pl == PARSE_LEVEL_2 )
 								printf("displacement: %c%c %c%c, ", 
 								   displacement16[0], displacement16[1], displacement16[2], displacement16[3]);
+							chp[*PC+0] = byte_string_to_byte(displacement16[0], displacement16[1]);
+							chp[*PC+1] = byte_string_to_byte(displacement16[2], displacement16[3]);
 							*PC = *PC + 2;
 							break;
 						case 0x8:
 							if( pl == PARSE_LEVEL_2 )
 								printf("displacement: %c%c, ", displacement8[0], displacement8[1]);
+							chp[*PC+0] = byte_string_to_byte(displacement8[0], displacement8[1]);
 							*PC = *PC + 1;
 							break;
 					} // end of switch
@@ -1156,6 +1199,10 @@ EXIT_POSITION2:
 									printf("imm: %c%c %c%c %c%c %c%c\n", 
 									   immediate32[0], immediate32[1], immediate32[2], immediate32[3],
 									   immediate32[4], immediate32[5], immediate32[6], immediate32[7]);
+								chp[*PC+0] = byte_string_to_byte(immediate32[0], immediate32[1]);
+								chp[*PC+1] = byte_string_to_byte(immediate32[2], immediate32[3]);
+								chp[*PC+2] = byte_string_to_byte(immediate32[4], immediate32[5]);
+								chp[*PC+3] = byte_string_to_byte(immediate32[6], immediate32[7]);
 								*PC = *PC + 4;
 							
 								//immediate32_string_to_hex(tp->str3);
@@ -1164,11 +1211,14 @@ EXIT_POSITION2:
 								if( pl == PARSE_LEVEL_2 )
 									printf("imm: %c%c %c%c\n", 
 									   immediate16[0], immediate16[1], immediate16[2], immediate16[3]);
+								chp[*PC] = byte_string_to_byte(immediate16[0], immediate16[1]);
+								chp[*PC+1] = byte_string_to_byte(immediate16[2], immediate16[3]);
 								*PC = *PC + 2;
 								break;
 							case 0x8:
 								if( pl == PARSE_LEVEL_2 )
 									printf("imm: %c%c\n", immediate8[0], immediate8[1]);
+								chp[*PC] = byte_string_to_byte(immediate8[0], immediate8[1]);
 								*PC = *PC + 1;
 								break;
 						} // end of switch
@@ -1177,7 +1227,7 @@ EXIT_POSITION2:
 			} // end of if 
 		} // end of for 
 	}
-	else if(tp->mod1 == 'o' && tp->mod2 == 'o' && tp->mod3 == 'o') // a.k.a. MOV REG, REG
+	else if(tp->mod1 == 'o' && tp->mod2 == 'o' && tp->mod3 == 'o') // A.K.A. mov reg, reg
 	{
 		unsigned char prefix = 0;
 		unsigned char opc	= 0;
@@ -1417,14 +1467,17 @@ EXIT_POSITION2:
 					{
 						if( pl == PARSE_LEVEL_2 )
 							printf("prefix: 0x%x, ", prefix);
+						chp[*PC] = prefix;
 						*PC = *PC + 1;
 					}
 					if( pl == PARSE_LEVEL_2 )
 						printf("opcode: 0x%x, ", opc);
+					chp[*PC] = opc;
 					*PC = *PC + 1;
 					
 					if( pl == PARSE_LEVEL_2 )
 						printf("modrm: 0x%x, ", modrm);
+					chp[*PC] = modrm;
 					*PC = *PC + 1;
 					
 				} // end of if 

@@ -8,7 +8,8 @@ void convert_add_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 	if( get_parse_level() == PARSE_LEVEL_2 )
 		printf("ADD DECODING\n\t");
 	
-	unsigned int pl = get_parse_level();
+	unsigned char* chp = get_output_buffer();
+	unsigned int pl    = get_parse_level();
 	if( (pl == 0xFF) || (!pl) )
 		return;
 	

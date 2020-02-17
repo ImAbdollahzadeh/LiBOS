@@ -59,5 +59,6 @@ int main(void)
 	printf("IMAGE_FILE_MEMORY-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
 	dump_image_file_memory(&ifm);
 	printf("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
+	dump_output_beffer();
 }
 

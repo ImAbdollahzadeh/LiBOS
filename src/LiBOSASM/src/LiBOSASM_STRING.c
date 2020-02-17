@@ -342,3 +342,10 @@ unsigned int address_string_to_hex(const char* s)
 }
 
 //....................................................................................................................................
+
+unsigned char byte_string_to_byte(char* byte_high_nibble, char* byte_low_nibble)
+{
+	return (( which_entry_from_hex_table(byte_high_nibble) * 16) + (( which_entry_from_hex_table(byte_low_nibble))));
+}
+
+//....................................................................................................................................

@@ -115,6 +115,7 @@ unsigned int    get_sizeof_opcodes                            (void);
 OPCODE*         get_opcodes                                   (void);
 unsigned int    get_table_of_labels_count                     (void);
 SYMBOLIC_LABEL* get_table_of_labels                           (void);
+unsigned char*  get_output_beffer                             (void);
 void            parse_1_or__convert_instructions_line_by_line (TRIPLE_PACKET* tp, unsigned int counts);
 void            convert_mov_instruction                       (TRIPLE_PACKET* tp, unsigned int* PC);
 void            convert_add_instruction                       (TRIPLE_PACKET* tp, unsigned int* PC);
@@ -136,5 +137,6 @@ void            zero_programCounter                           (void);
 unsigned int    get_programCounter                            (void);
 unsigned int    get_parse_level                               (void);
 void            image_file_make                               (TRIPLE_PACKET* tp, unsigned int counts, IMAGE_FILE_MEMORY* image_file_memory);
+void            dump_output_buffer                            (void);
 
 #endif // !__LIBOSASM__H__

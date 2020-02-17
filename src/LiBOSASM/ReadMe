@@ -1,52 +1,52 @@
-LiBOSASM: a 32-bit-only x86 assembler written in C by Iman Abdollahzadeh
+	LiBOSASM: a 32-bit-only x86 assembler written in C by Iman Abdollahzadeh
 
-Syntax:
-	registers:
-		eax, ecx, edx, ebx, esp, ebp, esi, edi
-		ax, cx, bx, dx, sp, bp, so, di
-		al, cl, dl, bl, ah, ch, dh, bh
-		cs, ds, es, fs, gs, ss, eflags, flags
+	Syntax:
+		registers:
+			eax, ecx, edx, ebx, esp, ebp, esi, edi
+			ax, cx, bx, dx, sp, bp, so, di
+			al, cl, dl, bl, ah, ch, dh, bh
+			cs, ds, es, fs, gs, ss, eflags, flags
 
-	memory modes:
-		mov eax, DWORD[0xFFFFFFFF]
-		mov eax, DWORD[address]
-		mov eax, DWORD[esp]
-		mov sp,  WORD[0xFFFFFFFF]
-		mov dh,  BYTE[0xFFFFFFFF]		
-		add BYTE[address], 0x58
+		memory modes:
+			mov eax, DWORD[0xFFFFFFFF]
+			mov eax, DWORD[address]
+			mov eax, DWORD[esp]
+			mov sp,  WORD[0xFFFFFFFF]
+			mov dh,  BYTE[0xFFFFFFFF]		
+			add BYTE[address], 0x58
 		
-		this is wrong -> mov eax, DWORD [address]. There should be no space between memory size and brakets
-	writing .asm files:
-		all files must be started with [LiBOSASM 32-bit]
-		all files must have only one origin as [ORIGIN 0x38EF501A]
-		.text and .data sections must be given as [SECTION .CODE] and [SECTION .DATA], respectively
-		there is no uninitialized section. There is no more sections
-		all labels MUST be ended with ':' character like FIRST_LABEL:
-		the only character reserved for the assembler and should not be used in any case is '!'
+			this is wrong -> mov eax, DWORD [address]. There should be no space between memory size and brakets
+		writing .asm files:
+			all files must be started with [LiBOSASM 32-bit]
+			all files must have only one origin as [ORIGIN 0x38EF501A]
+			.text and .data sections must be given as [SECTION .CODE] and [SECTION .DATA], respectively
+			there is no uninitialized section. There is no more sections
+			all labels MUST be ended with ':' character like FIRST_LABEL:
+			the only character reserved for the assembler and should not be used in any case is '!'
 		
-	data definitions in SECTION .DATA:
-		all data definitions include their size
-		they must be ended with character ':'
-		the data definition must be done in one line, therefore breaking the line by enter, is invalid
-		section .DATA must be declared ALWAYS at the end of the file after section .CODE
-		they obey the naming as for the labels (see below)
-		example:
-			[SECTION .DATA]
-			string_to_be_printed: db "LiBOS assembler version 0.00", 0x0A, 0x00
-			_@@__rgb_black_mask: dw 0x00000000
+		data definitions in SECTION .DATA:
+			all data definitions include their size
+			they must be ended with character ':'
+			the data definition must be done in one line, therefore breaking the line by enter, is invalid
+			section .DATA must be declared ALWAYS at the end of the file after section .CODE
+			they obey the naming as for the labels (see below)
+			example:
+				[SECTION .DATA]
+				string_to_be_printed: db "LiBOS assembler version 0.00", 0x0A, 0x00
+				_@@__rgb_black_mask: dw 0x00000000
 
-	several label examples:
-		__label@@__assembler12F0:
-		loop:
-		end_of_subroutine_v@u32@u32p@function:
-
-	upper/lower case:
-		all instructions include lower case mnemonics
-		all memory sizes are upper case
-		all numbers are in hexadecimal with 0x initiation like 0xFFAABBC7
-		all addresses should be 32-bits hexadecimal numbers
-		all numbers should be 32-bits hexadecimal like 0x00000042 instead of only 0x42
-		all numbers for 16-bit instructions are hexadecimal 16-bits like 'mov cx, 0x45FA'
-		all numbers for 8-bit instructions are hexadecimal 8-bits like 'mov cl, 0x4B'
-
-	ALL IN ALL, THE NUMBERING, ADDRESSING, AND INSTRUCTIONS ARE 'STRONGLY TYPED'
+		several label examples:
+			__label@@__assembler12F0:
+			loop:
+			end_of_subroutine_v@u32@u32p@function:
+	
+		upper/lower case:
+			all instructions include lower case mnemonics
+			all memory sizes are upper case
+			all numbers are in hexadecimal with 0x initiation like 0xFFAABBC7
+			all addresses should be 32-bits hexadecimal numbers
+			all numbers should be 32-bits hexadecimal like 0x00000042 instead of only 0x42
+			all numbers for 16-bit instructions are hexadecimal 16-bits like 'mov cx, 0x45FA'
+			all numbers for 8-bit instructions are hexadecimal 8-bits like 'mov cl, 0x4B'
+	
+		ALL IN ALL, THE NUMBERING, ADDRESSING, AND INSTRUCTIONS ARE 'STRONGLY TYPED'
