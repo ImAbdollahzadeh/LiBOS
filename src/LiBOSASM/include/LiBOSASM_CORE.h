@@ -27,18 +27,22 @@ typedef struct _TRIPLE_PACKET {
     unsigned char mod3;
 } TRIPLE_PACKET;
 
-enum ATTRIBUTE {
-    ATT_DIGIT,
-    ATT_r_plus,
-    ATT_r,
-    ATT_MEMORY_IMM,
-	ATT_REG_REG,
-};
+typedef enum _INSTRUCTION_ATTRIBUTE {
+	OP_REG_REG = 0x00,  /* source: register, destination: register  ex. mov eax, edi                */ 
+	OP_REG_IMM = 0x01,  /* source: register, destination: immediate ex. mov eax, 0xAABBCCDD         */ 
+	OP_REG_MEM = 0x02,  /* source: register, destination: memory    ex. mov eax, DWORD[address]     */ 
+	OP_MEM_REG = 0x03,  /* source: memory,   destination: register  ex. mov DWORD[address], eax     */ 
+	OP_MEM_IMM = 0x04,  /* source: memory  , destination: immediate ex. mov DWORD[addr], 0xAABBCCDD */ 
+	/* 0x05 was reserved for the OS                                                                 */ 
+	OP_MEM_MEM = 0xFF,  /* forbidden                                                                */ 
+	OP_X       = 0x06,  /* source: register, memory, or immediate   ex. push ebp                    */ 
+	OP         = 0x07,  /* source: --,       destination: --        ex. ret                         */ 
+} INSTRUCTION_ATTRIBUTE;
 
 typedef struct _OPCODE {
-    char* mnemonic;
-    enum ATTRIBUTE attribute;
-    unsigned char base_binary_code;
+    char*                 mnemonic;
+    INSTRUCTION_ATTRIBUTE attribute;
+    unsigned char         base_binary_code;
 } OPCODE;
 
 enum REG_32 {

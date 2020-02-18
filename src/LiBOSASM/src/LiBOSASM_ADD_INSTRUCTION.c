@@ -16,7 +16,7 @@ void convert_add_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 	unsigned int sizeof_opcodes = get_sizeof_opcodes();
 	OPCODE* opcodes = get_opcodes();
 	
-	if(tp->mod1 == 'o' && tp->mod2 == 'o' && tp->mod3 == 'I')
+	if(tp->mod1 == 'o' && tp->mod2 == 'o' && tp->mod3 == 'I') // A.K.A: add, reg, imm 
 	{
 		unsigned char prefix = 0;
 		unsigned char opc	= 0;
@@ -25,8 +25,8 @@ void convert_add_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 		unsigned char immediate16[4];
 		unsigned char immediate8 [2];
 		
-		unsigned char  which_immediate = 0; // BIT(1) : 32, BIT(2) : 16, and BIT(3) : 8
-		enum ATTRIBUTE attribute   = ATT_DIGIT;
+		unsigned char         which_immediate = 0; // BIT(1) : 32, BIT(2) : 16, and BIT(3) : 8
+		INSTRUCTION_ATTRIBUTE attribute       = OP_REG_IMM;
 	
 		int j;
 		for(j=0;j<sizeof_opcodes;j++)
@@ -283,7 +283,7 @@ void convert_add_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 			} // end of if 
 		} // end of for 
 	} // end of if
-	else if(tp->mod1 == 'o' && tp->mod2 == 'o' && tp->mod3 == 'M')
+	else if(tp->mod1 == 'o' && tp->mod2 == 'o' && tp->mod3 == 'M') // A.K.A: add, reg, mem
 	{
 		//printf("MEM\n");
 		unsigned char prefix = 0;
@@ -293,8 +293,8 @@ void convert_add_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 		unsigned char displacement32[8];
 		unsigned char displacement16[4];
 		unsigned char displacement8[2];
-		unsigned char  which_displacement = 0; // BIT(1) : 32, BIT(2) : 16, and BIT(3) : 8
-		enum ATTRIBUTE attribute = ATT_r;
+		unsigned char         which_displacement = 0; // BIT(1) : 32, BIT(2) : 16, and BIT(3) : 8
+		INSTRUCTION_ATTRIBUTE attribute          = OP_REG_MEM;
 	
 		int j;
 		for(j=0;j<sizeof_opcodes;j++)
@@ -610,7 +610,7 @@ EXIT_POSITION:
 			} // end of if 
 		} // end of for
 	} // end of if
-	else if(tp->mod1 == 'o' && tp->mod2 == 'M' && tp->mod3 == 'o')
+	else if(tp->mod1 == 'o' && tp->mod2 == 'M' && tp->mod3 == 'o') // A.K.A: add, mem, reg
 	{
 		//printf("MEM\n");
 		unsigned char prefix = 0;
@@ -621,7 +621,7 @@ EXIT_POSITION:
 		unsigned char displacement16[8];
 		unsigned char which_displacement  = 0;
 		unsigned char displacement8[8];
-		enum ATTRIBUTE attribute = ATT_r;
+		INSTRUCTION_ATTRIBUTE attribute = OP_MEM_REG;
 
 		int j;
 		for(j=0;j<sizeof_opcodes;j++)
@@ -953,7 +953,7 @@ EXIT_POSITION2:
 			} // end of if 
 		} // end of for
 	}
-	else if(tp->mod1 == 'o' && tp->mod2 == 'M' && tp->mod3 == 'I')
+	else if(tp->mod1 == 'o' && tp->mod2 == 'M' && tp->mod3 == 'I') // A.K.A: add, mem, imm
 	{
 		//printf("MEM+IMM\n");
 		unsigned char prefix = 0;
@@ -967,10 +967,10 @@ EXIT_POSITION2:
 		unsigned char displacement16[4];
 		unsigned char displacement8[2];
 		
-		unsigned char  which_immediate	= 0; // BIT(1) : 32, BIT(2) : 16, and BIT(3) : 8
+		unsigned char  which_immediate    = 0; // BIT(1) : 32, BIT(2) : 16, and BIT(3) : 8
 		unsigned char  which_displacement = 0; // BIT(1) : 32, BIT(2) : 16, and BIT(3) : 8
 		
-		enum ATTRIBUTE attribute   = ATT_DIGIT;
+		INSTRUCTION_ATTRIBUTE attribute   = OP_MEM_IMM;
 
 		int j;
 		for(j=0;j<sizeof_opcodes;j++)
@@ -1230,12 +1230,12 @@ EXIT_POSITION2:
 			
 		} // end of for 
 	}
-	else if(tp->mod1 == 'o' && tp->mod2 == 'o' && tp->mod3 == 'o') // a.k.a. MOV REG, REG
+	else if(tp->mod1 == 'o' && tp->mod2 == 'o' && tp->mod3 == 'o') // A.K.A: add, reg, reg
 	{
-		unsigned char prefix = 0;
-		unsigned char opc	= 0;
-		unsigned char modrm  = 0;
-		enum ATTRIBUTE attribute   = ATT_REG_REG;
+		unsigned char         prefix    = 0;
+		unsigned char         opc       = 0;
+		unsigned char         modrm     = 0;
+		INSTRUCTION_ATTRIBUTE attribute = OP_REG_REG;
 	
 		int j;
 		for(j=0;j<sizeof_opcodes;j++)

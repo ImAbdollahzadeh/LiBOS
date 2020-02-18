@@ -38,13 +38,38 @@ unsigned int mem_table_entries = sizeof(global_mem_table) / sizeof(const char*);
 //....................................................................................................................................
 
 OPCODE opcodes[] = {
-	{"add", ATT_DIGIT,	  0x80},
-	{"add", ATT_r,		  0x00},
-	{"mov", ATT_r_plus,	 0xB8},
-	{"mov", ATT_r,		  0x8B},
-	{"mov", ATT_MEMORY_IMM, 0xC7},
-	{"mov", ATT_REG_REG,	0x89},
-	{"add", ATT_REG_REG,	0x01},
+	{"add",  OP_REG_IMM, 0x80},
+	{"add",  OP_REG_MEM, 0x00},
+	{"add",  OP_REG_REG, 0x01}, //<-??
+	{"add",  OP_MEM_REG, 0xFF}, //<-??
+	{"add",  OP_MEM_IMM, 0xFF}, //<-??
+	{"mov",  OP_REG_IMM, 0xB8},
+	{"mov",  OP_REG_MEM, 0x8B},
+	{"mov",  OP_MEM_REG, 0x8B},
+	{"mov",  OP_MEM_IMM, 0xC7},
+	{"mov",  OP_REG_REG, 0x89},
+	{"sub",  OP_REG_IMM, 0xFF}, //<-??
+	{"sub",  OP_REG_MEM, 0xFF}, //<-??
+	{"sub",  OP_REG_REG, 0xFF}, //<-??
+	{"sub",  OP_MEM_REG, 0xFF}, //<-??
+	{"sub",  OP_MEM_IMM, 0xFF}, //<-??
+	{"cmp",  OP_REG_IMM, 0xFF}, //<-??
+	{"cmp",  OP_REG_MEM, 0xFF}, //<-??
+	{"cmp",  OP_REG_REG, 0xFF}, //<-??
+	{"cmp",  OP_MEM_REG, 0xFF}, //<-??
+	{"cmp",  OP_MEM_IMM, 0xFF}, //<-??
+	{"push", OP_X,       0xFF}, //<-??
+	{"push", OP_X,       0xFF}, //<-??
+	{"pop",  OP_X,       0xFF}, //<-??
+	{"pop",  OP_X,       0xFF}, //<-??
+	{"jmp",  OP_X,       0xFF}, //<-??
+	{"jmp",  OP_X,       0xFF}, //<-??
+	{"int",  OP_X,       0xFF}, //<-??
+	{"ret",  OP,         0xFF}, //<-??
+	{"nop",  OP,         0xFF}, //<-??
+	{"hlt",  OP,         0xFF}, //<-??
+	{"cli",  OP,         0xFF}, //<-??
+	{"sti",  OP,         0xFF}, //<-??
 };
 unsigned int sizeof_opcodes = sizeof(opcodes) / sizeof(OPCODE);
 
