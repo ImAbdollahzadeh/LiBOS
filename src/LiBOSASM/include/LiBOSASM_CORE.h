@@ -8,23 +8,23 @@
 #define MODRM_REG(R) ((R)<<3)
 
 typedef struct _SYMBOLIC_LABEL {
-    char* string;
-    void* address;
+	char* string;
+	void* address;
 } SYMBOLIC_LABEL;
 
 typedef struct _IMAGE_FILE_MEMORY {
-    void*        physical_origin;
+	void*        physical_origin;
 	unsigned int total_sizeof_image;
 	
 } IMAGE_FILE_MEMORY;
 
 typedef struct _TRIPLE_PACKET {
-    char str1[128];
-    char str2[128];
-    char str3[128];
-    unsigned char mod1;
-    unsigned char mod2;
-    unsigned char mod3;
+	char str1[128];
+	char str2[128];
+	char str3[128];
+	unsigned char mod1;
+	unsigned char mod2;
+	unsigned char mod3;
 } TRIPLE_PACKET;
 
 typedef enum _INSTRUCTION_ATTRIBUTE {
@@ -40,66 +40,66 @@ typedef enum _INSTRUCTION_ATTRIBUTE {
 } INSTRUCTION_ATTRIBUTE;
 
 typedef struct _OPCODE {
-    char*                 mnemonic;
-    INSTRUCTION_ATTRIBUTE attribute;
-    unsigned char         base_binary_code;
+	char*                 mnemonic;
+	INSTRUCTION_ATTRIBUTE attribute;
+	unsigned char         base_binary_code;
 } OPCODE;
 
 enum REG_32 {
-    IMM_EAX,
-    IMM_ECX,
-    IMM_EDX,
-    IMM_EBX,
-    IMM_ESP,
-    IMM_EBP,
-    IMM_ESI,
-    IMM_EDI
+	IMM_EAX,
+	IMM_ECX,
+	IMM_EDX,
+	IMM_EBX,
+	IMM_ESP,
+	IMM_EBP,
+	IMM_ESI,
+	IMM_EDI
 };
 
 enum REG_16 {
-    IMM_AX,
-    IMM_CX,
-    IMM_DX,
-    IMM_BX,
-    IMM_SP,
-    IMM_BP,
-    IMM_SI,
-    IMM_DI
+	IMM_AX,
+	IMM_CX,
+	IMM_DX,
+	IMM_BX,
+	IMM_SP,
+	IMM_BP,
+	IMM_SI,
+	IMM_DI
 };
 
 enum REG_8 {
-    IMM_AL,
-    IMM_CL,
-    IMM_DL,
-    IMM_BL,
-    IMM_AH,
-    IMM_CH,
-    IMM_DH,
-    IMM_BH
+	IMM_AL,
+	IMM_CL,
+	IMM_DL,
+	IMM_BL,
+	IMM_AH,
+	IMM_CH,
+	IMM_DH,
+	IMM_BH
 };
 
 enum MOD_RM {
-    MEM_TO_REG   = (1<<1),
-    REG_TO_MEM   = ~(1<<1),
-    _16_32       = (1<<0),
-    _8           = ~(1<<0),
-    MODRM_DISP32 = 0x05
+	MEM_TO_REG   =  (1<<1),
+	REG_TO_MEM   = ~(1<<1),
+	_16_32       =  (1<<0),
+	_8           = ~(1<<0),
+	MODRM_DISP32 =   0x05
 };
 
 enum PARSE_LEVEL {
-    PARSE_LEVEL_0,
+	PARSE_LEVEL_0,
 	PARSE_LEVEL_1,
 	PARSE_LEVEL_2,
 };
 
 enum SINGLET_INSTRUCTION_IDS {
-    SINGLET_INSTRUCTION_ID_RET = (1<<0),
-    SINGLET_INSTRUCTION_ID_CLD = (1<<1),
-    SINGLET_INSTRUCTION_ID_STD = (1<<2),
-    SINGLET_INSTRUCTION_ID_NOP = (1<<3),
-    SINGLET_INSTRUCTION_ID_HLT = (1<<4),
-    SINGLET_INSTRUCTION_ID_STI = (1<<5),
-    SINGLET_INSTRUCTION_ID_CLI = (1<<6),
+	SINGLET_INSTRUCTION_ID_RET = (1<<0),
+	SINGLET_INSTRUCTION_ID_CLD = (1<<1),
+	SINGLET_INSTRUCTION_ID_STD = (1<<2),
+	SINGLET_INSTRUCTION_ID_NOP = (1<<3),
+	SINGLET_INSTRUCTION_ID_HLT = (1<<4),
+	SINGLET_INSTRUCTION_ID_STI = (1<<5),
+	SINGLET_INSTRUCTION_ID_CLI = (1<<6),
 };
 
 typedef void(*singlet_instructions_handler)(TRIPLE_PACKET* tp, unsigned int* PC);
