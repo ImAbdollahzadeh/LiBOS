@@ -428,6 +428,14 @@ void _selection_stub(TRIPLE_PACKET* tp)
 		convert_singlets_instruction(tp, SINGLET_INSTRUCTION_ID_STD, &ProgramCounter);
 	else if( _strcmp(tp->str1, "ret") )
 		convert_singlets_instruction(tp, SINGLET_INSTRUCTION_ID_RET, &ProgramCounter);
+	else if( _strcmp(tp->str1, "nop") )
+		convert_singlets_instruction(tp, SINGLET_INSTRUCTION_ID_NOP, &ProgramCounter);
+	else if( _strcmp(tp->str1, "hlt") )
+		convert_singlets_instruction(tp, SINGLET_INSTRUCTION_ID_HLT, &ProgramCounter);
+	else if( _strcmp(tp->str1, "sti") )
+		convert_singlets_instruction(tp, SINGLET_INSTRUCTION_ID_STI, &ProgramCounter);
+	else if( _strcmp(tp->str1, "cli") )
+		convert_singlets_instruction(tp, SINGLET_INSTRUCTION_ID_CLI, &ProgramCounter);
 	else if( tp->mod1 == 'L' )
 		handle_labels(tp, &ProgramCounter);
 	

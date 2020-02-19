@@ -5,43 +5,99 @@
 
 void ret_handler(TRIPLE_PACKET* tp, unsigned int* PC)
 {
-	printf("ret handler\n");
+	unsigned char*        chp       = get_output_buffer();
+	unsigned int          pl        = get_parse_level();
+	INSTRUCTION_ATTRIBUTE attribute = OP;
+	unsigned char         opc       = 0xC3;
+	if( pl == PARSE_LEVEL_2 )
+		printf("ret handler\n");
+	if( pl == PARSE_LEVEL_2 )
+		printf("opcode: 0x%x\n", opc);
+	chp[*PC] = opc;
 	*PC = *PC + 1;
 }
 
 void cld_handler(TRIPLE_PACKET* tp, unsigned int* PC)
 {
-	printf("cld handler\n");
+	unsigned char*        chp       = get_output_buffer();
+	unsigned int          pl        = get_parse_level();
+	INSTRUCTION_ATTRIBUTE attribute = OP;
+	unsigned char         opc       = 0xFC;
+	if( pl == PARSE_LEVEL_2 )
+		printf("cld handler\n");
+	if( pl == PARSE_LEVEL_2 )
+		printf("opcode: 0x%x\n", opc);
+	chp[*PC] = opc;
 	*PC = *PC + 1;
 }
 
 void std_handler(TRIPLE_PACKET* tp, unsigned int* PC)
 {
-	printf("std handler\n");
+	unsigned char*        chp       = get_output_buffer();
+	unsigned int          pl        = get_parse_level();
+	INSTRUCTION_ATTRIBUTE attribute = OP;
+	unsigned char         opc       = 0xFD;
+	if( pl == PARSE_LEVEL_2 )
+		printf("std handler\n");
+	if( pl == PARSE_LEVEL_2 )
+		printf("opcode: 0x%x\n", opc);
+	chp[*PC] = opc;
 	*PC = *PC + 1;
 }
 
 void nop_handler(TRIPLE_PACKET* tp, unsigned int* PC)
 {
-	printf("nop handler\n");
+	unsigned char*        chp       = get_output_buffer();
+	unsigned int          pl        = get_parse_level();
+	INSTRUCTION_ATTRIBUTE attribute = OP;
+	unsigned char         opc       = 0x90;
+	if( pl == PARSE_LEVEL_2 )
+		printf("nop handler\n");
+	if( pl == PARSE_LEVEL_2 )
+		printf("opcode: 0x%x\n", opc);
+	chp[*PC] = opc;
 	*PC = *PC + 1;
 }
 
 void hlt_handler(TRIPLE_PACKET* tp, unsigned int* PC)
 {
-	printf("hlt handler\n");
+	unsigned char*        chp       = get_output_buffer();
+	unsigned int          pl        = get_parse_level();
+	INSTRUCTION_ATTRIBUTE attribute = OP;
+	unsigned char         opc       = 0xF4;
+	if( pl == PARSE_LEVEL_2 )
+		printf("hlt handler\n");
+	if( pl == PARSE_LEVEL_2 )
+		printf("opcode: 0x%x\n", opc);
+	chp[*PC] = opc;
 	*PC = *PC + 1;
 }
 
 void sti_handler(TRIPLE_PACKET* tp, unsigned int* PC)
 {
-	printf("sti handler\n");
+	unsigned char*        chp       = get_output_buffer();
+	unsigned int          pl        = get_parse_level();
+	INSTRUCTION_ATTRIBUTE attribute = OP;
+	unsigned char         opc       = 0xFB;
+	if( pl == PARSE_LEVEL_2 )
+		printf("sti handler\n");
+	if( pl == PARSE_LEVEL_2 )
+		printf("opcode: 0x%x\n", opc);
+	chp[*PC] = opc;
 	*PC = *PC + 1;
 }
 
 void cli_handler(TRIPLE_PACKET* tp, unsigned int* PC)
 {
-	printf("cli handler\n");
+	unsigned char*        chp       = get_output_buffer();
+	unsigned int          pl        = get_parse_level();
+	INSTRUCTION_ATTRIBUTE attribute = OP;
+	unsigned char         opc       = 0xFA;
+	if( pl == PARSE_LEVEL_2 )
+		printf("cli handler\n");
+	if( pl == PARSE_LEVEL_2 )
+		printf("opcode: 0x%x\n", opc);
+	chp[*PC] = opc;
 	*PC = *PC + 1;
 }
 

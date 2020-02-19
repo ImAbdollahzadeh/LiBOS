@@ -26,6 +26,8 @@ int main(void)
 		"\tmov edi, 0xAABBCCDD\n"
 		"\tmov bx, 0x45FF\n"
 		"\tmov ch, 0x7E\n"
+		"\tnop\n"
+		"\tnop\n"
 		"\tadd edx, 0xDDCCBB56\n"
 		"\tmov BYTE[esp+0x28], 0x16\n"
 		"\tmov WORD[ebp+0x00124585], esp\n"
