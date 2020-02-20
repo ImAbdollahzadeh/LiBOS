@@ -23,7 +23,7 @@ const char* global_lookup_table[] = {
 	"ecx", "cx", "ch", "cl", "edx", "dx", "dh", "dl",
 	"esi", "si", "edi", "di", "eip", "ip", "ebp", "bp",
 	"esp", "sp", "ss", "cs", "ds", "es", "fs", "gs", 
-	"eflags", "flags", "pushf", "popf", 
+	"eflags", "flags", "pushf", "popf", "int",
 };
 unsigned int lookup_table_entries = sizeof(global_lookup_table) / sizeof(const char*);
 
@@ -58,18 +58,18 @@ OPCODE opcodes[] = {
 	{"cmp",  OP_REG_REG, 0xFF}, //<-??
 	{"cmp",  OP_MEM_REG, 0xFF}, //<-??
 	{"cmp",  OP_MEM_IMM, 0xFF}, //<-??
-	{"push", OP_X,       0xFF}, //<-??
-	{"push", OP_X,       0xFF}, //<-??
-	{"pop",  OP_X,       0xFF}, //<-??
-	{"pop",  OP_X,       0xFF}, //<-??
-	{"jmp",  OP_X,       0xFF}, //<-??
-	{"jmp",  OP_X,       0xFF}, //<-??
-	{"int",  OP_X,       0xFF}, //<-??
-	{"ret",  OP,         0xFF}, //<-??
-	{"nop",  OP,         0xFF}, //<-??
-	{"hlt",  OP,         0xFF}, //<-??
-	{"cli",  OP,         0xFF}, //<-??
-	{"sti",  OP,         0xFF}, //<-??
+	{"push", OP_REG,     0x50}, 
+	{"push", OP_IMM,     0x68}, 
+	{"pop",  OP_REG,     0x58}, 
+	{"pop",  OP_MEM,     0x8F}, 
+	{"jmp",  OP_REG,     0xFF}, //<-??
+	{"jmp",  OP_REG,     0xFF}, //<-??
+	{"int",  OP_IMM,     0xCD}, 
+	{"ret",  OP,         0xFF}, // they are hard-coded
+	{"nop",  OP,         0xFF}, // they are hard-coded
+	{"hlt",  OP,         0xFF}, // they are hard-coded
+	{"cli",  OP,         0xFF}, // they are hard-coded
+	{"sti",  OP,         0xFF}, // they are hard-coded
 };
 unsigned int sizeof_opcodes = sizeof(opcodes) / sizeof(OPCODE);
 
@@ -410,6 +410,12 @@ void _selection_stub(TRIPLE_PACKET* tp)
 		convert_add_instruction(tp, &ProgramCounter);
 	else if( _strcmp(tp->str1, "sub") )
 		convert_sub_instruction(tp, &ProgramCounter);   
+	else if( _strcmp(tp->str1, "push") )
+		convert_push_instruction(tp, &ProgramCounter);   
+	else if( _strcmp(tp->str1, "pop") )
+		convert_pop_instruction(tp, &ProgramCounter);  
+	else if( _strcmp(tp->str1, "int") )
+		convert_int_instruction(tp, &ProgramCounter);
 	else if( _strcmp(tp->str1, "jmp") )
 		convert_jmp_instruction(tp, &ProgramCounter);
 	else if( _strcmp(tp->str1, "je") )

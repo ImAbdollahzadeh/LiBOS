@@ -35,8 +35,10 @@ typedef enum _INSTRUCTION_ATTRIBUTE {
 	OP_MEM_IMM = 0x04,  /* source: memory  , destination: immediate ex. mov DWORD[addr], 0xAABBCCDD */ 
 	/* 0x05 was reserved for the OS                                                                 */ 
 	OP_MEM_MEM = 0xFF,  /* forbidden                                                                */ 
-	OP_X       = 0x06,  /* source: register, memory, or immediate   ex. push ebp                    */ 
-	OP         = 0x07,  /* source: --,       destination: --        ex. ret                         */ 
+	OP_REG     = 0x06,  /* source: register                         ex. push ebp                    */
+	OP_MEM     = 0x07,  /* source: memory                           ex. pop DWORD[addr]             */
+	OP_IMM     = 0x08,  /* source: immediate                        ex. push 0xFDDAA45              */ 
+	OP         = 0x09,  /* source: --,       destination: --        ex. ret                         */ 
 } INSTRUCTION_ATTRIBUTE;
 
 typedef struct _OPCODE {
@@ -133,6 +135,7 @@ void            convert_je_instruction                        (TRIPLE_PACKET* tp
 void            convert_xor_instruction                       (TRIPLE_PACKET* tp, unsigned int* PC);
 void            convert_pop_instruction                       (TRIPLE_PACKET* tp, unsigned int* PC);
 void            convert_push_instruction                      (TRIPLE_PACKET* tp, unsigned int* PC);
+void            convert_int_instruction                       (TRIPLE_PACKET* tp, unsigned int* PC);
 void            convert_singlets_instruction                  (TRIPLE_PACKET* tp, unsigned int id, unsigned int* PC);
 void            parse_0                                       (const char* file, TRIPLE_PACKET** tp, unsigned int* lines, char* p);
 void            parse_2                                       (TRIPLE_PACKET* tp, unsigned int counts);
