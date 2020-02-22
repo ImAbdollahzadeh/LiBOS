@@ -5,7 +5,7 @@
 
 void convert_cmp_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 {
-	printf("CMP DECODING\n\t");
+	printf("CMP DECODING: ");
 	
 	unsigned int pl = get_parse_level();
 	if( (pl == 0xFF) || (!pl) )

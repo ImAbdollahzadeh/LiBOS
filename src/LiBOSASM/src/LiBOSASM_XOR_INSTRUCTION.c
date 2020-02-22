@@ -6,7 +6,7 @@
 void convert_xor_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 {
 	if( get_parse_level() == PARSE_LEVEL_2 )
-		printf("XOR DECODING\n\t");
+		printf("XOR DECODING: ");
 	
 	unsigned int pl = get_parse_level();
 	if( (pl == 0xFF) || (!pl) )

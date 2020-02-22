@@ -11,7 +11,7 @@ push imm32
 void convert_push_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 {
 	if( get_parse_level() == PARSE_LEVEL_2 )
-		printf("PUSH DECODING\n\t");
+		printf("PUSH DECODING: ");
 	
 	unsigned char* chp            = get_output_buffer();
 	unsigned int   pl             = get_parse_level();
@@ -149,7 +149,7 @@ void convert_push_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 					chp[*PC+0] = opc;
 					*PC = *PC + 1;
 					if( pl == PARSE_LEVEL_2 )
-						printf("imm: %c%c %c%c %c%c %c%c\n", 
+						printf("imm: %c%c %c%c %c%c %c%c, ", 
 							immediate32[0], immediate32[1], immediate32[2], immediate32[3],
 							immediate32[4], immediate32[5], immediate32[6], immediate32[7]);
 					chp[*PC+0] = byte_string_to_byte(immediate32[0], immediate32[1]);

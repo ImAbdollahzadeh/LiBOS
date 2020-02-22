@@ -10,7 +10,7 @@ int imm8
 void convert_int_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 {
 	if( get_parse_level() == PARSE_LEVEL_2 )
-		printf("INT DECODING\n\t");
+		printf("INT DECODING: ");
 	
 	unsigned char* chp            = get_output_buffer();
 	unsigned int   pl             = get_parse_level();

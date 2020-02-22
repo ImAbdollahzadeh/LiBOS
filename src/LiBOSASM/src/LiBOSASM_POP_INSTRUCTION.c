@@ -11,7 +11,7 @@ pop imm32
 void convert_pop_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 {
 	if( get_parse_level() == PARSE_LEVEL_2 )
-		printf("POP DECODING\n\t");
+		printf("POP DECODING: ");
 	
 	unsigned char* chp            = get_output_buffer();
 	unsigned int   pl             = get_parse_level();
@@ -296,7 +296,7 @@ EXIT_POSITION:
 							break;
 						case 0x2: 
 							if( pl == PARSE_LEVEL_2 )
-								printf("displacement: %c%c %c%c %c%c %c%c\n", 
+								printf("displacement: %c%c %c%c %c%c %c%c, ", 
 								   displacement32[0], displacement32[1], displacement32[2], displacement32[3],
 								   displacement32[4], displacement32[5], displacement32[6], displacement32[7]);
 							chp[*PC+0] = byte_string_to_byte(displacement32[0], displacement32[1]);
@@ -307,7 +307,7 @@ EXIT_POSITION:
 							break;
 						case 0x4:
 							if( pl == PARSE_LEVEL_2 )
-								printf("displacement: %c%c %c%c\n", 
+								printf("displacement: %c%c %c%c, ", 
 								   displacement16[0], displacement16[1], displacement16[2], displacement16[3]);
 							chp[*PC+0] = byte_string_to_byte(displacement16[0], displacement16[1]);
 							chp[*PC+1] = byte_string_to_byte(displacement16[2], displacement16[3]);
@@ -315,7 +315,7 @@ EXIT_POSITION:
 							break;
 						case 0x8:
 							if( pl == PARSE_LEVEL_2 )
-								printf("displacement: %c%c\n", displacement8[0], displacement8[1]);
+								printf("displacement: %c%c, ", displacement8[0], displacement8[1]);
 							chp[*PC+0] = byte_string_to_byte(displacement8[0], displacement8[1]);
 							*PC = *PC + 1;
 							break;

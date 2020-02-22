@@ -47,6 +47,21 @@ typedef struct _OPCODE {
 	unsigned char         base_binary_code;
 } OPCODE;
 
+typedef enum {
+    DATA_TYPE_BYTE    = 1,
+    DATA_TYPE_WORD    = 2,
+    DATA_TYPE_DWORD   = 4,
+    DATA_TYPE_QWORD   = 8,
+    DATA_TYPE_XMMWORD = 16,
+} DATA_TYPE;
+
+typedef struct _DATA_SECTION_ENTRIES {
+    char           data_name[128];
+    unsigned int   data_size;
+    unsigned char* data_buffer;
+    DATA_TYPE      data_type;
+} DATA_SECTION_ENTRIES;
+
 enum REG_32 {
 	IMM_EAX,
 	IMM_ECX,
@@ -140,10 +155,13 @@ void            convert_singlets_instruction                  (TRIPLE_PACKET* tp
 void            parse_0                                       (const char* file, TRIPLE_PACKET** tp, unsigned int* lines, char* p);
 void            parse_2                                       (TRIPLE_PACKET* tp, unsigned int counts);
 void            handle_labels                                 (TRIPLE_PACKET* tp, unsigned int* PC);
+void            handle_data_section                           (TRIPLE_PACKET* tp);
 void            zero_programCounter                           (void);
 unsigned int    get_programCounter                            (void);
 unsigned int    get_parse_level                               (void);
 void            image_file_make                               (TRIPLE_PACKET* tp, unsigned int counts, IMAGE_FILE_MEMORY* image_file_memory);
 void            dump_output_buffer                            (void);
+void            dump_data_section_table_entries               (void);
+void            print_file                                    (char* file);
 
 #endif // !__LIBOSASM__H__

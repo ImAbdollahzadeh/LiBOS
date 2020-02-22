@@ -5,7 +5,7 @@
 
 void convert_jmp_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 {
-	printf("JMP DECODING\n\t");
+	printf("JMP DECODING: ");
 	
 	unsigned int pl = get_parse_level();
 	if( (pl == 0xFF) || (!pl) )
@@ -97,7 +97,7 @@ CONVERT_JMP_END:
 
 void convert_jne_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 {
-	printf("JNE DECODING\n\t");
+	printf("JNE DECODING: ");
 	
 	unsigned int pl = get_parse_level();
 	if( (pl == 0xFF) || (!pl) )
@@ -108,7 +108,7 @@ void convert_jne_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 
 void convert_je_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 {
-	printf("JE DECODING\n\t");
+	printf("JE DECODING: ");
 	
 	unsigned int pl = get_parse_level();
 	if( (pl == 0xFF) || (!pl) )
@@ -119,7 +119,7 @@ void convert_je_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 
 void convert_jnz_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 {
-	printf("JNZ DECODING\n\t");
+	printf("JNZ DECODING: ");
 	
 	unsigned int pl = get_parse_level();
 	if( (pl == 0xFF) || (!pl) )
@@ -130,7 +130,7 @@ void convert_jnz_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 
 void convert_jz_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 {
-	printf("JZ DECODING\n\t");
+	printf("JZ DECODING: ");
 	
 	unsigned int pl = get_parse_level();
 	if( (pl == 0xFF) || (!pl) )

@@ -12,6 +12,9 @@ unsigned char output_buffer[16*1024 /* for nor 16 KiB */];
 SYMBOLIC_LABEL table_of_labels[0xFFFF];
 unsigned int table_of_labels_count = 0;
 
+DATA_SECTION_ENTRIES data_entries_table[1024];
+unsigned int data_entries_table_count = 0;
+
 //....................................................................................................................................
 
 const char* global_lookup_table[] = {
@@ -23,15 +26,20 @@ const char* global_lookup_table[] = {
 	"ecx", "cx", "ch", "cl", "edx", "dx", "dh", "dl",
 	"esi", "si", "edi", "di", "eip", "ip", "ebp", "bp",
 	"esp", "sp", "ss", "cs", "ds", "es", "fs", "gs", 
-	"eflags", "flags", "pushf", "popf", "int",
+	"eflags", "flags", "pushf", "popf", "int", "jz", 
+	"jnz",
 };
 unsigned int lookup_table_entries = sizeof(global_lookup_table) / sizeof(const char*);
 
 //....................................................................................................................................
 
 const char* global_mem_table[] = {
-	"[", "]", "byte", "BYTE", "word", "WORD", 
-	"dword", "DWORD", "xmmword", "XMMWORD", "qword", "QWORD",
+	"[", "]", 
+	"byte", "BYTE", 
+	"word", "WORD", 
+	"dword", "DWORD", 
+	"qword", "QWORD",
+	"xmmword", "XMMWORD", 
 };
 unsigned int mem_table_entries = sizeof(global_mem_table) / sizeof(const char*);
 
@@ -394,10 +402,10 @@ FINALIZE:
 void dump_table_of_labels(void)
 {
 	unsigned int i;
+	printf("........ DUMP TABLE OF LABELS ..................................\n");
 	for(i=0;i<table_of_labels_count;i++)
-	{
 		printf("%u: string: %s, address: 0x%x\n", i, table_of_labels[i].string, table_of_labels[i].address);
-	}
+	printf("................................................................\n");
 }
 
 //....................................................................................................................................
@@ -442,8 +450,10 @@ void _selection_stub(TRIPLE_PACKET* tp)
 		convert_singlets_instruction(tp, SINGLET_INSTRUCTION_ID_STI, &ProgramCounter);
 	else if( _strcmp(tp->str1, "cli") )
 		convert_singlets_instruction(tp, SINGLET_INSTRUCTION_ID_CLI, &ProgramCounter);
-	else if( tp->mod1 == 'L' )
+	else if( tp->mod1 == 'L' && _strcmp(tp->str2, "!") )
 		handle_labels(tp, &ProgramCounter);
+	else if( tp->mod1 == 'L' && (!_strcmp(tp->str2, "!")) )
+		handle_data_section(tp);
 	
 	else {}
 }
@@ -455,11 +465,13 @@ void parse_1_or__convert_instructions_line_by_line(TRIPLE_PACKET* tp, unsigned i
 	parse_level = PARSE_LEVEL_1;
 	
 	unsigned int i = 0;
+	printf("........ FIRST PARSE ...........................................\n");
 	while(i < counts)
 	{
 		_selection_stub(&tp[i]);
 		i++;
 	}
+	printf("................................................................\n");
 }
 
 //....................................................................................................................................
@@ -504,7 +516,7 @@ void parse_0(const char* file, TRIPLE_PACKET** tp, unsigned int* lines, char* p)
 	unsigned int j;
 	
 	parse_level = PARSE_LEVEL_0;
-	
+	printf("........ ZEROTH PARSE ..........................................\n");
 	printf("%u lines\n", *lines = how_many_lines(file));
 	*tp = alloc_units(*lines);
 
@@ -523,6 +535,7 @@ void parse_0(const char* file, TRIPLE_PACKET** tp, unsigned int* lines, char* p)
 		counter = 0;
 		f++;
 	}
+	printf("................................................................\n");
 }
 
 //....................................................................................................................................
@@ -532,11 +545,13 @@ void parse_2(TRIPLE_PACKET* tp, unsigned int counts)
 	parse_level = PARSE_LEVEL_2;
 	
 	unsigned int i = 0;
+	printf("........ SECOND PARSE ..........................................\n");
 	while(i < counts)
 	{
 		_selection_stub(&tp[i]);
 		i++;
 	}
+	printf("................................................................\n");
 }
 
 //....................................................................................................................................
@@ -555,6 +570,102 @@ void handle_labels(TRIPLE_PACKET* tp, unsigned int* PC)
  	        table_of_labels[i].address = (void*)(*PC);
  	    }
  	}
+}
+
+//....................................................................................................................................
+
+void handle_data_section(TRIPLE_PACKET* tp)
+{
+	unsigned int parse_level = get_parse_level();
+	if( parse_level == PARSE_LEVEL_2 )
+		return;
+	
+	char* ch = tp->str1;
+	unsigned int sz = 0, i = 0;
+	
+	while(*ch != ':')
+	{
+		data_entries_table[data_entries_table_count].data_name[i] = *ch++;
+		i++;
+	}
+	data_entries_table[data_entries_table_count].data_name[i+1] = '\0';
+	ch = tp->str2;
+	while(*ch++ != 'd');
+	 
+	if(*ch == 'b')
+	{
+		data_entries_table[data_entries_table_count].data_type = DATA_TYPE_BYTE;
+		ch++;
+	}
+	else if(*ch == 'w')
+	{
+		data_entries_table[data_entries_table_count].data_type = DATA_TYPE_WORD;
+		ch++;
+	}
+	else if(*ch == 'd')
+	{
+		data_entries_table[data_entries_table_count].data_type = DATA_TYPE_DWORD;
+		ch++;
+	}
+	else if(*ch == 'q')
+	{
+		data_entries_table[data_entries_table_count].data_type = DATA_TYPE_QWORD;
+		ch++;
+	}
+	else if(*ch == 'x')
+	{
+		data_entries_table[data_entries_table_count].data_type = DATA_TYPE_XMMWORD;
+		ch++;
+	}
+	
+	ch = tp->str3;
+	if(data_entries_table[data_entries_table_count].data_type == DATA_TYPE_BYTE)    
+	{
+		while(*ch++ != 39) // ascii code for '
+			;
+		char* tmp_ch = ch;
+		while(*ch++ != 39)
+			sz++;
+		
+		data_entries_table[data_entries_table_count].data_size = sz;
+		data_entries_table[data_entries_table_count].data_buffer = (unsigned char*)malloc(sz);
+		for(i=0; i<sz; i++)
+			data_entries_table[data_entries_table_count].data_buffer[i] = *tmp_ch++;
+	} 
+	
+	else if(data_entries_table[data_entries_table_count].data_type == DATA_TYPE_WORD)    
+	{
+		data_entries_table[data_entries_table_count].data_size = 2;
+		data_entries_table[data_entries_table_count].data_buffer = (unsigned char*)malloc(2);
+		for(i=0; i<sz; i++)
+			data_entries_table[data_entries_table_count].data_buffer[i] = 0;
+	}
+	
+	else if(data_entries_table[data_entries_table_count].data_type == DATA_TYPE_DWORD)    
+	{
+		data_entries_table[data_entries_table_count].data_size = 4;
+		data_entries_table[data_entries_table_count].data_buffer = (unsigned char*)malloc(4);
+		for(i=0; i<sz; i++)
+			data_entries_table[data_entries_table_count].data_buffer[i] = 0;
+	}
+	
+	else if(data_entries_table[data_entries_table_count].data_type == DATA_TYPE_QWORD)    
+	{
+		data_entries_table[data_entries_table_count].data_size = 8;
+		data_entries_table[data_entries_table_count].data_buffer = (unsigned char*)malloc(8);
+		for(i=0; i<sz; i++)
+			data_entries_table[data_entries_table_count].data_buffer[i] = 0;
+	}
+	
+	else if(data_entries_table[data_entries_table_count].data_type == DATA_TYPE_XMMWORD)    
+	{
+		data_entries_table[data_entries_table_count].data_size = 16;
+		data_entries_table[data_entries_table_count].data_buffer = (unsigned char*)malloc(16);
+		for(i=0; i<sz; i++)
+			data_entries_table[data_entries_table_count].data_buffer[i] = 0;
+	}
+
+	data_entries_table_count++;
 }
 
 //....................................................................................................................................
@@ -611,7 +722,9 @@ void image_file_make(TRIPLE_PACKET* tp, unsigned int counts, IMAGE_FILE_MEMORY* 
 
 void dump_image_file_memory(IMAGE_FILE_MEMORY* image_file_memory)
 {
+	printf("........ DUMP IMAGE MEMORY OUTPUT ..............................\n");
 	printf("ORIGIN: 0x%x, SIZE: %u bytes\n", image_file_memory->physical_origin, image_file_memory->total_sizeof_image);
+	printf("................................................................\n");
 }
 
 //....................................................................................................................................
@@ -628,10 +741,36 @@ void dump_output_beffer(void)
 	unsigned int count = get_programCounter(), i;
 	unsigned char* out = get_output_buffer();
 	
-	printf("DUMP OUTPUT BUFFER -+-+-+--+-+-+-+-+\n");
+	printf("........ DUMP OUTPUT BUFFER ....................................\n");
 	for(i = 0; i < count; i++)
 		printf("%x ", out[i]);
-	printf("\n-+-+-+-+-+-+-+-+-+-+-+-+--+-+-+-+-+\n");
+	printf("\n................................................................\n");
+}
+
+//....................................................................................................................................
+
+void dump_data_section_table_entries(void)
+{
+	unsigned int i;
+	printf("........ DUMP TABLE OF DATA ENTRIES ............................\n");
+	for(i = 0; i < data_entries_table_count; i++)
+	{
+		printf("entry %u:\n", i);
+		printf("    data_name: %s\n", data_entries_table[i].data_name);
+		printf("    data_type: %i\n", data_entries_table[i].data_type);
+		printf("    data_size: %u\n", data_entries_table[i].data_size);
+		printf("    data_buffer: %s\n", data_entries_table[i].data_buffer);
+	}
+	printf("................................................................\n");
+}
+
+//....................................................................................................................................
+
+void print_file(char* file)
+{
+	printf("........ PRINT FILE ............................................\n");
+	printf(file);
+	printf("................................................................\n");
 }
 
 //....................................................................................................................................

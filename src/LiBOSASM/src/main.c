@@ -3,7 +3,6 @@
 
 int main(void)
 {
-	printf("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
 	unsigned int lines = 0;
 	unsigned int j;
 	TRIPLE_PACKET* tp = 0;
@@ -42,27 +41,25 @@ int main(void)
 		"_THIRD_AND_LAST@@_LABEL:\n"
 		"\tret\n"
 		"[SECTION .DATA]\n"
-		"string_to_be_printed: db ""ImanAbdollahzadehLiBOS"", 0x0A, 0x00\n"
-		"_rgb@@mask_black: dw 0x00000000\n";
+		"string_to_be_printed: db 'ImanAbdollahzadehLiBOS'\n"
+		"_rgb@@mask_black:     dd  0x00000000\n"
+		"libos_word_data:      dw  0x0000\n";
 	
 	parse_0(file, &tp, &lines, p);
 	
-	printf(file);
+	print_file(file);
 	
 	parse_1_or__convert_instructions_line_by_line(tp, lines);
 	dump_table_of_labels();
 	zero_programCounter();
-	printf("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
 	
 	IMAGE_FILE_MEMORY ifm;
 	parse_2(tp, lines);
 	ifm.total_sizeof_image = get_programCounter();
 	image_file_make(tp, lines, &ifm);
-	printf("DUMP TABLE-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
 	dump_table_of_labels();
-	printf("IMAGE_FILE_MEMORY-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
 	dump_image_file_memory(&ifm);
-	printf("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
 	dump_output_beffer();
+	dump_data_section_table_entries();
 }
 
