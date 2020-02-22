@@ -89,6 +89,8 @@ unsigned int in_opcodes(const char* str)
 {
 	unsigned int i = 0;
 	unsigned int length = 0, ret = 1;
+	unsigned int str_length = string_length(str);
+	unsigned int str_length_copy = str_length;
 	char* trg = 0;
 	char* src = str;
 	while(i < lookup_table_entries)
@@ -98,14 +100,16 @@ unsigned int in_opcodes(const char* str)
 		
 		while(length--)
 		{
+			str_length_copy--;
 			if(*src++ != *trg++)
 				ret = 0;
 		}
-		if(ret)
+		if(ret && !str_length_copy)
 			return 1;
 		i++;
 		src = str;
 		ret = 1;
+		str_length_copy = str_length;
 	}
 	return 0;
 }
@@ -355,7 +359,7 @@ void lex(TRIPLE_PACKET* tp, const char* line)
 {
 	//printf("*** %s\n\n", line);
 	unsigned int size = string_length(line), counter = 0;
-	tp->str1[0] = tp->str2[0] = tp->str3[0] = '!';	
+	tp->str1[0] = tp->str2[0] = tp->str3[0] = '!';
 	char tmp[128], *f = line;
 	while(*f)
 	{
@@ -377,7 +381,7 @@ void lex(TRIPLE_PACKET* tp, const char* line)
 				}
 				tmp[counter] = ']';
 				counter++;
-				tmp[counter] = '\0';			
+				tmp[counter] = '\0';
 				_stub(tp, counter, tmp);
 				counter = 0;
 				f++;
@@ -580,10 +584,10 @@ void handle_labels(TRIPLE_PACKET* tp, unsigned int* PC)
 	
  	for(i=0; i < table_of_labels_count; i++)
  	{
- 	    if( _strcmp(label, table_of_labels[i].string) )
- 	    {
- 	        table_of_labels[i].address = (void*)(*PC);
- 	    }
+ 		if( _strcmp(label, table_of_labels[i].string) )
+ 		{
+ 			table_of_labels[i].address = (void*)(*PC);
+ 		}
  	}
 }
 
@@ -597,7 +601,7 @@ void handle_data_section(TRIPLE_PACKET* tp)
 	
 	char* ch = tp->str1;
 	unsigned int sz = 0, i = 0;
-	unsigned char immediate128[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+	unsigned char immediate128[32] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 	
 	while(*ch != ':')
 	{
@@ -628,7 +632,7 @@ void handle_data_section(TRIPLE_PACKET* tp)
 		data_entries_table[data_entries_table_count].data_type = DATA_TYPE_QWORD;
 		ch++;
 	}
-	else if(*ch == 'x')
+	else if(*ch == 'X')
 	{
 		data_entries_table[data_entries_table_count].data_type = DATA_TYPE_XMMWORD;
 		ch++;
@@ -688,8 +692,23 @@ void handle_data_section(TRIPLE_PACKET* tp)
 	{
 		data_entries_table[data_entries_table_count].data_size = 16;
 		data_entries_table[data_entries_table_count].data_buffer = (unsigned char*)malloc(16);
-		for(i=0; i<sz; i++)
-			data_entries_table[data_entries_table_count].data_buffer[i] = 0;
+		encode_u128(ch, immediate128);
+		data_entries_table[data_entries_table_count].data_buffer[0]  = byte_string_to_byte(immediate128[0], immediate128[1]);
+		data_entries_table[data_entries_table_count].data_buffer[1]  = byte_string_to_byte(immediate128[2], immediate128[3]);
+		data_entries_table[data_entries_table_count].data_buffer[2]  = byte_string_to_byte(immediate128[4], immediate128[5]);
+		data_entries_table[data_entries_table_count].data_buffer[3]  = byte_string_to_byte(immediate128[6], immediate128[7]);
+		data_entries_table[data_entries_table_count].data_buffer[4]  = byte_string_to_byte(immediate128[8], immediate128[9]);
+		data_entries_table[data_entries_table_count].data_buffer[5]  = byte_string_to_byte(immediate128[10], immediate128[11]);
+		data_entries_table[data_entries_table_count].data_buffer[6]  = byte_string_to_byte(immediate128[12], immediate128[13]);
+		data_entries_table[data_entries_table_count].data_buffer[7]  = byte_string_to_byte(immediate128[14], immediate128[15]);
+		data_entries_table[data_entries_table_count].data_buffer[8]  = byte_string_to_byte(immediate128[16], immediate128[17]);
+		data_entries_table[data_entries_table_count].data_buffer[9]  = byte_string_to_byte(immediate128[18], immediate128[19]);
+		data_entries_table[data_entries_table_count].data_buffer[10] = byte_string_to_byte(immediate128[20], immediate128[21]);
+		data_entries_table[data_entries_table_count].data_buffer[11] = byte_string_to_byte(immediate128[22], immediate128[23]);
+		data_entries_table[data_entries_table_count].data_buffer[12] = byte_string_to_byte(immediate128[24], immediate128[25]);
+		data_entries_table[data_entries_table_count].data_buffer[13] = byte_string_to_byte(immediate128[26], immediate128[27]);
+		data_entries_table[data_entries_table_count].data_buffer[14] = byte_string_to_byte(immediate128[28], immediate128[29]);
+		data_entries_table[data_entries_table_count].data_buffer[15] = byte_string_to_byte(immediate128[30], immediate128[31]);
 	}
 
 	data_entries_table_count++;
@@ -801,7 +820,8 @@ void dump_data_section_table_entries(void)
 				printf("    data_buffer: 0x%llx\n", *(unsigned long long*)(data_entries_table[i].data_buffer));
 				break;
 			case DATA_TYPE_XMMWORD:
-				printf("    data_buffer: %s\n", data_entries_table[i].data_buffer);
+				printf("    data_buffer: 0x%llx", *(unsigned long long*)((data_entries_table[i].data_buffer) + 8));
+				printf("%llx\n",                  *(unsigned long long*)(data_entries_table[i].data_buffer));
 				break;
 		}
 		

@@ -10,7 +10,7 @@ int main(void)
 	
 	const char* file = 
 		"[LiBOSASM 32-bit]\n"
-		"[ORIGIN 0x00009400]\n"
+		"[ORIGIN 0x38EF501A]\n"
 		"[SECTION .CODE]\n"
 		"global _start\n"
 		"global vid_pl\n"
@@ -44,6 +44,7 @@ int main(void)
 		"string_to_be_printed: db 'ImanAbdollahzadehLiBOS'\n"
 		"_rgb@@mask_black:     dd  0x23AB8FC6\n"
 		"libos_word_data:      dw  0x8F7A\n"
+		"simd_operation_rgba:  dX  0xFF000000FF111111FF222222FF33333333\n"
 		"_@@an_example_qword:  dq  0x112233445678AEF0\n";
 	
 	parse_0(file, &tp, &lines, p);

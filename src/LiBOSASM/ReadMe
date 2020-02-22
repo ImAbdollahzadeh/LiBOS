@@ -30,10 +30,22 @@
 			the data definition must be done in one line, therefore breaking the line by enter, is invalid
 			section .DATA must be declared ALWAYS at the end of the file after section .CODE
 			they obey the naming as for the labels (see below)
+			data types are:
+				db to define 1 to n bytes as string
+				dw to define 1 WORD data
+				dd to define 1 DWORD data
+				dq to define 1 QWORD data
+				dX (and not dx to be confused with dx register) to define 1 XMMWORD data
+
+			all numeric data must be goven in hexadecimal form like 0xFF
+			to define a string of characters use '' and not ""
+			all special characters such as \n and \t must be defined inside '' for the string
+
 			example:
 				[SECTION .DATA]
-				string_to_be_printed: db "LiBOS assembler version 0.00", 0x0A, 0x00
-				_@@__rgb_black_mask: dw 0x00000000
+				string_to_be_printed: db 'LiBOS assembler version 0.00\n\0'
+				_@@__rgb_black_mask: dw 0x0000
+				simd_operation_data: dX 0xFFFFFFFF000000001111111122222222
 
 		several label examples:
 			__label@@__assembler12F0:
@@ -44,6 +56,7 @@
 			all instructions include lower case mnemonics
 			all memory sizes are upper case
 			all numbers are in hexadecimal with 0x initiation like 0xFFAABBC7
+			to define a simd 128-bit data from integer values use: 0xAAAAAAAABBBBBBBBCCCCCCCCDDDDDDDD
 			all addresses should be 32-bits hexadecimal numbers
 			all numbers should be 32-bits hexadecimal like 0x00000042 instead of only 0x42
 			all numbers for 16-bit instructions are hexadecimal 16-bits like 'mov cx, 0x45FA'
