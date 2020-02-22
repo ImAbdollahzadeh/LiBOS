@@ -15,6 +15,8 @@ unsigned int table_of_labels_count = 0;
 DATA_SECTION_ENTRIES data_entries_table[1024];
 unsigned int data_entries_table_count = 0;
 
+unsigned int data_section_identifier = 0;
+
 //....................................................................................................................................
 
 const char* global_lookup_table[] = {
@@ -195,8 +197,10 @@ unsigned int is_immediate(const char* str)
 unsigned int is_label(const char* str)
 {
 	unsigned int length = string_length(str);
-	if(str[length - 1] == ':')
-		return 1;	
+	if(str[length - 1] == ':' && !data_section_identifier)
+		return 1;
+	if(str[length - 1] == ':' && data_section_identifier)
+		return 2;
 	return 0;
 }
 
@@ -221,13 +225,17 @@ void map_machine_codes(TRIPLE_PACKET* tp)
 		{
 			//printf("%c", 'D');
 			tp->mod1 = 'D';
+			
+			// [SECTION .DATA] case
+			if( _contain(tp->str1, ".DATA") )
+				data_section_identifier = 1;
 		}
 		else if( is_immediate(s) )
 		{
 			//printf("%c", 'I');
 			tp->mod1 = 'I';
 		}
-		else if( is_label(s) )
+		else if( is_label(s) == 1 )
 		{
 			//printf("%c", 'L');
 			tp->mod1 = 'L';
@@ -235,6 +243,13 @@ void map_machine_codes(TRIPLE_PACKET* tp)
 			table_of_labels[table_of_labels_count].address = 0;
 			table_of_labels_count++;
 		}
+		
+		else if( is_label(s) == 2 )
+		{
+			//printf("%c", 'L');
+			tp->mod1 = 'L';
+		}
+		
 		else
 		{
 			//printf("%c", '.');
@@ -582,6 +597,7 @@ void handle_data_section(TRIPLE_PACKET* tp)
 	
 	char* ch = tp->str1;
 	unsigned int sz = 0, i = 0;
+	unsigned char immediate128[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 	
 	while(*ch != ':')
 	{
@@ -637,24 +653,35 @@ void handle_data_section(TRIPLE_PACKET* tp)
 	{
 		data_entries_table[data_entries_table_count].data_size = 2;
 		data_entries_table[data_entries_table_count].data_buffer = (unsigned char*)malloc(2);
-		for(i=0; i<sz; i++)
-			data_entries_table[data_entries_table_count].data_buffer[i] = 0;
+		encode_u16(ch, immediate128);
+		data_entries_table[data_entries_table_count].data_buffer[0] = byte_string_to_byte(immediate128[0], immediate128[1]);
+		data_entries_table[data_entries_table_count].data_buffer[1] = byte_string_to_byte(immediate128[2], immediate128[3]);
 	}
 	
 	else if(data_entries_table[data_entries_table_count].data_type == DATA_TYPE_DWORD)    
 	{
 		data_entries_table[data_entries_table_count].data_size = 4;
 		data_entries_table[data_entries_table_count].data_buffer = (unsigned char*)malloc(4);
-		for(i=0; i<sz; i++)
-			data_entries_table[data_entries_table_count].data_buffer[i] = 0;
+		encode_u32(ch, immediate128);
+		data_entries_table[data_entries_table_count].data_buffer[0] = byte_string_to_byte(immediate128[0], immediate128[1]);
+		data_entries_table[data_entries_table_count].data_buffer[1] = byte_string_to_byte(immediate128[2], immediate128[3]);
+		data_entries_table[data_entries_table_count].data_buffer[2] = byte_string_to_byte(immediate128[4], immediate128[5]);
+		data_entries_table[data_entries_table_count].data_buffer[3] = byte_string_to_byte(immediate128[6], immediate128[7]);
 	}
 	
 	else if(data_entries_table[data_entries_table_count].data_type == DATA_TYPE_QWORD)    
 	{
 		data_entries_table[data_entries_table_count].data_size = 8;
 		data_entries_table[data_entries_table_count].data_buffer = (unsigned char*)malloc(8);
-		for(i=0; i<sz; i++)
-			data_entries_table[data_entries_table_count].data_buffer[i] = 0;
+		encode_u64(ch, immediate128);
+		data_entries_table[data_entries_table_count].data_buffer[0] = byte_string_to_byte(immediate128[0], immediate128[1]);
+		data_entries_table[data_entries_table_count].data_buffer[1] = byte_string_to_byte(immediate128[2], immediate128[3]);
+		data_entries_table[data_entries_table_count].data_buffer[2] = byte_string_to_byte(immediate128[4], immediate128[5]);
+		data_entries_table[data_entries_table_count].data_buffer[3] = byte_string_to_byte(immediate128[6], immediate128[7]);
+		data_entries_table[data_entries_table_count].data_buffer[4] = byte_string_to_byte(immediate128[8], immediate128[9]);
+		data_entries_table[data_entries_table_count].data_buffer[5] = byte_string_to_byte(immediate128[10], immediate128[11]);
+		data_entries_table[data_entries_table_count].data_buffer[6] = byte_string_to_byte(immediate128[12], immediate128[13]);
+		data_entries_table[data_entries_table_count].data_buffer[7] = byte_string_to_byte(immediate128[14], immediate128[15]);
 	}
 	
 	else if(data_entries_table[data_entries_table_count].data_type == DATA_TYPE_XMMWORD)    
@@ -759,7 +786,25 @@ void dump_data_section_table_entries(void)
 		printf("    data_name: %s\n", data_entries_table[i].data_name);
 		printf("    data_type: %i\n", data_entries_table[i].data_type);
 		printf("    data_size: %u\n", data_entries_table[i].data_size);
-		printf("    data_buffer: %s\n", data_entries_table[i].data_buffer);
+		switch( data_entries_table[i].data_type )
+		{
+			case DATA_TYPE_BYTE:
+				printf("    data_buffer: %s\n", data_entries_table[i].data_buffer);
+				break;
+			case DATA_TYPE_WORD:
+				printf("    data_buffer: 0x%x\n", *(unsigned short*)(data_entries_table[i].data_buffer));
+				break;
+			case DATA_TYPE_DWORD:
+				printf("    data_buffer: 0x%x\n", *(unsigned int*)(data_entries_table[i].data_buffer));
+				break;
+			case DATA_TYPE_QWORD:
+				printf("    data_buffer: 0x%llx\n", *(unsigned long long*)(data_entries_table[i].data_buffer));
+				break;
+			case DATA_TYPE_XMMWORD:
+				printf("    data_buffer: %s\n", data_entries_table[i].data_buffer);
+				break;
+		}
+		
 	}
 	printf("................................................................\n");
 }
@@ -771,6 +816,13 @@ void print_file(char* file)
 	printf("........ PRINT FILE ............................................\n");
 	printf(file);
 	printf("................................................................\n");
+}
+
+//....................................................................................................................................
+
+void zero_data_section_identifier(void)
+{
+	data_section_identifier = 0;
 }
 
 //....................................................................................................................................

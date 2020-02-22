@@ -11,6 +11,8 @@ unsigned int   immediate32_string_to_hex                   (const char* s);
 unsigned short immediate16_string_to_hex                   (const char* s);
 unsigned char  immediate8_string_to_hex                    (const char* s);
 unsigned int   address_string_to_hex                       (const char* s);
+void           encode_u128                                 (const char* s, char* src);
+void           encode_u64                                  (const char* s, char* src);
 void           encode_u32                                  (const char* s, char* src);
 void           encode_u16                                  (const char* s, char* src);
 void           encode_u8                                   (const char* s, char* src);

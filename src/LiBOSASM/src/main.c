@@ -42,8 +42,9 @@ int main(void)
 		"\tret\n"
 		"[SECTION .DATA]\n"
 		"string_to_be_printed: db 'ImanAbdollahzadehLiBOS'\n"
-		"_rgb@@mask_black:     dd  0x00000000\n"
-		"libos_word_data:      dw  0x0000\n";
+		"_rgb@@mask_black:     dd  0x23AB8FC6\n"
+		"libos_word_data:      dw  0x8F7A\n"
+		"_@@an_example_qword:  dq  0x112233445678AEF0\n";
 	
 	parse_0(file, &tp, &lines, p);
 	
@@ -52,6 +53,7 @@ int main(void)
 	parse_1_or__convert_instructions_line_by_line(tp, lines);
 	dump_table_of_labels();
 	zero_programCounter();
+	zero_data_section_identifier();
 	
 	IMAGE_FILE_MEMORY ifm;
 	parse_2(tp, lines);

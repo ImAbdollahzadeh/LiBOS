@@ -157,6 +157,7 @@ void            parse_2                                       (TRIPLE_PACKET* tp
 void            handle_labels                                 (TRIPLE_PACKET* tp, unsigned int* PC);
 void            handle_data_section                           (TRIPLE_PACKET* tp);
 void            zero_programCounter                           (void);
+void            zero_data_section_identifier                  (void);
 unsigned int    get_programCounter                            (void);
 unsigned int    get_parse_level                               (void);
 void            image_file_make                               (TRIPLE_PACKET* tp, unsigned int counts, IMAGE_FILE_MEMORY* image_file_memory);
