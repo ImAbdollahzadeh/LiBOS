@@ -9,6 +9,9 @@ unsigned char output_buffer[16*1024 /* for nor 16 KiB */];
 
 //....................................................................................................................................
 
+NUMERIC_TOKEN table_of_numeric_tokens[0xFFFF];
+unsigned int  table_of_numeric_tokens_count = 0;
+
 SYMBOLIC_LABEL table_of_labels[0xFFFF];
 unsigned int table_of_labels_count = 0;
 
@@ -82,6 +85,16 @@ OPCODE opcodes[] = {
 	{"sti",  OP,         0xFF}, // they are hard-coded
 };
 unsigned int sizeof_opcodes = sizeof(opcodes) / sizeof(OPCODE);
+
+//....................................................................................................................................
+
+unsigned int is_numeric_token(const char* str)
+{
+	unsigned int length = string_length(str);
+	if(*str == '$' && str[length-1] != ':')
+		return 1;
+	return 0;
+}
 
 //....................................................................................................................................
 
@@ -252,6 +265,12 @@ void map_machine_codes(TRIPLE_PACKET* tp)
 		{
 			//printf("%c", 'L');
 			tp->mod1 = 'L';
+		}
+		
+		else if( is_numeric_token(s) )
+		{
+			//printf("%c", 'N');
+			tp->mod1 = 'N';
 		}
 		
 		else
@@ -473,6 +492,8 @@ void _selection_stub(TRIPLE_PACKET* tp)
 		handle_labels(tp, &ProgramCounter);
 	else if( tp->mod1 == 'L' && (!_strcmp(tp->str2, "!")) )
 		handle_data_section(tp);
+	else if( tp->mod1 == 'N' )
+		handle_numeric_table(tp);
 	
 	else {}
 }
@@ -843,6 +864,44 @@ void print_file(char* file)
 void zero_data_section_identifier(void)
 {
 	data_section_identifier = 0;
+}
+
+//....................................................................................................................................
+
+void handle_numeric_table(TRIPLE_PACKET* tp)
+{
+	unsigned int pl = get_parse_level();
+	unsigned int pc = get_programCounter();
+	unsigned int i;
+	
+	if( pl == PARSE_LEVEL_1 )
+	{
+		for(i=0; i<table_of_numeric_tokens_count; i++)
+		{
+			if( _strcmp(table_of_numeric_tokens[i].string, tp->str1) )
+			{
+				printf("Numeric token has been already defined ERROR\n");
+				table_of_numeric_tokens[table_of_numeric_tokens_count].string = "FATAL ERROR";
+				table_of_numeric_tokens[table_of_numeric_tokens_count].PC     = 0xFFFFFFFF;
+				table_of_numeric_tokens_count++;
+				return;
+			}
+		}
+		table_of_numeric_tokens[table_of_numeric_tokens_count].string = tp->str1;
+		table_of_numeric_tokens[table_of_numeric_tokens_count].PC     = pc;
+		table_of_numeric_tokens_count++;
+	}
+}
+
+//....................................................................................................................................
+
+void dump_numeric_table(void)
+{
+	unsigned int i;
+	printf("........ DUMP TABLE OF NEMERIC TOKEN ...........................\n");
+	for(i=0; i<table_of_numeric_tokens_count; i++)
+		printf("entry %u: string = %s, PC = %u\n", i, table_of_numeric_tokens[i].string, table_of_numeric_tokens[i].PC);
+	printf("................................................................\n");
 }
 
 //....................................................................................................................................

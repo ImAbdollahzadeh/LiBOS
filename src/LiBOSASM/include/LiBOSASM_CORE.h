@@ -12,6 +12,11 @@ typedef struct _SYMBOLIC_LABEL {
 	void* address;
 } SYMBOLIC_LABEL;
 
+typedef struct _NUMERIC_TOKEN {
+	char*        string;
+	unsigned int PC;
+} NUMERIC_TOKEN;
+
 typedef struct _IMAGE_FILE_MEMORY {
 	void*        physical_origin;
 	unsigned int total_sizeof_image;
@@ -123,6 +128,7 @@ typedef void(*singlet_instructions_handler)(TRIPLE_PACKET* tp, unsigned int* PC)
 
 //....................................................................................................................................
 
+unsigned int    is_numeric_token                              (const char* str);
 unsigned int    in_opcodes                                    (const char* str);
 unsigned int    memory_operands                               (const char* str);
 unsigned int    is_immediate                                  (const char* str);
@@ -156,6 +162,7 @@ void            parse_0                                       (const char* file,
 void            parse_2                                       (TRIPLE_PACKET* tp, unsigned int counts);
 void            handle_labels                                 (TRIPLE_PACKET* tp, unsigned int* PC);
 void            handle_data_section                           (TRIPLE_PACKET* tp);
+void            handle_numeric_table                          (TRIPLE_PACKET* tp);
 void            zero_programCounter                           (void);
 void            zero_data_section_identifier                  (void);
 unsigned int    get_programCounter                            (void);
@@ -163,6 +170,7 @@ unsigned int    get_parse_level                               (void);
 void            image_file_make                               (TRIPLE_PACKET* tp, unsigned int counts, IMAGE_FILE_MEMORY* image_file_memory);
 void            dump_output_buffer                            (void);
 void            dump_data_section_table_entries               (void);
+void            dump_numeric_table                            (void);
 void            print_file                                    (char* file);
 
 #endif // !__LIBOSASM__H__

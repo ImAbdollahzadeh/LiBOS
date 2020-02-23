@@ -61,5 +61,38 @@
 			all numbers should be 32-bits hexadecimal like 0x00000042 instead of only 0x42
 			all numbers for 16-bit instructions are hexadecimal 16-bits like 'mov cx, 0x45FA'
 			all numbers for 8-bit instructions are hexadecimal 8-bits like 'mov cl, 0x4B'
-	
+
+		defining numeric tokens:
+			in order to mark two or more positions in the entire file for further analysis,
+			there is the machanism called 'numeric token'. For instance, we have a subroutine somewhere.
+			We would like to know, during the runtime, the sizeof this particular subroutine.
+			The way to do it is via numeroc token definition.
+
+			Example:
+				...
+				_subroutine_1:
+					$subroutine_1_start
+						push ebp
+						mov ebp, esp
+						mov eax, DWORD[some_address]
+						xor edi, edi					
+						add eax, edi
+						mov esp, ebp
+						pop ebp
+						ret
+					$subroutine_1_end
+
+				_subroutine_2
+					...
+ 
+				Therefore the quantity ($subroutine_1_start - $subroutine_1_end) gives the size of _subroutine_1.
+			The way to define a proper numeric token is to start with a '$' character and follow up with any other
+			characters, numbers expcep '!' character.
+
+			Note that defining two or more similar numeric tokens leads to the whole program crash.
+			Note that you should not finish your numeric token with a ':' character, otherwise LiBOSASSEMBLER 
+			takes it into account as a label.
+ 
+		
+
 		ALL IN ALL, THE NUMBERING, ADDRESSING, AND INSTRUCTIONS ARE 'STRONGLY TYPED'

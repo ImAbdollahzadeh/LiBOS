@@ -17,6 +17,7 @@ int main(void)
 		"_start:\n"
 		"\tpush 0xAA001258\n"
 		"\tpush ebp\n"
+		"\t$1\n"
 		"\tmov ebp, esp\n"
 		"\tmov  WORD[memory_libos], cx\n"
 		"\tmov dh,  BYTE[memory_libos]\n"
@@ -27,17 +28,20 @@ int main(void)
 		"\tmov bx, 0x45FF\n"
 		"\tmov ch, 0x7E\n"
 		"\tnop\n"
+		"\t$2\n"
 		"\tnop\n"
 		"\tadd edx, 0xDDCCBB56\n"
 		"\tmov BYTE[esp+0x28], 0x16\n"
 		"\tmov WORD[ebp+0x00124585], esp\n"
 		"\tjmp _THIRD_AND_LAST@@_LABEL:\n"
 		"\tmov esp, ebp\n"
+		"\t$_SECOND_LABEL_start\n"
 		"__SECOND_LABEL:\n"
 		"\tjmp __SECOND_LABEL:\n"
 		"\tadd esp, ebp\n"
 		"\tpop DWORD[esp+0xFFDDAA56]\n"
 		"\tint 0x03\n"
+		"\t$_SECOND_LABEL_end\n"
 		"_THIRD_AND_LAST@@_LABEL:\n"
 		"\tret\n"
 		"[SECTION .DATA]\n"
@@ -64,5 +68,6 @@ int main(void)
 	dump_image_file_memory(&ifm);
 	dump_output_beffer();
 	dump_data_section_table_entries();
+	dump_numeric_table();
 }
 
