@@ -8,8 +8,8 @@
 #define MODRM_REG(R) ((R)<<3)
 
 typedef struct _SYMBOLIC_LABEL {
-	char* string;
-	void* address;
+	char*        string;
+	unsigned int address;
 } SYMBOLIC_LABEL;
 
 typedef struct _NUMERIC_TOKEN {

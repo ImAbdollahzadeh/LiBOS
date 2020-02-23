@@ -20,5 +20,6 @@ void           extract_from_memory_displacement_as_address (const char* s, char*
 void           extract_from_memory_displacement8           (const char* s, char* dspl);
 void           extract_from_memory_displacement32          (const char* s, char* dspl);
 unsigned char  byte_string_to_byte                         (char*, char*);
+void           _construct_string_from_hex                  (char* string_32_bit, unsigned int hex);
 
 #endif // !__LIBOSASM_STRING__H__

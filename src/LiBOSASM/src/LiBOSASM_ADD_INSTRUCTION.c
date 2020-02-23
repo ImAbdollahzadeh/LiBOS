@@ -39,7 +39,7 @@ void convert_add_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 					if( _strcmp(tp->str2, "eax") )
 					{
 						opc |= _16_32;
-									modrm |= ((1<<7) | (1<<6)); // register
+						modrm |= ((1<<7) | (1<<6)); // register
 						modrm |= IMM_EAX;
 						which_immediate |= (1<<1);
 						encode_u32(tp->str3, immediate32);
@@ -47,15 +47,15 @@ void convert_add_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 					else if( _strcmp(tp->str2, "ecx") )
 					{
 						opc |= _16_32;
-									modrm |= ((1<<7) | (1<<6)); // register
+						modrm |= ((1<<7) | (1<<6)); // register
 						modrm |= IMM_ECX;
-						 which_immediate |= (1<<1);
-						 encode_u32(tp->str3, immediate32);
+						which_immediate |= (1<<1);
+						encode_u32(tp->str3, immediate32);
 					}
 					else if( _strcmp(tp->str2, "edx") )
 					{
 						opc |= _16_32;
-									modrm |= ((1<<7) | (1<<6)); // register
+						modrm |= ((1<<7) | (1<<6)); // register
 						modrm |= IMM_EDX;
 						which_immediate |= (1<<1);
 						encode_u32(tp->str3, immediate32);
@@ -63,7 +63,7 @@ void convert_add_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 					else if( _strcmp(tp->str2, "ebx") )
 					{
 						opc |= _16_32;
-									modrm |= ((1<<7) | (1<<6)); // register
+						modrm |= ((1<<7) | (1<<6)); // register
 						modrm |= IMM_EBX;
 						which_immediate |= (1<<1);
 						encode_u32(tp->str3, immediate32);
@@ -71,7 +71,7 @@ void convert_add_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 					else if( _strcmp(tp->str2, "esp") )
 					{
 						opc |= _16_32;
-									modrm |= ((1<<7) | (1<<6)); // register
+						modrm |= ((1<<7) | (1<<6)); // register
 						modrm |= IMM_ESP;
 						which_immediate |= (1<<1);
 						encode_u32(tp->str3, immediate32);
@@ -79,7 +79,7 @@ void convert_add_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 					else if( _strcmp(tp->str2, "ebp") )
 					{
 						opc |= _16_32;
-									modrm |= ((1<<7) | (1<<6)); // register
+						modrm |= ((1<<7) | (1<<6)); // register
 						modrm |= IMM_EBP;
 						which_immediate |= (1<<1);
 						encode_u32(tp->str3, immediate32);
@@ -87,7 +87,7 @@ void convert_add_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 					else if( _strcmp(tp->str2, "esi") )
 					{
 						opc |= _16_32;
-									modrm |= ((1<<7) | (1<<6)); // register
+						modrm |= ((1<<7) | (1<<6)); // register
 						modrm |= IMM_ESI;
 						which_immediate |= (1<<1);
 						encode_u32(tp->str3, immediate32);
@@ -104,7 +104,7 @@ void convert_add_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 					{
 						prefix = 0x66;
 						opc |= _16_32;
-									modrm |= ((1<<7) | (1<<6)); // register
+						modrm |= ((1<<7) | (1<<6)); // register
 						modrm |= IMM_AX;
 						which_immediate |= (1<<2);
 						encode_u16(tp->str3, immediate16);
@@ -113,7 +113,7 @@ void convert_add_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 					{
 						prefix = 0x66;
 						opc |= _16_32;
-									modrm |= ((1<<7) | (1<<6)); // register
+						modrm |= ((1<<7) | (1<<6)); // register
 						modrm |= IMM_BX;
 						which_immediate |= (1<<2);
 						encode_u16(tp->str3, immediate16);
@@ -122,7 +122,7 @@ void convert_add_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 					{
 						prefix = 0x66;
 						opc |= _16_32;
-									modrm |= ((1<<7) | (1<<6)); // register
+						modrm |= ((1<<7) | (1<<6)); // register
 						modrm |= IMM_CX;
 						which_immediate |= (1<<2);
 						encode_u16(tp->str3, immediate16);
@@ -131,7 +131,7 @@ void convert_add_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 					{
 						prefix = 0x66;
 						opc |= _16_32;
-									modrm |= ((1<<7) | (1<<6)); // register
+						modrm |= ((1<<7) | (1<<6)); // register
 						modrm |= IMM_DX;
 						which_immediate |= (1<<2);
 						encode_u16(tp->str3, immediate16);
@@ -140,7 +140,7 @@ void convert_add_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 					{
 						prefix = 0x66;
 						opc |= _16_32;
-									modrm |= ((1<<7) | (1<<6)); // register
+						modrm |= ((1<<7) | (1<<6)); // register
 						modrm |= IMM_SP;
 						which_immediate |= (1<<2);
 						encode_u16(tp->str3, immediate16);
@@ -149,7 +149,7 @@ void convert_add_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 					{
 						prefix = 0x66;
 						opc |= _16_32;
-									modrm |= ((1<<7) | (1<<6)); // register
+						modrm |= ((1<<7) | (1<<6)); // register
 						modrm |= IMM_BP;
 						which_immediate |= (1<<2);
 						encode_u16(tp->str3, immediate16);
@@ -158,7 +158,7 @@ void convert_add_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 					{
 						prefix = 0x66;
 						opc |= _16_32;
-									modrm |= ((1<<7) | (1<<6)); // register
+						modrm |= ((1<<7) | (1<<6)); // register
 						modrm |= IMM_SI;
 						which_immediate |= (1<<2);
 						encode_u16(tp->str3, immediate16);
@@ -167,7 +167,7 @@ void convert_add_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 					{
 						prefix = 0x66;
 						opc |= _16_32;
-									modrm |= ((1<<7) | (1<<6)); // register
+						modrm |= ((1<<7) | (1<<6)); // register
 						modrm |= IMM_DI;
 						which_immediate |= (1<<2);
 						encode_u16(tp->str3, immediate16);
@@ -175,7 +175,7 @@ void convert_add_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 					else if( _strcmp(tp->str2, "al") )
 					{
 						opc |= _8;
-									modrm |= ((1<<7) | (1<<6)); // register
+						modrm |= ((1<<7) | (1<<6)); // register
 						modrm |= IMM_AL;
 						which_immediate |= (1<<3);
 						encode_u8(tp->str3, immediate8);
@@ -183,7 +183,7 @@ void convert_add_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 					else if( _strcmp(tp->str2, "cl") )
 					{
 						opc |= _8;
-									modrm |= ((1<<7) | (1<<6)); // register
+						modrm |= ((1<<7) | (1<<6)); // register
 						modrm |= IMM_CL;
 						which_immediate |= (1<<3);
 						encode_u8(tp->str3, immediate8);
@@ -242,15 +242,18 @@ void convert_add_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 					{
 						if( pl == PARSE_LEVEL_2 )
 							printf("prefix: 0x%x, ", prefix);
+						chp[*PC+0] = prefix;
 						*PC = *PC + 1;
 					}
 					
 					if( pl == PARSE_LEVEL_2 )
 						printf("opcode: 0x%x, ", opc);
+					chp[*PC+0] = opc;
 					*PC = *PC + 1;
 					
 					if( pl == PARSE_LEVEL_2 )
 						printf("modrm: 0x%x, ", modrm);
+					chp[*PC+0] = modrm;
 					*PC = *PC + 1;
 					
 					if(which_immediate)
@@ -262,7 +265,10 @@ void convert_add_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 									printf("imm: %c%c %c%c %c%c %c%c, ", 
 									   immediate32[0], immediate32[1], immediate32[2], immediate32[3],
 									   immediate32[4], immediate32[5], immediate32[6], immediate32[7]);
-							
+								chp[*PC+0] = byte_string_to_byte(immediate32[0], immediate32[1]);
+								chp[*PC+1] = byte_string_to_byte(immediate32[2], immediate32[3]);
+								chp[*PC+2] = byte_string_to_byte(immediate32[4], immediate32[5]);
+								chp[*PC+3] = byte_string_to_byte(immediate32[6], immediate32[7]);
 								//immediate32_string_to_hex(tp->str3);
 								*PC = *PC + 4;
 								break;
@@ -270,11 +276,14 @@ void convert_add_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 								if( pl == PARSE_LEVEL_2 )
 									printf("imm: %c%c %c%c, ", 
 									   immediate16[0], immediate16[1], immediate16[2], immediate16[3]);
+								chp[*PC+0] = byte_string_to_byte(immediate16[0], immediate16[1]);
+								chp[*PC+1] = byte_string_to_byte(immediate16[2], immediate16[3]);
 								*PC = *PC + 2;
 								break;
 							case 0x8:
 								if( pl == PARSE_LEVEL_2 )
 									printf("imm: %c%c, ", immediate8[0], immediate8[1]);
+								chp[*PC+0] = byte_string_to_byte(immediate8[0], immediate8[1]);
 								*PC = *PC + 1;
 								break;
 						} // end of switch
@@ -494,7 +503,7 @@ void convert_add_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 					else if( _contain(tp->str3, "0x") ) // a bare address
 					{
 						extract_from_memory_displacement_as_address(tp->str3, displacement32);
-						which_displacement = (1<<1);							
+						which_displacement = (1<<1);
 					}
 					
 					else // there is only REG r a LABEL
@@ -564,21 +573,25 @@ EXIT_POSITION:
 					{
 						if( pl == PARSE_LEVEL_2 )
 							printf("prefix: 0x%x, ", prefix);
+						chp[*PC+0] = prefix;
 						*PC = *PC + 1;
 					}
 					
 					if( pl == PARSE_LEVEL_2 )
 						printf("opcode: 0x%x, ", opc);
+					chp[*PC+0] = opc;
 					*PC = *PC + 1;
 					
 					if( pl == PARSE_LEVEL_2 )
 						printf("modrm: 0x%x, ", modrm);
+					chp[*PC+0] = modrm;
 					*PC = *PC + 1;
 					
 					if(sib)
 					{
 						if( pl == PARSE_LEVEL_2 )
 							printf("sib: 0x%x, ", sib);
+						chp[*PC+0] = sib;
 						*PC = *PC + 1;
 					}
 					switch(which_displacement)
@@ -592,17 +605,24 @@ EXIT_POSITION:
 								printf("displacement: %c%c %c%c %c%c %c%c, ", 
 								   displacement32[0], displacement32[1], displacement32[2], displacement32[3],
 								   displacement32[4], displacement32[5], displacement32[6], displacement32[7]);
+							chp[*PC+0] = byte_string_to_byte(displacement32[0], displacement32[1]);
+							chp[*PC+1] = byte_string_to_byte(displacement32[2], displacement32[3]);
+							chp[*PC+2] = byte_string_to_byte(displacement32[4], displacement32[5]);
+							chp[*PC+3] = byte_string_to_byte(displacement32[6], displacement32[7]);
 							*PC = *PC + 4;
 							break;
 						case 0x4:
 							if( pl == PARSE_LEVEL_2 )
 								printf("displacement: %c%c %c%c, ", 
 								   displacement16[0], displacement16[1], displacement16[2], displacement16[3]);
+							chp[*PC+0] = byte_string_to_byte(displacement16[0], displacement16[1]);
+							chp[*PC+1] = byte_string_to_byte(displacement16[2], displacement16[3]);
 							*PC = *PC + 2;
 							break;
 						case 0x8:
 							if( pl == PARSE_LEVEL_2 )
 								printf("displacement: %c%c, ", displacement8[0], displacement8[1]);
+							chp[*PC+0] = byte_string_to_byte(displacement8[0], displacement8[1]);
 							*PC = *PC + 1;
 							break;
 					} // end of switch
@@ -737,50 +757,42 @@ EXIT_POSITION:
 					}
 					else if( _strcmp(tp->str3, "al") )
 					{
-						opc &= _8;
-						opc |= REG_TO_MEM;
+						opc &= ~MEM_TO_REG;
 						modrm |= (MODRM_REG(IMM_AL) | MODRM_DISP32);
 					}
 					else if( _strcmp(tp->str3, "cl") )
 					{
-						opc &= _8;
-						opc |= REG_TO_MEM;
+						opc &= ~MEM_TO_REG;
 						modrm |= (MODRM_REG(IMM_CL) | MODRM_DISP32);
 					}
 					else if( _strcmp(tp->str3, "dl") )
 					{
-						opc &= _8;
-						opc |= REG_TO_MEM;
+						opc &= ~MEM_TO_REG;
 						modrm |= (MODRM_REG(IMM_CL) | MODRM_DISP32);
 					}
 					else if( _strcmp(tp->str3, "bl") )
 					{
-						opc &= _8;
-						opc |= REG_TO_MEM;
+						opc &= ~MEM_TO_REG;
 						modrm |= (MODRM_REG(IMM_BL) | MODRM_DISP32);
 					}
 					else if( _strcmp(tp->str3, "ah") )
 					{
-						opc &= _8;
-						opc |= REG_TO_MEM;
+						opc &= ~MEM_TO_REG;
 						modrm |= (MODRM_REG(IMM_AH) | MODRM_DISP32);
 					}
 					else if( _strcmp(tp->str3, "ch") )
 					{
-						opc &= _8;
-						opc |= REG_TO_MEM;
+						opc &= ~MEM_TO_REG;
 						modrm |= (MODRM_REG(IMM_CH) | MODRM_DISP32);
 					}
 					else if( _strcmp(tp->str3, "dh") )
 					{
-						opc &= _8;
-						opc |= REG_TO_MEM;
+						opc &= ~MEM_TO_REG;
 						modrm |= (MODRM_REG(IMM_DH) | MODRM_DISP32);
 					}
 					else if( _strcmp(tp->str3, "bh") )
 					{
-						opc &= _8;
-						opc |= REG_TO_MEM;
+						opc &= ~MEM_TO_REG;
 						modrm |= (MODRM_REG(IMM_BH) | MODRM_DISP32);
 					}
 					else {}
@@ -837,7 +849,7 @@ EXIT_POSITION:
 					else if( _contain(tp->str2, "0x") ) // a bare address
 					{
 						extract_from_memory_displacement_as_address(tp->str2, displacement32);
-						which_displacement = (1<<1);							
+						which_displacement = (1<<1);
 					}
 					
 					else // there is only REG r a LABEL
@@ -907,21 +919,25 @@ EXIT_POSITION2:
 					{
 						if( pl == PARSE_LEVEL_2 )
 							printf("prefix: 0x%x, ", prefix);
+						chp[*PC+0] = prefix;
 						*PC = *PC + 1;
 					}
 
 					if( pl == PARSE_LEVEL_2 )
 						printf("opcode: 0x%x, ", opc);
+					chp[*PC+0] = opc;
 					*PC = *PC + 1;
 					
 					if( pl == PARSE_LEVEL_2 )
 						printf("modrm: 0x%x, ", modrm);
+					chp[*PC+0] = modrm;
 					*PC = *PC + 1;
 					
 					if(sib)
 					{
 						if( pl == PARSE_LEVEL_2 )
 							printf("sib: 0x%x, ", sib);
+						chp[*PC+0] = sib;
 						*PC = *PC + 1;
 					}
 					switch(which_displacement)
@@ -935,17 +951,24 @@ EXIT_POSITION2:
 								printf("displacement: %c%c %c%c %c%c %c%c, ", 
 								   displacement32[0], displacement32[1], displacement32[2], displacement32[3],
 								   displacement32[4], displacement32[5], displacement32[6], displacement32[7]);
+							chp[*PC+0] = byte_string_to_byte(displacement32[0], displacement32[1]);
+							chp[*PC+1] = byte_string_to_byte(displacement32[2], displacement32[3]);
+							chp[*PC+2] = byte_string_to_byte(displacement32[4], displacement32[5]);
+							chp[*PC+3] = byte_string_to_byte(displacement32[6], displacement32[7]);
 							*PC = *PC + 4;
 							break;
 						case 0x4:
 							if( pl == PARSE_LEVEL_2 )
 								printf("displacement: %c%c %c%c, ", 
 								   displacement16[0], displacement16[1], displacement16[2], displacement16[3]);
+							chp[*PC+0] = byte_string_to_byte(displacement16[0], displacement16[1]);
+							chp[*PC+1] = byte_string_to_byte(displacement16[2], displacement16[3]);
 							*PC = *PC + 2;
 							break;
 						case 0x8:
 							if( pl == PARSE_LEVEL_2 )
 								printf("displacement: %c%c, ", displacement8[0], displacement8[1]);
+							chp[*PC+0] = byte_string_to_byte(displacement8[0], displacement8[1]);
 							*PC = *PC + 1;
 							break;
 					} // end of switch
@@ -1016,11 +1039,17 @@ EXIT_POSITION2:
 						}
 						if( _contain(tp->str2, "ebp") )
 						{
-							modrm |= (1<<6); // now the mode is [MEMORY+DISP8]
+							modrm |= (1<<7); // now the mode is [MEMORY+DISP8]
 							modrm |= 0x05;   // now ebp selected
-							displacement8[0] = '0';
-							displacement8[1] = '0';
-							which_displacement = (1<<3);
+							displacement32[0] = '0';
+							displacement32[1] = '0';
+							displacement32[2] = '0';
+							displacement32[3] = '0';
+							displacement32[4] = '0';
+							displacement32[5] = '0';
+							displacement32[6] = '0';
+							displacement32[7] = '0';
+							which_displacement = (1<<1);
 						}
 						if( _contain(tp->str2, "esi") )
 						{
@@ -1033,9 +1062,10 @@ EXIT_POSITION2:
 						
 						if( _contain(tp->str2, "+") ) // it has a displacement
 						{
-							// for now suppose only 8-bit displacement
-							extract_from_memory_displacement8(tp->str2, displacement8);
-							which_displacement = (1<<3);
+							// for now suppose only 32-bit displacement
+							extract_from_memory_displacement32(tp->str2, displacement32);
+							which_displacement = (1<<1);
+							modrm |= (1<<7); // MEMORY+DISP32
 						}
 					}
 					
@@ -1073,11 +1103,17 @@ EXIT_POSITION2:
 						}
 						if( _contain(tp->str2, "ebp") )
 						{
-							modrm |= (1<<6); // now the mode is [MEMORY+DISP8]
+							modrm |= (1<<7); // now the mode is [MEMORY+DISP32]
 							modrm |= 0x05;   // now ebp selected
-							displacement8[0] = '0';
-							displacement8[1] = '0';
-							which_displacement = (1<<3);
+							displacement32[0] = '0';
+							displacement32[1] = '0';
+							displacement32[2] = '0';
+							displacement32[3] = '0';
+							displacement32[4] = '0';
+							displacement32[5] = '0';
+							displacement32[6] = '0';
+							displacement32[7] = '0';
+							which_displacement = (1<<1);
 						}
 						if( _contain(tp->str2, "esi") )
 						{
@@ -1090,11 +1126,11 @@ EXIT_POSITION2:
 						
 						if( _contain(tp->str2, "+") ) // it has a displacement
 						{
-							modrm |= (1<<6); // now the mode is [MEMORY+DISP8]
+							modrm |= (1<<7); // now the mode is [MEMORY+DISP32]
 							
 							// for now suppose only 8-bit displacement
-							extract_from_memory_displacement8(tp->str2, displacement8);
-							which_displacement = (1<<3);
+							extract_from_memory_displacement32(tp->str2, displacement32);
+							which_displacement = (1<<1);
 						}
 					}
 					
@@ -1163,19 +1199,26 @@ EXIT_POSITION2:
 					{
 						if( pl == PARSE_LEVEL_2 )
 							printf("prefix: 0x%x, ", prefix);
+						chp[*PC+0] = prefix;
 						*PC = *PC + 1;
 					}
 					
 					if( pl == PARSE_LEVEL_2 )
 						printf("opcode: 0x%x, ", opc);
+					chp[*PC+0] = opc;
+					*PC = *PC + 1;
 					
 					if( pl == PARSE_LEVEL_2 )
 						printf("modrm: 0x%x, ", modrm);
+					chp[*PC+0] = modrm;
+					*PC = *PC + 1;
 					
 					if(sib)
 					{
 						if( pl == PARSE_LEVEL_2 )
 							printf("sib: 0x%x, ", sib);
+						chp[*PC+0] = sib;
+						*PC = *PC + 1;
 					}
 					switch(which_displacement)
 					{
@@ -1184,17 +1227,24 @@ EXIT_POSITION2:
 								printf("displacement: %c%c %c%c %c%c %c%c, ", 
 								   displacement32[0], displacement32[1], displacement32[2], displacement32[3],
 								   displacement32[4], displacement32[5], displacement32[6], displacement32[7]);
+							chp[*PC+0] = byte_string_to_byte(displacement32[0], displacement32[1]);
+							chp[*PC+1] = byte_string_to_byte(displacement32[2], displacement32[3]);
+							chp[*PC+2] = byte_string_to_byte(displacement32[4], displacement32[5]);
+							chp[*PC+3] = byte_string_to_byte(displacement32[6], displacement32[7]);
 							*PC = *PC + 4;
 							break;
 						case 0x4:
 							if( pl == PARSE_LEVEL_2 )
 								printf("displacement: %c%c %c%c, ", 
 								   displacement16[0], displacement16[1], displacement16[2], displacement16[3]);
+							chp[*PC+0] = byte_string_to_byte(displacement16[0], displacement16[1]);
+							chp[*PC+1] = byte_string_to_byte(displacement16[2], displacement16[3]);
 							*PC = *PC + 2;
 							break;
 						case 0x8:
 							if( pl == PARSE_LEVEL_2 )
 								printf("displacement: %c%c, ", displacement8[0], displacement8[1]);
+							chp[*PC+0] = byte_string_to_byte(displacement8[0], displacement8[1]);
 							*PC = *PC + 1;
 							break;
 					} // end of switch
@@ -1208,6 +1258,10 @@ EXIT_POSITION2:
 									printf("imm: %c%c %c%c %c%c %c%c, ", 
 									immediate32[0], immediate32[1], immediate32[2], immediate32[3],
 									immediate32[4], immediate32[5], immediate32[6], immediate32[7]);
+								chp[*PC+0] = byte_string_to_byte(immediate32[0], immediate32[1]);
+								chp[*PC+1] = byte_string_to_byte(immediate32[2], immediate32[3]);
+								chp[*PC+2] = byte_string_to_byte(immediate32[4], immediate32[5]);
+								chp[*PC+3] = byte_string_to_byte(immediate32[6], immediate32[7]);
 								*PC = *PC + 4;
 							
 								//immediate32_string_to_hex(tp->str3);
@@ -1216,11 +1270,14 @@ EXIT_POSITION2:
 								if( pl == PARSE_LEVEL_2 )
 									printf("imm: %c%c %c%c, ", 
 									immediate16[0], immediate16[1], immediate16[2], immediate16[3]);
+								chp[*PC+0] = byte_string_to_byte(immediate16[0], immediate16[1]);
+								chp[*PC+1] = byte_string_to_byte(immediate16[2], immediate16[3]);
 								*PC = *PC + 2;
 								break;
 							case 0x8:
 								if( pl == PARSE_LEVEL_2 )
 									printf("imm: %c%c, ", immediate8[0], immediate8[1]);
+								chp[*PC+0] = byte_string_to_byte(immediate8[0], immediate8[1]);
 								*PC = *PC + 1;
 								break;
 						} // end of switch
@@ -1248,114 +1305,122 @@ EXIT_POSITION2:
 					modrm |= ((1<<7) | (1<<6)); //register
 					if( _strcmp(tp->str2, "eax") )
 					{
+						opc   |= _16_32;
 						modrm |= IMM_EAX;
 					}
 					else if( _strcmp(tp->str2, "ecx") )
 					{
+						opc   |= _16_32;
 						modrm |= IMM_ECX;
 					}
 					else if( _strcmp(tp->str2, "edx") )
 					{
+						opc   |= _16_32;
 						modrm |= IMM_EDX;
 					}
 					else if( _strcmp(tp->str2, "ebx") )
 					{
+						opc   |= _16_32;
 						modrm |= IMM_EBX;
 					}
 					else if( _strcmp(tp->str2, "esp") )
 					{
+						opc   |= _16_32;
 						modrm |= IMM_ESP;
 					}
 					else if( _strcmp(tp->str2, "ebp") )
 					{
+						opc   |= _16_32;
 						modrm |= IMM_EBP;
 					}
 					else if( _strcmp(tp->str2, "esi") )
 					{
+						opc   |= _16_32;
 						modrm |= IMM_ESI;
 					}
 					else if( _strcmp(tp->str2, "edi") )
 					{
+						opc   |= _16_32;
 						modrm |= IMM_EDI;
 					}
 					else if( _strcmp(tp->str2, "ax") )
 					{
+						opc   |= _16_32;
 						prefix = 0x66;
 						modrm |= IMM_AX;
 					}
 					else if( _strcmp(tp->str2, "bx") )
 					{
+						opc   |= _16_32;
 						prefix = 0x66;
 						modrm |= IMM_BX;
 					}
 					else if( _strcmp(tp->str2, "cx") )
 					{
+						opc   |= _16_32;
 						prefix = 0x66;
 						modrm |= IMM_CX;
 					}
 					else if( _strcmp(tp->str2, "dx") )
 					{
+						opc   |= _16_32;
 						prefix = 0x66;
 						modrm |= IMM_DX;
 					}
 					else if( _strcmp(tp->str2, "sp") )
 					{
+						opc   |= _16_32;
 						prefix = 0x66;
 						modrm |= IMM_SP;
 					}
 					else if( _strcmp(tp->str2, "bp") )
 					{
+						opc   |= _16_32;
 						prefix = 0x66;
 						modrm |= IMM_BP;
 					}
 					else if( _strcmp(tp->str2, "si") )
 					{
+						opc   |= _16_32;
 						prefix = 0x66;
 						modrm |= IMM_SI;
 					}
 					else if( _strcmp(tp->str2, "di") )
 					{
+						opc   |= _16_32;
 						prefix = 0x66;
 						modrm |= IMM_DI;
 					}
 					else if( _strcmp(tp->str2, "al") )
 					{
-						opc &= ~(1<<0);
 						modrm |= IMM_AL;
 					}
 					else if( _strcmp(tp->str2, "cl") )
 					{
-						opc &= ~(1<<0);
 						modrm |= IMM_CL;
 					}
 					else if( _strcmp(tp->str2, "dl") )
 					{
-						opc &= ~(1<<0);
 						modrm |= IMM_DL;
 					}
 					else if( _strcmp(tp->str2, "bl") )
 					{
-						opc &= ~(1<<0);
 						modrm |= IMM_BL;
 					}
 					else if( _strcmp(tp->str2, "ah") )
 					{
-						opc &= ~(1<<0);
 						modrm |= IMM_AH;
 					}
 					else if( _strcmp(tp->str2, "ch") )
 					{
-						opc &= ~(1<<0);
 						modrm |= IMM_CH;
 					}
 					else if( _strcmp(tp->str2, "dh") )
 					{
-						opc &= ~(1<<0);
 						modrm |= IMM_DH;
 					}
 					else if( _strcmp(tp->str2, "bh") )
 					{
-						opc &= ~(1<<0);
 						modrm |= IMM_BH;
 					}
 					else {}

@@ -146,10 +146,11 @@ void convert_pop_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 				if( attribute == opcodes[j].attribute )
 				{
 					opc = opcodes[j].base_binary_code;
-					if( _contain(tp->str2, "+") ) // now it MUST have a register along
+					opc |= _16_32;
+					modrm |= ((0<<7) | (0<<6)); // memory
+					
+					if( _contain(tp->str2, "DWORD[") )
 					{
-						modrm &= 0x38; //00111000
-						modrm |= (1<<7); // now with mode [MEMORY+DISP32]
 						if( _contain(tp->str2, "eax") )
 						{
 							modrm |= IMM_EAX;
@@ -168,7 +169,6 @@ void convert_pop_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 						}
 						if( _contain(tp->str2, "esp") )
 						{
-							modrm &= ~(0x07);
 							modrm |= 0x04;   // now SIB selected
 							
 							// SIB fields:
@@ -180,90 +180,101 @@ void convert_pop_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 						}
 						if( _contain(tp->str2, "ebp") )
 						{
-							modrm |= IMM_EBP;
-						}
-						if( _contain(tp->str2, "esi") )
-						{
-							modrm |= IMM_ESI;
-						}
-						if( _contain(tp->str2, "edi") )
-						{
-							modrm |= IMM_EDI;
-						}
-						
-						extract_from_memory_displacement32(tp->str2, displacement32);
-						which_displacement = (1<<1);
-					}
-					
-					else if( _contain(tp->str2, "0x") ) // a bare address
-					{
-						extract_from_memory_displacement_as_address(tp->str2, displacement32);
-						which_displacement = (1<<1);
-					}
-					
-					else // there is only REG r a LABEL
-					{
-						modrm &= 0x38; //00111000. Now with mode [MEMORY]
-						
-						if( _contain(tp->str2, "eax") )
-						{
-							modrm |= IMM_EAX;
-							goto EXIT_POSITION;
-						}
-						if( _contain(tp->str2, "ecx") )
-						{
-							modrm |= IMM_ECX;
-							goto EXIT_POSITION;
-						}
-						if( _contain(tp->str2, "edx") )
-						{
-							modrm |= IMM_EDX;
-							goto EXIT_POSITION;
-						}
-						if( _contain(tp->str2, "ebx") )
-						{
-							modrm |= IMM_EBX;
-							goto EXIT_POSITION;
-						}
-						if( _contain(tp->str2, "esp") )
-						{
-							modrm &= ~(0x07);
-							modrm |= 0x04;   // now SIB selected
-							
-							// SIB fields:
-							// scale  index  base
-							// --   | ---  | ---
-							// [EBX+EDI*scale] an scale is either of 1,2,4,8. Here EBX is base, and EDI is index
-							// for us: [ESP] -> [0+ESP*1]
-							sib   |= ((IMM_ESP << 3) | IMM_ESP);
-							goto EXIT_POSITION;
-						}
-						if( _contain(tp->str2, "ebp") )
-						{
-							modrm |= (1<<6); // now the mode is [MEMORY+DISP8]
+							modrm |= (1<<7); // now the mode is [MEMORY+DISP8]
 							modrm |= 0x05;   // now ebp selected
-							displacement8[0] = '0';
-							displacement8[1] = '0';
-							which_displacement = (1<<3);
-							goto EXIT_POSITION;
+							displacement32[0] = '0';
+							displacement32[1] = '0';
+							displacement32[2] = '0';
+							displacement32[3] = '0';
+							displacement32[4] = '0';
+							displacement32[5] = '0';
+							displacement32[6] = '0';
+							displacement32[7] = '0';
+							which_displacement = (1<<1);
 						}
 						if( _contain(tp->str2, "esi") )
 						{
 							modrm |= IMM_ESI;
-							goto EXIT_POSITION;
 						}
 						if( _contain(tp->str2, "edi") )
 						{
 							modrm |= IMM_EDI;
-							goto EXIT_POSITION;
 						}
 						
-						// therefore there is a LABEL
-						modrm |= 0x05;
-						extract_from_memory_displacement_as_address(tp->str2, displacement32);
-						which_displacement = (1<<1);
+						if( _contain(tp->str2, "+") ) // it has a displacement
+						{
+							// for now suppose only 32-bit displacement
+							extract_from_memory_displacement32(tp->str2, displacement32);
+							which_displacement = (1<<1);
+							modrm |= (1<<7); // MEMORY+DISP32
+						}
 					}
-EXIT_POSITION:												
+					
+					else if( _contain(tp->str2, "WORD[") && (!_contain(tp->str2, "DWORD[")) )
+					{
+						prefix = 0x66;
+						if( _contain(tp->str2, "eax") )
+						{
+							modrm |= IMM_EAX;
+						}
+						if( _contain(tp->str2, "ecx") )
+						{
+							modrm |= IMM_ECX;
+						}
+						if( _contain(tp->str2, "edx") )
+						{
+							modrm |= IMM_EDX;
+						}
+						if( _contain(tp->str2, "ebx") )
+						{
+							modrm |= IMM_EBX;
+						}
+						if( _contain(tp->str2, "esp") )
+						{
+							modrm |= 0x04;   // now SIB selected
+							
+							// SIB fields:
+							// scale  index  base
+							// --   | ---  | ---
+							// [EBX+EDI*scale] an scale is either of 1,2,4,8. Here EBX is base, and EDI is index
+							// for us: [ESP] -> [0+ESP*1]
+							sib   |= ((IMM_ESP << 3) | IMM_ESP);
+						}
+						if( _contain(tp->str2, "ebp") )
+						{
+							modrm |= (1<<7); // now the mode is [MEMORY+DISP32]
+							modrm |= 0x05;   // now ebp selected
+							displacement32[0] = '0';
+							displacement32[1] = '0';
+							displacement32[2] = '0';
+							displacement32[3] = '0';
+							displacement32[4] = '0';
+							displacement32[5] = '0';
+							displacement32[6] = '0';
+							displacement32[7] = '0';
+							which_displacement = (1<<1);
+						}
+						if( _contain(tp->str2, "esi") )
+						{
+							modrm |= IMM_ESI;
+						}
+						if( _contain(tp->str2, "edi") )
+						{
+							modrm |= IMM_EDI;
+						}
+						
+						if( _contain(tp->str2, "+") ) // it has a displacement
+						{
+							modrm |= (1<<7); // now the mode is [MEMORY+DISP32]
+							
+							// for now suppose only 8-bit displacement
+							extract_from_memory_displacement32(tp->str2, displacement32);
+							which_displacement = (1<<1);
+						}
+					}
+					
+					else {}
+					
 					if(prefix)
 					{
 						if( pl == PARSE_LEVEL_2 )

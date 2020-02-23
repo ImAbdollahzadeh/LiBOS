@@ -456,10 +456,10 @@ void convert_mov_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 					else if( _contain(tp->str3, "0x") ) // a bare address
 					{
 						extract_from_memory_displacement_as_address(tp->str3, displacement32);
-						which_displacement = (1<<1);							
+						which_displacement = (1<<1);
 					}
 					
-					else // there is only REG r a LABEL
+					else // there is only REG or a LABEL
 					{
 						modrm &= 0x38; //00111000. Now with mode [MEMORY]
 						
@@ -521,7 +521,7 @@ void convert_mov_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 						extract_from_memory_displacement_as_address(tp->str3, displacement32);
 						which_displacement = (1<<1);
 					}
-EXIT_POSITION:												
+EXIT_POSITION:
 					if(prefix)
 					{
 						if( pl == PARSE_LEVEL_2 )
@@ -882,6 +882,7 @@ EXIT_POSITION2:
 						chp[*PC+0] = prefix;
 						*PC = *PC + 1;
 					}
+					
 					if( pl == PARSE_LEVEL_2 )
 						printf("opcode: 0x%x, ", opc);
 					chp[*PC+0] = opc;

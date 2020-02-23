@@ -53,9 +53,9 @@ unsigned int mem_table_entries = sizeof(global_mem_table) / sizeof(const char*);
 OPCODE opcodes[] = {
 	{"add",  OP_REG_IMM, 0x80},
 	{"add",  OP_REG_MEM, 0x00},
-	{"add",  OP_REG_REG, 0x01}, //<-??
-	{"add",  OP_MEM_REG, 0xFF}, //<-??
-	{"add",  OP_MEM_IMM, 0xFF}, //<-??
+	{"add",  OP_REG_REG, 0x00},
+	{"add",  OP_MEM_REG, 0x00}, 
+	{"add",  OP_MEM_IMM, 0x80},
 	{"mov",  OP_REG_IMM, 0xB8},
 	{"mov",  OP_REG_MEM, 0x8B},
 	{"mov",  OP_MEM_REG, 0x8B},
@@ -607,7 +607,7 @@ void handle_labels(TRIPLE_PACKET* tp, unsigned int* PC)
  	{
  		if( _strcmp(label, table_of_labels[i].string) )
  		{
- 			table_of_labels[i].address = (void*)(*PC);
+ 			table_of_labels[i].address = *PC;
  		}
  	}
 }

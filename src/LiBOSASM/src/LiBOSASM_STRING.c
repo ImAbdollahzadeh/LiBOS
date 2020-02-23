@@ -1,3 +1,4 @@
+#include "../include/LiBOSASM_CORE.h"
 #include "../include/LiBOSASM_STRING.h"
 
 //....................................................................................................................................
@@ -275,7 +276,7 @@ void extract_from_memory_displacement_as_address(const char* s, char* dspl)
 	for(i=0;i<8;i++)
 		dspl[i] = '0';
 	
-	unsigned char tmp[10];
+	unsigned char tmp[128];
 	unsigned int sz = string_length(s);
 	i = 0;
 	while(i < sz)
@@ -290,6 +291,7 @@ void extract_from_memory_displacement_as_address(const char* s, char* dspl)
 				j++;
 				i++;
 			}
+			tmp[j++] = '\0';
 			break;
 		}
 		i++;
@@ -305,6 +307,28 @@ void extract_from_memory_displacement_as_address(const char* s, char* dspl)
 		dspl[5] = tmp[5];
 		dspl[6] = tmp[2];
 		dspl[7] = tmp[3];
+	}
+
+	else
+	{
+		// there is a label. Search label_table to find a match entry.
+		unsigned int pl = get_parse_level();
+		if( pl == PARSE_LEVEL_2 )
+		{
+			SYMBOLIC_LABEL* tab  = get_table_of_labels();
+			unsigned int tab_cnt = get_table_of_labels_count();
+			unsigned int j;
+			for(j=0; j<tab_cnt; j++)
+			{
+				if( _strcmp(tab[j].string, tmp) )
+				{
+					unsigned int trg = tab[j].address;
+					_construct_string_from_hex(dspl, trg);
+					return;
+				}
+			}
+		}
+		printf("invalid label\n");
 	}
 }
 
@@ -406,6 +430,30 @@ unsigned int address_string_to_hex(const char* s)
 unsigned char byte_string_to_byte(char* byte_high_nibble, char* byte_low_nibble)
 {
 	return (( which_entry_from_hex_table(byte_high_nibble) * 16) + (( which_entry_from_hex_table(byte_low_nibble))));
+}
+
+//....................................................................................................................................
+
+void _construct_string_from_hex(char* string_32_bit, unsigned int hex)
+{
+	unsigned int n = hex;
+	unsigned int c = 0;
+	while(n/16)
+	{
+		string_32_bit[c+1] = hex_table_codes[n%16];
+		n /= 16;
+		string_32_bit[c]   = hex_table_codes[n%16];
+		c+=2;
+		n /= 16;
+	}
+	if(!n)
+		return;
+	
+	string_32_bit[c+1] = hex_table_codes[n%16];
+	string_32_bit[c]   = hex_table_codes[n/16];
+	
+	//string_32_bit[c]   = hex_table_codes[n];
+	//string_32_bit[c++] = '\0';
 }
 
 //....................................................................................................................................
