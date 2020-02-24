@@ -49,7 +49,7 @@ void convert_int_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 						goto EXIT_FROM_INT;
 
 					if( pl == PARSE_LEVEL_2 )
-						printf("imm: %c%c\n", immediate8[0], immediate8[1]);
+						printf("imm: %c%c,", immediate8[0], immediate8[1]);
 					chp[*PC] = byte_string_to_byte(immediate8[0], immediate8[1]);
 					*PC = *PC + 1;
 				}

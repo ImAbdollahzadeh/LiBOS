@@ -61,11 +61,11 @@ OPCODE opcodes[] = {
 	{"mov",  OP_MEM_REG, 0x8B},
 	{"mov",  OP_MEM_IMM, 0xC7},
 	{"mov",  OP_REG_REG, 0x89},
-	{"sub",  OP_REG_IMM, 0xFF}, //<-??
-	{"sub",  OP_REG_MEM, 0xFF}, //<-??
-	{"sub",  OP_REG_REG, 0xFF}, //<-??
-	{"sub",  OP_MEM_REG, 0xFF}, //<-??
-	{"sub",  OP_MEM_IMM, 0xFF}, //<-??
+	{"sub",  OP_REG_IMM, 0x80}, 
+	{"sub",  OP_REG_MEM, 0x2A},
+	{"sub",  OP_REG_REG, 0x28},
+	{"sub",  OP_MEM_REG, 0x28}, 
+	{"sub",  OP_MEM_IMM, 0x80},
 	{"cmp",  OP_REG_IMM, 0xFF}, //<-??
 	{"cmp",  OP_REG_MEM, 0xFF}, //<-??
 	{"cmp",  OP_REG_REG, 0xFF}, //<-??
@@ -345,7 +345,7 @@ void map_machine_codes(TRIPLE_PACKET* tp)
 
 TRIPLE_PACKET* alloc_units(unsigned int lines)
 {
-	return (TRIPLE_PACKET*)malloc(lines * sizeof(TRIPLE_PACKET));	
+	return (TRIPLE_PACKET*)malloc(lines * sizeof(TRIPLE_PACKET));
 }
 
 //....................................................................................................................................
@@ -608,6 +608,7 @@ void handle_labels(TRIPLE_PACKET* tp, unsigned int* PC)
  		if( _strcmp(label, table_of_labels[i].string) )
  		{
  			table_of_labels[i].address = *PC;
+			return;
  		}
  	}
 }
