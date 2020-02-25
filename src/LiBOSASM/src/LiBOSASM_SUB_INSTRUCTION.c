@@ -1054,7 +1054,7 @@ EXIT_POSITION2:
 							modrm |= IMM_EDI;
 						}
 						
-						else if( _contain(tp->str2, "+") ) // it has a displacement
+						if( _contain(tp->str2, "+") ) // it has a displacement
 						{
 							// for now suppose only 32-bit displacement
 							extract_from_memory_displacement32(tp->str2, displacement32);
@@ -1063,7 +1063,7 @@ EXIT_POSITION2:
 						}
 						
 						// therefore there is a LABEL
-						else 
+						else if( _contain(tp->str2, ":") )
 						{
 							modrm |= 0x05;
 							extract_from_memory_displacement_as_address(tp->str2, displacement32);
@@ -1126,7 +1126,7 @@ EXIT_POSITION2:
 							modrm |= IMM_EDI;
 						}
 						
-						else if( _contain(tp->str2, "+") ) // it has a displacement
+						if( _contain(tp->str2, "+") ) // it has a displacement
 						{
 							modrm |= (1<<7); // now the mode is [MEMORY+DISP32]
 							
@@ -1136,7 +1136,7 @@ EXIT_POSITION2:
 						}
 						
 						// therefore there is a LABEL
-						else 
+						else if( _contain(tp->str2, ":") )
 						{
 							modrm |= 0x05;
 							extract_from_memory_displacement_as_address(tp->str2, displacement32);
@@ -1193,7 +1193,7 @@ EXIT_POSITION2:
 							modrm |= IMM_EDI;
 						}
 						
-						else if( _contain(tp->str2, "+") ) // it has a displacement
+						if( _contain(tp->str2, "+") ) // it has a displacement
 						{
 							modrm |= (1<<6); // now the mode is [MEMORY+DISP8]
 							
@@ -1203,7 +1203,7 @@ EXIT_POSITION2:
 						}
 						
 						// therefore there is a LABEL
-						else 
+						else if( _contain(tp->str2, ":") )
 						{
 							modrm |= 0x05;
 							extract_from_memory_displacement_as_address(tp->str2, displacement32);

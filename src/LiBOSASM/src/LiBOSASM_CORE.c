@@ -32,7 +32,7 @@ const char* global_lookup_table[] = {
 	"esi", "si", "edi", "di", "eip", "ip", "ebp", "bp",
 	"esp", "sp", "ss", "cs", "ds", "es", "fs", "gs", 
 	"eflags", "flags", "pushf", "popf", "int", "jz", 
-	"jnz",
+	"jnz", "xor",
 };
 unsigned int lookup_table_entries = sizeof(global_lookup_table) / sizeof(const char*);
 
@@ -66,6 +66,11 @@ OPCODE opcodes[] = {
 	{"sub",  OP_REG_REG, 0x28},
 	{"sub",  OP_MEM_REG, 0x28}, 
 	{"sub",  OP_MEM_IMM, 0x80},
+	{"xor",  OP_REG_IMM, 0x80},
+	{"xor",  OP_REG_MEM, 0x32}, 
+	{"xor",  OP_REG_REG, 0x30}, 
+	{"xor",  OP_MEM_REG, 0x30}, 
+	{"xor",  OP_MEM_IMM, 0x80}, 
 	{"cmp",  OP_REG_IMM, 0xFF}, //<-??
 	{"cmp",  OP_REG_MEM, 0xFF}, //<-??
 	{"cmp",  OP_REG_REG, 0xFF}, //<-??
@@ -455,7 +460,9 @@ void _selection_stub(TRIPLE_PACKET* tp)
 	else if( _strcmp(tp->str1, "add") )
 		convert_add_instruction(tp, &ProgramCounter);
 	else if( _strcmp(tp->str1, "sub") )
-		convert_sub_instruction(tp, &ProgramCounter);   
+		convert_sub_instruction(tp, &ProgramCounter);  
+	else if( _strcmp(tp->str1, "xor") )
+		convert_xor_instruction(tp, &ProgramCounter); 
 	else if( _strcmp(tp->str1, "push") )
 		convert_push_instruction(tp, &ProgramCounter);   
 	else if( _strcmp(tp->str1, "pop") )
