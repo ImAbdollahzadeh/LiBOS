@@ -71,11 +71,11 @@ OPCODE opcodes[] = {
 	{"xor",  OP_REG_REG, 0x30}, 
 	{"xor",  OP_MEM_REG, 0x30}, 
 	{"xor",  OP_MEM_IMM, 0x80}, 
-	{"cmp",  OP_REG_IMM, 0xFF}, //<-??
-	{"cmp",  OP_REG_MEM, 0xFF}, //<-??
-	{"cmp",  OP_REG_REG, 0xFF}, //<-??
-	{"cmp",  OP_MEM_REG, 0xFF}, //<-??
-	{"cmp",  OP_MEM_IMM, 0xFF}, //<-??
+	{"cmp",  OP_REG_IMM, 0x80}, 
+	{"cmp",  OP_REG_MEM, 0x3A}, 
+	{"cmp",  OP_REG_REG, 0x3A}, 
+	{"cmp",  OP_MEM_REG, 0x38}, 
+	{"cmp",  OP_MEM_IMM, 0x80}, 
 	{"push", OP_REG,     0x50}, 
 	{"push", OP_IMM,     0x68}, 
 	{"pop",  OP_REG,     0x58}, 

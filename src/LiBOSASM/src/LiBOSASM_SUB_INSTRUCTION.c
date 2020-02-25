@@ -411,7 +411,7 @@ void convert_sub_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 					{
 						opc &= _8;
 						opc |= MEM_TO_REG;
-						modrm |= (MODRM_REG(IMM_CL) | MODRM_DISP32);
+						modrm |= (MODRM_REG(IMM_DL) | MODRM_DISP32);
 					}
 					else if( _strcmp(tp->str2, "bl") )
 					{
@@ -762,7 +762,7 @@ EXIT_POSITION:
 					else if( _strcmp(tp->str3, "dl") )
 					{
 						opc &= ~MEM_TO_REG;
-						modrm |= (MODRM_REG(IMM_CL) | MODRM_DISP32);
+						modrm |= (MODRM_REG(IMM_DL) | MODRM_DISP32);
 					}
 					else if( _strcmp(tp->str3, "bl") )
 					{
