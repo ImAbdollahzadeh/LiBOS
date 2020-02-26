@@ -66,6 +66,10 @@ unsigned int _strcmp(const char* instruction_name, char* trg)
 
 unsigned int _contain(char* string, const char* substring)
 {
+	if((string_length(string)) == (string_length(substring)))
+		return _strcmp(string, substring);
+	
+	
 	unsigned int substring_size = 0;
 	unsigned int    string_size = 0;
 	char* src = substring;
