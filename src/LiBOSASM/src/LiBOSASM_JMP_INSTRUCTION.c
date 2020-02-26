@@ -3,6 +3,30 @@
 
 //....................................................................................................................................
 
+#define CHARACTER_SWAP(CH1, CH2) do { char t = *CH1; *CH1 = *CH2; *CH2 = t; } while(0)
+static unsigned int _create_hex_value(char* src)
+{
+	unsigned int ret = 0;
+	int          LiBOS_K;
+	char tmp[11] = {0,0,0,0,0,0,0,0,0,0,'\0'};
+	
+	encode_u32(src, tmp);
+	
+	for(LiBOS_K = 7; LiBOS_K >= 0; LiBOS_K--)
+		tmp[LiBOS_K+2] = tmp[LiBOS_K];
+	
+	tmp[0] = '0';
+	tmp[1] = 'x';
+	CHARACTER_SWAP((&tmp[2]), (&tmp[8]));
+	CHARACTER_SWAP((&tmp[3]), (&tmp[9]));
+	CHARACTER_SWAP((&tmp[4]), (&tmp[6]));
+	CHARACTER_SWAP((&tmp[5]), (&tmp[7]));
+
+	return address_string_to_hex(tmp);
+}
+
+//....................................................................................................................................
+
 void convert_jmp_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 {
 	if( get_parse_level() == PARSE_LEVEL_2 )
@@ -290,12 +314,113 @@ CONVERT_JMP_END:
 //....................................................................................................................................
 
 void convert_jne_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
+/*
+THERE ARE ONLY 2 MODES
+	1- jne rel32
+	2- jne label32
+	
+	rel32 means offset from the initial point othe SECTION .CODE (in our case it is 0x00 + origin)
+*/
 {
-	printf("JNE DECODING: ");
+	if( get_parse_level() == PARSE_LEVEL_2 )
+		printf("JNE DECODING: ");
 	
 	unsigned int pl = get_parse_level();
 	if( (pl == 0xFF) || (!pl) )
 		return;
+	
+	unsigned char* chp = get_output_buffer();
+	
+	unsigned int i;
+	unsigned char displacement32[8];
+	unsigned char which_displacement = 0; // BIT(1) : 32, BIT(2) : 16, and BIT(3) : 8
+	unsigned char opc = 0;
+	unsigned char modrm = 0;
+	char* src = tp->str2;
+	unsigned int length = string_length(src)
+		;
+	unsigned int    table_of_labels_count = get_table_of_labels_count();
+	SYMBOLIC_LABEL* table_of_labels       = get_table_of_labels();
+	
+	if( _contain(src, "0x") ) // a hard-coded hexadecimal value [DO WE REALLY USE THIS ??]
+	{
+		displacement32[0] = '0';
+		displacement32[1] = '0';
+		displacement32[2] = '0';
+		displacement32[3] = '0';
+		displacement32[4] = '0';
+		displacement32[5] = '0';
+		displacement32[6] = '0';
+		displacement32[7] = '0';
+		opc   = 0x0F;
+		modrm = 0x85;
+		chp[*PC+0] = opc;
+		chp[*PC+1] = modrm;
+		unsigned int n = _create_hex_value(src) - 6; // sizeof this instruction in form of 0F 85 xx xx xx xx
+		n -= *PC; // from the begining of the SECTION .CODE which is in our case is (0x00 + origin address)
+		n += 0x0000000; // TODO ~> REPLACE WITH REAL ORIGIN VALUE
+		_construct_string_from_hex(displacement32, n);
+		which_displacement = (1<<1);
+		*PC = *PC + 2;
+	}
+	
+	else if( src[length - 1] == ':' ) // a hard-coded hexadecimal value
+	{
+		for(i=0; i<table_of_labels_count; i++)
+		{
+			if( _strcmp(src, table_of_labels[i].string) )
+			{
+				displacement32[0] = '0';
+				displacement32[1] = '0';
+				displacement32[2] = '0';
+				displacement32[3] = '0';
+				displacement32[4] = '0';
+				displacement32[5] = '0';
+				displacement32[6] = '0';
+				displacement32[7] = '0';
+				opc   = 0x0F;
+				modrm = 0x85;
+				chp[*PC+0] = opc;
+				chp[*PC+1] = modrm;
+				unsigned int n = table_of_labels[i].address - 6; // sizeof this instruction in form of 0F 85 xx xx xx xx
+				n += 0x0000000; // TODO ~> REPLACE WITH REAL ORIGIN VALUE
+				_construct_string_from_hex(displacement32, n);
+				which_displacement = (1<<1);
+				*PC = *PC + 2;
+			}
+		}
+	}
+	
+	else {}
+
+	if( pl == PARSE_LEVEL_2 )
+		printf("opcode: 0x%x, ", opc);
+	
+	if(modrm)
+	{
+		if( pl == PARSE_LEVEL_2 )
+		printf("modrm: 0x%x, ", modrm);
+	}
+
+	switch(which_displacement)
+	{
+		case 0x2: 
+			if( pl == PARSE_LEVEL_2 )
+				printf("displacement: %c%c %c%c %c%c %c%c, ", 
+				   displacement32[0], displacement32[1], displacement32[2], displacement32[3],
+				   displacement32[4], displacement32[5], displacement32[6], displacement32[7]);
+			chp[*PC+0] = byte_string_to_byte(displacement32[0], displacement32[1]);
+			chp[*PC+1] = byte_string_to_byte(displacement32[2], displacement32[3]);
+			chp[*PC+2] = byte_string_to_byte(displacement32[4], displacement32[5]);
+			chp[*PC+3] = byte_string_to_byte(displacement32[6], displacement32[7]);
+			*PC = *PC + 4;
+			break;
+		case 0x4: break;
+		case 0x8: break;
+	}
+	
+	if( pl == PARSE_LEVEL_2 )
+			printf("\n");
 }
 
 //....................................................................................................................................
