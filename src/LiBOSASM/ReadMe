@@ -93,6 +93,24 @@
 			Note that you should not finish your numeric token with a ':' character, otherwise LiBOSASSEMBLER 
 			takes it into account as a label.
  
-		
+		jumps:
+			there are two types of jumps and for each, there are two supported modes.
+			the first type of jump is normal far jump to anywhere
+			the second type is conditional jumps based on values in EFLAGS register.
+			for each jump type explained above, the suppoted modew can be either direct immediate-32-bit or indirect addressing
+			including labels.
+
+			Example:
+				...
+				jmp 0xFFFFDDAA
+				jmp DWORD[_a_label:]
+				jmp DWORD[eax+0xFFFFAA12]
+				jmp DWORD[esp]				
+				...
+ 				jne 0xFFAA2345
+				je  DWORD[mem]
+				jnz ...
+				jz  ...
+				...		
 
 		ALL IN ALL, THE NUMBERING, ADDRESSING, AND INSTRUCTIONS ARE 'STRONGLY TYPED'
