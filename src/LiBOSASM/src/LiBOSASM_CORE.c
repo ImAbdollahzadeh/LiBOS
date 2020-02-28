@@ -81,7 +81,7 @@ OPCODE opcodes[] = {
 	{"pop",  OP_REG,     0x58}, 
 	{"pop",  OP_MEM,     0x8F}, 
 	{"jmp",  OP_REG,     0xFF}, // it gets /4 in its MODRM
-	{"jmp",  OP_MEM,     0xFF}, //<-??
+	{"jmp",  OP_MEM,     0xFF}, // it gets /4 in its MODRM
 	{"int",  OP_IMM,     0xCD}, 
 	{"ret",  OP,         0xFF}, // they are hard-coded
 	{"nop",  OP,         0xFF}, // they are hard-coded
