@@ -82,6 +82,8 @@ OPCODE opcodes[] = {
 	{"pop",  OP_MEM,     0x8F}, 
 	{"jmp",  OP_REG,     0xFF}, // it gets /4 in its MODRM
 	{"jmp",  OP_MEM,     0xFF}, // it gets /4 in its MODRM
+	{"call", OP_MEM,     0xFF}, // hard-coded
+	{"call", OP_IMM,     0xFF}, // hard-coded
 	{"int",  OP_IMM,     0xCD}, 
 	{"ret",  OP,         0xFF}, // they are hard-coded
 	{"nop",  OP,         0xFF}, // they are hard-coded
@@ -481,6 +483,8 @@ void _selection_stub(TRIPLE_PACKET* tp)
 		convert_jnz_instruction(tp, &ProgramCounter);
 	else if( _strcmp(tp->str1, "cmp") )
 		convert_cmp_instruction(tp, &ProgramCounter);
+	else if( _strcmp(tp->str1, "call") )
+		convert_call_instruction(tp, &ProgramCounter);
 	else if( _strcmp(tp->str1, "cld") )
 		convert_singlets_instruction(tp, SINGLET_INSTRUCTION_ID_CLD, &ProgramCounter);
 	else if( _strcmp(tp->str1, "std") )
@@ -818,7 +822,7 @@ void dump_output_beffer(void)
 	
 	printf("........ DUMP OUTPUT BUFFER ....................................\n");
 	for(i = 0; i < count; i++)
-		printf("%x ", out[i]);
+		printf((unsigned int)(out[i]) < 0x10 ? "0%x " : "%x ", out[i]);
 	printf("\n................................................................\n");
 }
 

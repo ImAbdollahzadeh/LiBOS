@@ -151,32 +151,21 @@ void convert_jmp_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 		{
 			opc = 0xFF;
 			modrm |= ( (4 << 3) | IMM_EAX );
-			chp[*PC+0] = opc;
-			chp[*PC+1] = modrm;
-			*PC = *PC + 2;
 		}
 		else if( _contain(src, "ecx") )
 		{
 			opc = 0xFF;
 			modrm |= ( (4 << 3) | IMM_ECX );
-			chp[*PC+0] = opc;
-			chp[*PC+1] = modrm;
-			*PC = *PC + 2;
 		}
 		else if( _contain(src, "edx") )
 		{
 			opc = 0xFF;
 			modrm |= ( (4 << 3) | IMM_EDX );
-			chp[*PC+0] = opc;
-			chp[*PC+1] = modrm;
-			*PC = *PC + 2;
 		}
 		else if( _contain(src, "ebx") )
 		{
 			opc = 0xFF;
 			modrm |= ( (4 << 3) | IMM_EBX );
-			chp[*PC+0] = opc;
-			chp[*PC+1] = modrm;
 		}
 		else if( _contain(src, "esp") )
 		{
@@ -191,10 +180,6 @@ void convert_jmp_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 			// [EBX+EDI*scale] an scale is either of 1,2,4,8. Here EBX is base, and EDI is index
 			// for us: [ESP] -> [0+ESP*1]
 			sib   |= ((IMM_ESP << 3) | IMM_ESP);
-			chp[*PC+0] = opc;
-			chp[*PC+1] = modrm;
-			chp[*PC+2] = sib;
-			*PC = *PC + 2;
 		}
 		else if( _contain(src, "ebp") )
 		{
@@ -210,25 +195,16 @@ void convert_jmp_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 			displacement32[6] = '0';
 			displacement32[7] = '0';
 			which_displacement = (1<<1);
-			chp[*PC+0] = opc;
-			chp[*PC+1] = modrm;
-			*PC = *PC + 2;
 		}
 		else if( _contain(src, "esi") )
 		{
 			opc = 0xFF;
 			modrm |= ( (4 << 3) | IMM_ESI );
-			chp[*PC+0] = opc;
-			chp[*PC+1] = modrm;
-			*PC = *PC + 2;
 		}
 		else if( _contain(src, "edi") )
 		{
 			opc = 0xFF;
 			modrm |= ( (4 << 3) | IMM_EDI );
-			chp[*PC+0] = opc;
-			chp[*PC+1] = modrm;
-			*PC = *PC + 2;
 		}
 		
 		if( _contain(src, "+") ) // displacement (only 32 bit hexadecimal numbers are accepted)
@@ -243,9 +219,6 @@ void convert_jmp_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 		{
 			opc = 0xFF;
 			modrm |= (0x05 | (4 << 3) );
-			chp[*PC+0] = opc;
-			chp[*PC+1] = modrm;
-			*PC = *PC + 2;
 			extract_from_memory_displacement_as_address(src, displacement32);
 			which_displacement = (1<<1);
 		}
@@ -261,8 +234,6 @@ void convert_jmp_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 	{
 		opc = 0xEA; // jump far to pre16:ptr32
 		modrm = 0;
-		chp[*PC+0] = opc;
-		*PC = *PC + 1;
 		encode_u32(src, displacement32);
 		which_displacement = (1<<1);
 		segment_active     = 1;
@@ -273,16 +244,22 @@ void convert_jmp_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 CONVERT_JMP_END:
 	if( pl == PARSE_LEVEL_2 )
 		printf("opcode: 0x%x, ", opc);
+	chp[*PC+0] = opc;
+	*PC = *PC + 1;
 	
 	if(modrm)
 	{
 		if( pl == PARSE_LEVEL_2 )
 		printf("modrm: 0x%x, ", modrm);
+		chp[*PC+0] = modrm;
+		*PC = *PC + 1;
 	}
 	if(sib)
 	{
 		if( pl == PARSE_LEVEL_2 )
 			printf("sib: 0x%x, ", sib);
+		chp[*PC+0] = sib;
+		*PC = *PC + 1;
 	}
 
 	switch(which_displacement)

@@ -1556,15 +1556,18 @@ EXIT_POSITION2:
 					{
 						if( pl == PARSE_LEVEL_2 )
 							printf("prefix: 0x%x, ", prefix);
+						chp[*PC+0] = prefix;
 						*PC = *PC + 1;
 					}
 					
 					if( pl == PARSE_LEVEL_2 )
 						printf("opcode: 0x%x, ", opc);
+					chp[*PC+0] = opc;
 					*PC = *PC + 1;
 					
 					if( pl == PARSE_LEVEL_2 )
 						printf("modrm: 0x%x, ", modrm);
+					chp[*PC+0] = modrm;
 					*PC = *PC + 1;
 				} // end of if 
 			} // end of if 
