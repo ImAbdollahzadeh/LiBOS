@@ -58,7 +58,7 @@ OPCODE opcodes[] = {
 	{"add",  OP_MEM_IMM, 0x80},
 	{"mov",  OP_REG_IMM, 0xB8},
 	{"mov",  OP_REG_MEM, 0x8B},
-	{"mov",  OP_MEM_REG, 0x8B},
+	{"mov",  OP_MEM_REG, 0x8A},
 	{"mov",  OP_MEM_IMM, 0xC7},
 	{"mov",  OP_REG_REG, 0x89},
 	{"sub",  OP_REG_IMM, 0x80}, 
@@ -817,12 +817,20 @@ unsigned char* get_output_buffer(void)
 
 void dump_output_beffer(void)
 {
-	unsigned int count = get_programCounter(), i;
+	unsigned int count = get_programCounter(), i, jumper = 0x10;
 	unsigned char* out = get_output_buffer();
 	
 	printf("........ DUMP OUTPUT BUFFER ....................................\n");
 	for(i = 0; i < count; i++)
+	{
+		jumper --;
 		printf((unsigned int)(out[i]) < 0x10 ? "0%x " : "%x ", out[i]);
+		if( !jumper )
+		{
+			printf("\n");
+			jumper = 0x10;
+		}
+	}
 	printf("\n................................................................\n");
 }
 
@@ -910,7 +918,7 @@ void handle_numeric_table(TRIPLE_PACKET* tp)
 void dump_numeric_table(void)
 {
 	unsigned int i;
-	printf("........ DUMP TABLE OF NEMERIC TOKEN ...........................\n");
+	printf("........ DUMP TABLE OF NUMERIC TOKEN ...........................\n");
 	for(i=0; i<table_of_numeric_tokens_count; i++)
 		printf("entry %u: string = %s, PC = %u\n", i, table_of_numeric_tokens[i].string, table_of_numeric_tokens[i].PC);
 	printf("................................................................\n");

@@ -603,6 +603,7 @@ EXIT_POSITION:
 				if( attribute == opcodes[j].attribute )
 				{
 					opc = opcodes[j].base_binary_code;
+					
 					if( _strcmp(tp->str3, "eax") )
 					{
 						opc |= _16_32;
@@ -709,54 +710,38 @@ EXIT_POSITION:
 					}
 					else if( _strcmp(tp->str3, "al") )
 					{
-						opc &= _8;
-						opc |= REG_TO_MEM;
-						modrm |= (MODRM_REG(IMM_AL) | MODRM_DISP32);
+						modrm |= MODRM_REG(IMM_AL);
 					}
 					else if( _strcmp(tp->str3, "cl") )
 					{
-						opc &= _8;
-						opc |= REG_TO_MEM;
-						modrm |= (MODRM_REG(IMM_CL) | MODRM_DISP32);
+						modrm |= MODRM_REG(IMM_CL);
 					}
 					else if( _strcmp(tp->str3, "dl") )
 					{
-						opc &= _8;
-						opc |= REG_TO_MEM;
-						modrm |= (MODRM_REG(IMM_DL) | MODRM_DISP32);
+						modrm |= MODRM_REG(IMM_DL);
 					}
 					else if( _strcmp(tp->str3, "bl") )
 					{
-						opc &= _8;
-						opc |= REG_TO_MEM;
-						modrm |= (MODRM_REG(IMM_BL) | MODRM_DISP32);
+						modrm |= MODRM_REG(IMM_BL);
 					}
 					else if( _strcmp(tp->str3, "ah") )
 					{
-						opc &= _8;
-						opc |= REG_TO_MEM;
-						modrm |= (MODRM_REG(IMM_AH) | MODRM_DISP32);
+						modrm |= MODRM_REG(IMM_AH);
 					}
 					else if( _strcmp(tp->str3, "ch") )
 					{
-						opc &= _8;
-						opc |= REG_TO_MEM;
-						modrm |= (MODRM_REG(IMM_CH) | MODRM_DISP32);
+						modrm |= MODRM_REG(IMM_CH);
 					}
 					else if( _strcmp(tp->str3, "dh") )
 					{
-						opc &= _8;
-						opc |= REG_TO_MEM;
-						modrm |= (MODRM_REG(IMM_DH) | MODRM_DISP32);
+						modrm |= MODRM_REG(IMM_DH);
 					}
 					else if( _strcmp(tp->str3, "bh") )
 					{
-						opc &= _8;
-						opc |= REG_TO_MEM;
-						modrm |= (MODRM_REG(IMM_BH) | MODRM_DISP32);
+						modrm |= MODRM_REG(IMM_BH);
 					}
 					else {}
-					
+
 					if( _contain(tp->str2, "+") ) // now it MUST have a register along
 					{
 						modrm &= 0x38; //00111000
@@ -809,13 +794,11 @@ EXIT_POSITION:
 					else if( _contain(tp->str2, "0x") ) // a bare address
 					{
 						extract_from_memory_displacement_as_address(tp->str2, displacement32);
-						which_displacement = (1<<1);							
+						which_displacement = (1<<1);
 					}
 					
-					else // there is only REG r a LABEL
+					else // there is only REG or a LABEL
 					{
-						modrm &= 0x38; //00111000. Now with mode [MEMORY]
-						
 						if( _contain(tp->str2, "eax") )
 						{
 							modrm |= IMM_EAX;
@@ -851,11 +834,17 @@ EXIT_POSITION:
 						}
 						if( _contain(tp->str2, "ebp") )
 						{
-							modrm |= (1<<6); // now the mode is [MEMORY+DISP8]
+							modrm |= (1<<7); // now the mode is [MEMORY+DISP32]
 							modrm |= 0x05;   // now ebp selected
-							displacement8[0] = '0';
-							displacement8[1] = '0';
-							which_displacement = (1<<3);
+							displacement32[0] = '0';
+							displacement32[1] = '0';
+							displacement32[2] = '0';
+							displacement32[3] = '0';
+							displacement32[4] = '0';
+							displacement32[5] = '0';
+							displacement32[6] = '0';
+							displacement32[7] = '0';
+							which_displacement = (1<<1);
 							goto EXIT_POSITION2;
 						}
 						if( _contain(tp->str2, "esi") )
@@ -874,7 +863,7 @@ EXIT_POSITION:
 						extract_from_memory_displacement_as_address(tp->str2, displacement32);
 						which_displacement = (1<<1);
 					}
-EXIT_POSITION2:												
+EXIT_POSITION2:
 					if(prefix)
 					{
 						if( pl == PARSE_LEVEL_2 )
@@ -1079,7 +1068,7 @@ EXIT_POSITION2:
 					
 					else if( _contain(tp->str2, "BYTE[") )
 					{
-						which_immediate |= (1<<3);
+						which_immediate = (1<<3);
 						opc &= ~(1<<0);
 						encode_u8(tp->str3, immediate8);
 						if( _contain(tp->str2, "eax") )
@@ -1111,11 +1100,17 @@ EXIT_POSITION2:
 						}
 						if( _contain(tp->str2, "ebp") )
 						{
-							modrm |= (1<<6); // now the mode is [MEMORY+DISP8]
+							modrm |= (1<<7); // now the mode is [MEMORY+DISP32]
 							modrm |= 0x05;   // now ebp selected
-							displacement8[0] = '0';
-							displacement8[1] = '0';
-							which_displacement = (1<<3);
+							displacement32[0] = '0';
+							displacement32[1] = '0';
+							displacement32[2] = '0';
+							displacement32[3] = '0';
+							displacement32[4] = '0';
+							displacement32[5] = '0';
+							displacement32[6] = '0';
+							displacement32[7] = '0';
+							which_displacement = (1<<1);
 						}
 						if( _contain(tp->str2, "esi") )
 						{
@@ -1128,11 +1123,11 @@ EXIT_POSITION2:
 						
 						if( _contain(tp->str2, "+") ) // it has a displacement
 						{
-							modrm |= (1<<6); // now the mode is [MEMORY+DISP8]
+							modrm |= (1<<7); // now the mode is [MEMORY+DISP32]
 							
 							// for now suppose only 8-bit displacement
-							extract_from_memory_displacement8(tp->str2, displacement8);
-							which_displacement = (1<<3);
+							extract_from_memory_displacement32(tp->str2, displacement32);
+							which_displacement = (1<<1);
 						}
 					}
 					

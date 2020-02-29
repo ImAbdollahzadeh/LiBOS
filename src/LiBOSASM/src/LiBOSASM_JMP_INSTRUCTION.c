@@ -363,6 +363,7 @@ THERE ARE ONLY 2 MODES
 				chp[*PC+0] = opc;
 				chp[*PC+1] = modrm;
 				unsigned int n = table_of_labels[i].address - 6; // sizeof this instruction in form of 0F 85 xx xx xx xx
+				n -= *PC;
 				n += 0x0000000; // TODO ~> REPLACE WITH REAL ORIGIN VALUE
 				_construct_string_from_hex(displacement32, n);
 				which_displacement = (1<<1);
@@ -379,7 +380,7 @@ THERE ARE ONLY 2 MODES
 	if(modrm)
 	{
 		if( pl == PARSE_LEVEL_2 )
-		printf("modrm: 0x%x, ", modrm);
+			printf("modrm: 0x%x, ", modrm);
 	}
 
 	switch(which_displacement)
