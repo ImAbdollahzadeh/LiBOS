@@ -819,18 +819,201 @@ void dump_output_beffer(void)
 {
 	unsigned int count = get_programCounter(), i, jumper = 0x10;
 	unsigned char* out = get_output_buffer();
+	unsigned int j = 0;
+	
+	unsigned int SIZEOF_CODE_SECTION = count;
+	unsigned int SIZEOF_DATA_SECTION = 0;
+	unsigned int SIZEOF_MODULES_SECTION = 0;
+	unsigned int SIZEOF_HEADER_SECTION = 0;
+	
+	
+	for(i = 0; i < data_entries_table_count; i++)
+	{
+		char*        tmp = (char*)(&data_entries_table[i]);
+		unsigned int sz  = string_length(data_entries_table[i].data_name);
+		
+		while(sz--)
+		{
+			out[count + j] = *tmp++;
+			j++;
+		}
+		count += j;
+		SIZEOF_DATA_SECTION += j;
+		j = 0;
+		
+		tmp = (char*)(&(data_entries_table[i].data_size));
+		out[count+0] = *(unsigned char*)tmp++;
+		out[count+1] = *(unsigned char*)tmp++;
+		out[count+2] = *(unsigned char*)tmp++;
+		out[count+3] = *(unsigned char*)tmp++;
+		count += 4;
+		SIZEOF_DATA_SECTION += 4;
+	
+		sz = data_entries_table[i].data_size;
+		tmp = (char*)(data_entries_table[i].data_buffer);
+		while(sz--)
+		{
+			out[count + j] = *tmp++;
+			j++;
+		}
+		count += j;
+		SIZEOF_DATA_SECTION += j;
+		j = 0;
+		
+		tmp = (char*)(&(data_entries_table[i].data_type));
+		unsigned int k;
+		for(k=0; k<sizeof(DATA_TYPE); k++)
+			out[count + k] = *(DATA_TYPE*)tmp++;
+		count += sizeof(DATA_TYPE);
+		SIZEOF_DATA_SECTION += sizeof(DATA_TYPE);
+	}
+	
+	EXT_HEADER ext_header;
+	const char* iid = "LiBOS_EXT_IMAGE";
+	const char* wwriter = "Iman_Abdollahzadeh";
+	const char* ddate = "01_Mar_2020";
+	unsigned int iid_length = string_length(iid);
+	unsigned int wwriter_length = string_length(wwriter);
+	unsigned int ddate_length = string_length(ddate);
+	unsigned int k;
+	for(k=0; k<iid_length; k++)
+		ext_header.id[k] = iid[k];
+	ext_header.id[iid_length] = '\0';
+	for(k=0; k<wwriter_length; k++)
+		ext_header.writer[k] = wwriter[k];
+	ext_header.writer[wwriter_length] = '\0';
+	for(k=0; k<ddate_length; k++)
+		ext_header.date[k] = ddate[k];
+	ext_header.date[ddate_length] = '\0';
+	
+	SIZEOF_HEADER_SECTION += iid_length + wwriter_length + ddate_length + (5 * sizeof(unsigned int));
+	
+	ext_header.start_of_code = iid_length + wwriter_length + ddate_length + (5 * sizeof(unsigned int)); // ??
+	ext_header.start_of_data = get_programCounter() + ext_header.start_of_code;
+	ext_header.start_of_modules = ext_header.start_of_data + SIZEOF_DATA_SECTION;
+	ext_header.sizeof_writer = wwriter_length;
+	ext_header.sizeof_date   = ddate_length;
+	
+	char* tmp = (char*)(&ext_header.id);
+	j = 0;
+	while(iid_length--)
+	{
+		out[count + j] = *tmp++;
+		j++;
+	}
+	count += j;
+	j = 0;
+	
+	tmp = (char*)(&ext_header.sizeof_writer);
+	out[count+0] = *(unsigned char*)tmp++;
+	out[count+1] = *(unsigned char*)tmp++;
+	out[count+2] = *(unsigned char*)tmp++;
+	out[count+3] = *(unsigned char*)tmp++;
+	count += 4;
+	
+	tmp = (char*)(&ext_header.writer);
+	while(wwriter_length--)
+	{
+		out[count + j] = *tmp++;
+		j++;
+	}
+	count += j;
+	j = 0;
+	
+	tmp = (char*)(&ext_header.sizeof_date);
+	out[count+0] = *(unsigned char*)tmp++;
+	out[count+1] = *(unsigned char*)tmp++;
+	out[count+2] = *(unsigned char*)tmp++;
+	out[count+3] = *(unsigned char*)tmp++;
+	count += 4;
+	
+	tmp = (char*)(&ext_header.date);
+	while(ddate_length--)
+	{
+		out[count + j] = *tmp++;
+		j++;
+	}
+	count += j;
+	j = 0;
+	
+	tmp = (char*)(&ext_header.start_of_code);
+	out[count+0] = *(unsigned char*)tmp++;
+	out[count+1] = *(unsigned char*)tmp++;
+	out[count+2] = *(unsigned char*)tmp++;
+	out[count+3] = *(unsigned char*)tmp++;
+	count += 4;
+	tmp = (char*)(&ext_header.start_of_data);
+	out[count+0] = *(unsigned char*)tmp++;
+	out[count+1] = *(unsigned char*)tmp++;
+	out[count+2] = *(unsigned char*)tmp++;
+	out[count+3] = *(unsigned char*)tmp++;
+	count += 4;
+	tmp = (char*)(&ext_header.start_of_modules);
+	out[count+0] = *(unsigned char*)tmp++;
+	out[count+1] = *(unsigned char*)tmp++;
+	out[count+2] = *(unsigned char*)tmp++;
+	out[count+3] = *(unsigned char*)tmp++;
+	count += 4;
 	
 	printf("........ DUMP OUTPUT BUFFER ....................................\n");
+	printf("        00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F\n");
+	printf("................................................................\n00:     ");
+	
+	unsigned char swap_buffer[16*1024];
+	unsigned int MAJOR_COUNTER;
+	for(MAJOR_COUNTER=0; MAJOR_COUNTER<SIZEOF_HEADER_SECTION; MAJOR_COUNTER++)
+		swap_buffer[MAJOR_COUNTER] = out[SIZEOF_CODE_SECTION+SIZEOF_DATA_SECTION+SIZEOF_MODULES_SECTION + MAJOR_COUNTER];
+	
+	for(MAJOR_COUNTER=0; MAJOR_COUNTER<SIZEOF_CODE_SECTION; MAJOR_COUNTER++)
+		swap_buffer[SIZEOF_HEADER_SECTION + MAJOR_COUNTER] = out[MAJOR_COUNTER];
+	
+	for(MAJOR_COUNTER=0; MAJOR_COUNTER<SIZEOF_DATA_SECTION; MAJOR_COUNTER++)
+		swap_buffer[SIZEOF_HEADER_SECTION + SIZEOF_CODE_SECTION + MAJOR_COUNTER] = out[SIZEOF_CODE_SECTION + MAJOR_COUNTER];
+	
+	for(MAJOR_COUNTER=0; MAJOR_COUNTER<SIZEOF_MODULES_SECTION; MAJOR_COUNTER++)
+		swap_buffer[SIZEOF_HEADER_SECTION + SIZEOF_CODE_SECTION + SIZEOF_DATA_SECTION + MAJOR_COUNTER] = out[SIZEOF_CODE_SECTION+SIZEOF_DATA_SECTION + MAJOR_COUNTER];
+	
+	
+	unsigned int column_counter = 0x10;
 	for(i = 0; i < count; i++)
 	{
 		jumper --;
-		printf((unsigned int)(out[i]) < 0x10 ? "0%x " : "%x ", out[i]);
+		printf((unsigned int)(swap_buffer[i]) < 0x10 ? "0%x " : "%x ", swap_buffer[i]);
 		if( !jumper )
 		{
-			printf("\n");
+			printf("\n%x:     ", column_counter);
+			column_counter += 0x10;
 			jumper = 0x10;
 		}
 	}
+	
+	printf("\n................................................................\n");
+	
+	printf("........ DUMP OUTPUT BUFFER (ASCII) ..............................\n");
+	printf("        00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F\n");
+	printf("................................................................\n00:     ");
+	jumper = 0x10;
+	column_counter = 0x10;
+	for(i = 0; i < count; i++)
+	{
+		jumper --;
+		if(swap_buffer[i] >= 33 && swap_buffer[i] < 126)
+			printf("%c  ", swap_buffer[i]);
+		else if(swap_buffer[i] == '!' )
+			printf("!  ");
+		else if(swap_buffer[i] == '?' )
+			printf("?  ");
+		else 
+			printf(".  ");
+		
+		if( !jumper )
+		{
+			printf("\n%x:     ", column_counter);
+			column_counter += 0x10;
+			jumper = 0x10;
+		}
+	}
+	
 	printf("\n................................................................\n");
 }
 

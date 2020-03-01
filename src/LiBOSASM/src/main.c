@@ -184,7 +184,8 @@ int main(void)
 		"\tpop  ebp\n"
 		"\tret\n"
 		"[SECTION .DATA]\n"
-		"name_of_module: db 'LiBOS_V2_printk'\n";
+		"name_of_module: db 'LiBOS_V2_printk'\n"
+		"a_dummy_data:   dd 0x12FD7E4B\n";
 	
 	parse_0(file, &tp, &lines, p);
 	
@@ -195,14 +196,14 @@ int main(void)
 	zero_programCounter();
 	zero_data_section_identifier();
 	
-	IMAGE_FILE_MEMORY ifm;
+	//IMAGE_FILE_MEMORY ifm;
 	parse_2(tp, lines);
-	ifm.total_sizeof_image = get_programCounter();
-	image_file_make(tp, lines, &ifm);
-	dump_table_of_labels();
-	dump_image_file_memory(&ifm);
+	//ifm.total_sizeof_image = get_programCounter();
+	//image_file_make(tp, lines, &ifm);
+	//dump_table_of_labels();
+	//dump_image_file_memory(&ifm);
 	dump_output_beffer();
-	dump_data_section_table_entries();
-	dump_numeric_table();
+	//dump_data_section_table_entries();
+	//dump_numeric_table();
 }
 

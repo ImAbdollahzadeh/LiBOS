@@ -67,6 +67,17 @@ typedef struct _DATA_SECTION_ENTRIES {
     DATA_TYPE      data_type;
 } DATA_SECTION_ENTRIES;
 
+typedef struct _EXT_HEADER {
+	char         id    [128];
+	unsigned int sizeof_writer;
+    char         writer[128];
+	unsigned int sizeof_date;
+	char         date  [128];
+	unsigned int start_of_code;
+	unsigned int start_of_data;
+	unsigned int start_of_modules;
+} EXT_HEADER;
+
 enum REG_32 {
 	IMM_EAX,
 	IMM_ECX,
