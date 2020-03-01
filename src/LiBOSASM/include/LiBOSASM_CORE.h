@@ -153,6 +153,8 @@ unsigned int    get_sizeof_opcodes                            (void);
 OPCODE*         get_opcodes                                   (void);
 unsigned int    get_table_of_labels_count                     (void);
 SYMBOLIC_LABEL* get_table_of_labels                           (void);
+unsigned int    get_table_of_data_count                       (void);
+DATA_SECTION_ENTRIES* get_table_of_data                             (void);
 unsigned char*  get_output_beffer                             (void);
 void            parse_1_or__convert_instructions_line_by_line (TRIPLE_PACKET* tp, unsigned int counts);
 void            convert_mov_instruction                       (TRIPLE_PACKET* tp, unsigned int* PC);

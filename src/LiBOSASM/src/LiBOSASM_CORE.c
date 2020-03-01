@@ -57,8 +57,8 @@ OPCODE opcodes[] = {
 	{"add",  OP_MEM_REG, 0x00}, 
 	{"add",  OP_MEM_IMM, 0x80},
 	{"mov",  OP_REG_IMM, 0xB8},
-	{"mov",  OP_REG_MEM, 0x8B},
-	{"mov",  OP_MEM_REG, 0x8A},
+	{"mov",  OP_REG_MEM, 0x8A},
+	{"mov",  OP_MEM_REG, 0x88},
 	{"mov",  OP_MEM_IMM, 0xC7},
 	{"mov",  OP_REG_REG, 0x89},
 	{"sub",  OP_REG_IMM, 0x80}, 
@@ -641,6 +641,7 @@ void handle_data_section(TRIPLE_PACKET* tp)
 		data_entries_table[data_entries_table_count].data_name[i] = *ch++;
 		i++;
 	}
+	data_entries_table[data_entries_table_count].data_name[i] = ':';
 	data_entries_table[data_entries_table_count].data_name[i+1] = '\0';
 	ch = tp->str2;
 	while(*ch++ != 'd');
@@ -989,7 +990,7 @@ void dump_output_beffer(void)
 	
 	printf("\n................................................................\n");
 	
-	printf("........ DUMP OUTPUT BUFFER (ASCII) ..............................\n");
+	printf("........ DUMP OUTPUT BUFFER (ASCII) ............................\n");
 	printf("        00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F\n");
 	printf("................................................................\n00:     ");
 	jumper = 0x10;
@@ -1105,6 +1106,20 @@ void dump_numeric_table(void)
 	for(i=0; i<table_of_numeric_tokens_count; i++)
 		printf("entry %u: string = %s, PC = %u\n", i, table_of_numeric_tokens[i].string, table_of_numeric_tokens[i].PC);
 	printf("................................................................\n");
+}
+
+//....................................................................................................................................
+
+unsigned int get_table_of_data_count()
+{
+	return data_entries_table_count;
+}
+
+//....................................................................................................................................
+
+DATA_SECTION_ENTRIES* get_table_of_data()
+{
+	return data_entries_table;
 }
 
 //....................................................................................................................................

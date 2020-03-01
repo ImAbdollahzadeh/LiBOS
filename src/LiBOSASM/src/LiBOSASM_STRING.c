@@ -300,7 +300,7 @@ void extract_from_memory_displacement_as_address(const char* s, char* dspl)
 		}
 		i++;
 	}
-	
+
 	if(tmp[0] == '0' && tmp[1] == 'x')
 	{
 		dspl[0] = tmp[8];
@@ -315,7 +315,7 @@ void extract_from_memory_displacement_as_address(const char* s, char* dspl)
 
 	else
 	{
-		// there is a label. Search label_table to find a match entry.
+		// there is a LABEL or DATA. Search label_table to find a match entry.
 		unsigned int pl = get_parse_level();
 		if( pl == PARSE_LEVEL_2 )
 		{
@@ -331,8 +331,34 @@ void extract_from_memory_displacement_as_address(const char* s, char* dspl)
 					return;
 				}
 			}
+			
+			DATA_SECTION_ENTRIES* ttab = get_table_of_data();
+			tab_cnt                    = get_table_of_data_count();
+			for(j=0; j<tab_cnt; j++)
+			{
+				if( _strcmp(ttab[j].data_name, tmp) )
+				{
+					
+					if(ttab[j].data_type == DATA_TYPE_DWORD)
+					{
+						unsigned int trg = *(unsigned int*)(ttab[j].data_buffer);
+						_construct_string_from_hex(dspl, trg);
+						return;
+					}
+					
+					if(ttab[j].data_type == DATA_TYPE_BYTE)
+					{
+						unsigned int trg = (unsigned int)(ttab[j].data_buffer);
+						_construct_string_from_hex(dspl, trg);
+						char* c = (char*)trg;
+						//printf("%s ", c);
+						return;
+					}
+					
+				}
+			}
 		}
-		printf("invalid label\n");
+		printf("invalid LABEL or DATA\n");
 	}
 }
 

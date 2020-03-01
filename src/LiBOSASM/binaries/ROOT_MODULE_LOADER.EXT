@@ -1,0 +1,109 @@
+[LiBOSASM 32-bit]
+[ORIGIN 0x00000000]
+[SECTION .CODE]
+	mov  eax, DWORD[global_module_table_address:]
+	mov  ebx, DWORD[global_module_table_count_address:]
+	mov  edi, DWORD[root_module_0:]
+	mov  edx, DWORD[root_module_0_address:]
+	xor  esi, esi
+	mov  DWORD[ebx], 0x00000000
+	push ebp
+	xor  ebp, ebp
+__@next:
+	xor  ecx, ecx
+	mov  cl, BYTE[edi]
+	mov  BYTE[eax], cl
+	add  edi, 0x00000001
+	add  esi, 0x00000001
+	add  eax, 0x00000001
+	cmp  ecx, 0x00000000
+	jne  __@next:
+	add  DWORD[ebx], 0x00000001
+__@@next:
+	mov  BYTE[eax], 0x00
+	add  eax, 0x00000001
+	add  esi, 0x00000001
+	cmp  esi, 0x00000080
+	jne  __@@next:
+	mov  DWORD[eax], edx
+	add  eax, 0x00000004
+	mov  edi, DWORD[root_module_1:]
+	mov  edx, DWORD[root_module_1_address:]
+	xor  esi, esi
+	add  ebp, 0x00000001
+	cmp  ebp, 0x00000002
+	jne  __@next:
+	pop  ebp
+	ret
+[SECTION .DATA]
+root_module_0:                     db 'LiBOS_V0_printk'
+root_module_0_address:             dd 0x20004004
+root_module_1:                     db 'LiBOS_V1_printk'
+root_module_1_address:             dd 0x20008004
+global_module_table_address:       dd 0x20000000
+global_module_table_count_address: dd 0x20004000
+................................................................
+........ DUMP OUTPUT BUFFER ....................................
+        00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
+................................................................
+00:     4c 69 42 4f 53 5f 45 58 54 5f 49 4d 41 47 45 12 
+10:     00 00 00 49 6d 61 6e 5f 41 62 64 6f 6c 6c 61 68 
+20:     7a 61 64 65 68 0b 00 00 00 30 31 5f 4d 61 72 5f 
+30:     32 30 32 30 40 00 00 00 d2 00 00 00 b6 01 00 00 
+40:     8b 05 00 00 00 20 8b 1d 00 40 00 20 8b 3d b0 d6 
+50:     05 02 8b 15 04 40 00 20 31 f6 c7 03 00 00 00 00 
+60:     55 31 ed 31 c9 8a 0f 88 08 81 c7 01 00 00 00 81 
+70:     c6 01 00 00 00 81 c0 01 00 00 00 81 f9 00 00 00 
+80:     00 0f 85 dc ff ff ff 81 03 01 00 00 00 c6 00 00 
+90:     81 c0 01 00 00 00 81 c6 01 00 00 00 81 fe 80 00 
+a0:     00 00 0f 85 e5 ff ff ff 89 10 81 c0 04 00 00 00 
+b0:     8b 3d f0 d6 05 02 8b 15 04 80 00 20 31 f6 81 c5 
+c0:     01 00 00 00 81 fd 02 00 00 00 0f 85 93 ff ff ff 
+d0:     5d c3 72 6f 6f 74 5f 6d 6f 64 75 6c 65 5f 30 3a 
+e0:     0f 00 00 00 4c 69 42 4f 53 5f 56 30 5f 70 72 69 
+f0:     6e 74 6b 01 00 00 00 72 6f 6f 74 5f 6d 6f 64 75 
+100:     6c 65 5f 30 5f 61 64 64 72 65 73 73 3a 04 00 00 
+110:     00 04 40 00 20 04 00 00 00 72 6f 6f 74 5f 6d 6f 
+120:     64 75 6c 65 5f 31 3a 0f 00 00 00 4c 69 42 4f 53 
+130:     5f 56 31 5f 70 72 69 6e 74 6b 01 00 00 00 72 6f 
+140:     6f 74 5f 6d 6f 64 75 6c 65 5f 31 5f 61 64 64 72 
+150:     65 73 73 3a 04 00 00 00 04 80 00 20 04 00 00 00 
+160:     67 6c 6f 62 61 6c 5f 6d 6f 64 75 6c 65 5f 74 61 
+170:     62 6c 65 5f 61 64 64 72 65 73 73 3a 04 00 00 00 
+180:     00 00 00 20 04 00 00 00 67 6c 6f 62 61 6c 5f 6d 
+190:     6f 64 75 6c 65 5f 74 61 62 6c 65 5f 63 6f 75 6e 
+1a0:     74 5f 61 64 64 72 65 73 73 3a 04 00 00 00 00 40 
+1b0:     00 20 04 00 00 00 
+........ DUMP OUTPUT BUFFER (ASCII) ............................
+        00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
+................................................................
+00:     L  i  B  O  S  _  E  X  T  _  I  M  A  G  E  .  
+10:     .  .  .  I  m  a  n  _  A  b  d  o  l  l  a  h  
+20:     z  a  d  e  h  .  .  .  .  0  1  _  M  a  r  _  
+30:     2  0  2  0  @  .  .  .  .  .  .  .  .  .  .  .  
+40:     .  .  .  .  .  .  .  .  .  @  .  .  .  =  .  .  
+50:     .  .  .  .  .  @  .  .  1  .  .  .  .  .  .  .  
+60:     U  1  .  1  .  .  .  .  .  .  .  .  .  .  .  .  
+70:     .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  
+80:     .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  
+90:     .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  
+a0:     .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  
+b0:     .  =  .  .  .  .  .  .  .  .  .  .  1  .  .  .  
+c0:     .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  
+d0:     ]  .  r  o  o  t  _  m  o  d  u  l  e  _  0  :  
+e0:     .  .  .  .  L  i  B  O  S  _  V  0  _  p  r  i  
+f0:     n  t  k  .  .  .  .  r  o  o  t  _  m  o  d  u  
+100:     l  e  _  0  _  a  d  d  r  e  s  s  :  .  .  .  
+110:     .  .  @  .  .  .  .  .  .  r  o  o  t  _  m  o  
+120:     d  u  l  e  _  1  :  .  .  .  .  L  i  B  O  S  
+130:     _  V  1  _  p  r  i  n  t  k  .  .  .  .  r  o  
+140:     o  t  _  m  o  d  u  l  e  _  1  _  a  d  d  r  
+150:     e  s  s  :  .  .  .  .  .  .  .  .  .  .  .  .  
+160:     g  l  o  b  a  l  _  m  o  d  u  l  e  _  t  a  
+170:     b  l  e  _  a  d  d  r  e  s  s  :  .  .  .  .  
+180:     .  .  .  .  .  .  .  .  g  l  o  b  a  l  _  m  
+190:     o  d  u  l  e  _  t  a  b  l  e  _  c  o  u  n  
+1a0:     t  _  a  d  d  r  e  s  s  :  .  .  .  .  .  @  
+1b0:     .  .  .  .  .  .  
+................................................................
+
