@@ -338,17 +338,16 @@ void extract_from_memory_displacement_as_address(const char* s, char* dspl)
 			{
 				if( _strcmp(ttab[j].data_name, tmp) )
 				{
-					
 					if(ttab[j].data_type == DATA_TYPE_DWORD)
 					{
-						unsigned int trg = *(unsigned int*)(ttab[j].data_buffer);
+						unsigned int trg = (unsigned int*)(ttab[j].data_buffer); // TODO BETTER
 						_construct_string_from_hex(dspl, trg);
 						return;
 					}
 					
 					if(ttab[j].data_type == DATA_TYPE_BYTE)
 					{
-						unsigned int trg = (unsigned int)(ttab[j].data_buffer);
+						unsigned int trg = (unsigned int)(ttab[j].data_buffer); // TODO BETTER
 						_construct_string_from_hex(dspl, trg);
 						char* c = (char*)trg;
 						//printf("%s ", c);

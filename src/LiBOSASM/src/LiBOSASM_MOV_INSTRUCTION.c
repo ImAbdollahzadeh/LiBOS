@@ -873,6 +873,18 @@ void convert_mov_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 							which_displacement = (1<<1);
 							modrm |= (1<<7); // MEMORY+DISP32
 						}
+						else if( _contain(tp->str2, "0x") ) // a bare address
+						{
+							extract_from_memory_displacement_as_address(tp->str2, displacement32);
+							which_displacement = (1<<1);
+						}
+						
+						else if( _contain(tp->str2, ":") )// therefore there is a LABEL
+						{
+							modrm |= 0x05;
+							extract_from_memory_displacement_as_address(tp->str2, displacement32);
+							which_displacement = (1<<1);
+						}
 					}
 					
 					else if( _contain(tp->str2, "WORD[") && (!_contain(tp->str2, "DWORD[")) )
@@ -934,6 +946,18 @@ void convert_mov_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 							
 							// for now suppose only 8-bit displacement
 							extract_from_memory_displacement32(tp->str2, displacement32);
+							which_displacement = (1<<1);
+						}
+						else if( _contain(tp->str2, "0x") ) // a bare address
+						{
+							extract_from_memory_displacement_as_address(tp->str2, displacement32);
+							which_displacement = (1<<1);
+						}
+						
+						else if( _contain(tp->str2, ":") )// therefore there is a LABEL
+						{
+							modrm |= 0x05;
+							extract_from_memory_displacement_as_address(tp->str2, displacement32);
 							which_displacement = (1<<1);
 						}
 					}
@@ -1000,6 +1024,13 @@ void convert_mov_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 						}
 						else if( _contain(tp->str2, "0x") ) // a bare address
 						{
+							extract_from_memory_displacement_as_address(tp->str2, displacement32);
+							which_displacement = (1<<1);
+						}
+						
+						else if( _contain(tp->str2, ":") )// therefore there is a LABEL
+						{
+							modrm |= 0x05;
 							extract_from_memory_displacement_as_address(tp->str2, displacement32);
 							which_displacement = (1<<1);
 						}
