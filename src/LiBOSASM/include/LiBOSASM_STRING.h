@@ -17,6 +17,7 @@ void           encode_u32                                  (const char* s, char*
 void           encode_u16                                  (const char* s, char* src);
 void           encode_u8                                   (const char* s, char* src);
 void           extract_from_memory_displacement_as_address (const char* s, char* dspl);
+void           extract_from_memory_displacement_as_value   (const char* s, char* dspl);
 void           extract_from_memory_displacement8           (const char* s, char* dspl);
 void           extract_from_memory_displacement32          (const char* s, char* dspl);
 unsigned char  byte_string_to_byte                         (char*, char*);

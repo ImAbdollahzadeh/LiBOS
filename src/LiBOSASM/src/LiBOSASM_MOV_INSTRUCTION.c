@@ -387,7 +387,41 @@ void convert_mov_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 					}
 					else {}
 					
-					if( _contain(tp->str3, "DWORD[") )
+					if( _contain(tp->str3, "VALUE[") ) /* *** VERY SPECIAL CASE *** */
+					{
+						if( !_contain(tp->str3, ":") )// therefore there is a LABEL
+						{
+							printf("error using VALUE\n");
+							return;
+						}
+						extract_from_memory_displacement_as_value(tp->str3, displacement32);
+						opc = 0xB8; // mov reg, imm32 !
+						if     ( _strcmp(tp->str2, "eax") ) opc |= IMM_EAX;
+						else if( _strcmp(tp->str2, "ecx") ) opc |= IMM_ECX;
+						else if( _strcmp(tp->str2, "edx") ) opc |= IMM_EDX;
+						else if( _strcmp(tp->str2, "ebx") ) opc |= IMM_EBX;
+						else if( _strcmp(tp->str2, "esp") ) opc |= IMM_ESP;
+						else if( _strcmp(tp->str2, "ebp") ) opc |= IMM_EBP;
+						else if( _strcmp(tp->str2, "esi") ) opc |= IMM_ESI;
+						else if( _strcmp(tp->str2, "edi") ) opc |= IMM_EDI;
+						
+						if( pl == PARSE_LEVEL_2 )
+							printf("opcode: 0x%x, ", opc);
+						chp[*PC+0] = opc;
+						*PC = *PC + 1;
+						if( pl == PARSE_LEVEL_2 )
+							printf("imm: %c%c %c%c %c%c %c%c, ", 
+								displacement32[0], displacement32[1], displacement32[2], displacement32[3],
+								displacement32[4], displacement32[5], displacement32[6], displacement32[7]);
+							chp[*PC+0] = byte_string_to_byte(displacement32[0], displacement32[1]);
+							chp[*PC+1] = byte_string_to_byte(displacement32[2], displacement32[3]);
+							chp[*PC+2] = byte_string_to_byte(displacement32[4], displacement32[5]);
+							chp[*PC+3] = byte_string_to_byte(displacement32[6], displacement32[7]);
+							*PC = *PC + 4;
+						return;
+					}
+					
+					else if( _contain(tp->str3, "DWORD[") )
 					{
 						if( _contain(tp->str3, "eax") )
 						{

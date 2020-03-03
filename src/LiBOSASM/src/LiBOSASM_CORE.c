@@ -45,6 +45,7 @@ const char* global_mem_table[] = {
 	"dword", "DWORD", 
 	"qword", "QWORD",
 	"xmmword", "XMMWORD", 
+	"VALUE", "value",
 };
 unsigned int mem_table_entries = sizeof(global_mem_table) / sizeof(const char*);
 

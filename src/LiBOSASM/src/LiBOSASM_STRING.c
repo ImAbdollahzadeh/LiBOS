@@ -363,6 +363,54 @@ void extract_from_memory_displacement_as_address(const char* s, char* dspl)
 
 //....................................................................................................................................
 
+void extract_from_memory_displacement_as_value(const char* s, char* dspl)
+{
+	unsigned int i;
+	for(i=0;i<8;i++)
+		dspl[i] = '0';
+	
+	unsigned char tmp[128];
+	unsigned int sz = string_length(s);
+	i = 0;
+	while(i < sz)
+	{
+		if(s[i] == '[')
+		{
+			i++;
+			unsigned int j = 0;
+			while(s[i] != ']')
+			{
+				tmp[j] = s[i];
+				j++;
+				i++;
+			}
+			tmp[j++] = '\0';
+			break;
+		}
+		i++;
+	}
+
+	// there is a DATA. Search data_table to find a match entry.
+	
+	DATA_SECTION_ENTRIES* ttab    = get_table_of_data();
+	unsigned int          tab_cnt = get_table_of_data_count(), j;
+	for(j=0; j<tab_cnt; j++)
+	{
+		if( _strcmp(ttab[j].data_name, tmp) )
+		{
+			if(ttab[j].data_type == DATA_TYPE_DWORD)
+			{
+				unsigned int trg = *(unsigned int*)(ttab[j].data_buffer); // TODO BETTER
+				_construct_string_from_hex(dspl, trg);
+				return;
+			}
+		}
+	}
+	printf("invalid DATA\n");
+}
+
+//....................................................................................................................................
+
 void extract_from_memory_displacement8(const char* s, char* dspl)
 {
 	unsigned int i;
