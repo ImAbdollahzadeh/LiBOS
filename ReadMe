@@ -1,0 +1,127 @@
+	LiBOSASM: a 32-bit-only x86 assembler written in C by Iman Abdollahzadeh
+
+	Syntax:
+		registers:
+			eax, ecx, edx, ebx, esp, ebp, esi, edi
+			ax, cx, bx, dx, sp, bp, so, di
+			al, cl, dl, bl, ah, ch, dh, bh
+			cs, ds, es, fs, gs, ss, eflags, flags
+
+		memory modes:
+			mov eax, DWORD[0xFFFFFFFF]
+			mov eax, DWORD[address]
+			mov eax, DWORD[esp]
+			mov sp,  WORD[0xFFFFFFFF]
+			mov dh,  BYTE[0xFFFFFFFF]		
+			add BYTE[address], 0x58
+		
+			this is wrong -> mov eax, DWORD [address]. There should be no space between memory size and brakets
+		writing .asm files:
+			all files must be started with [LiBOSASM 32-bit]
+			all files must have only one origin as [ORIGIN 0x38EF501A]
+			.text and .data sections must be given as [SECTION .CODE] and [SECTION .DATA], respectively
+			there is no uninitialized section. There is no more sections
+			all labels MUST be ended with ':' character like FIRST_LABEL:
+			the only character reserved for the assembler and should not be used in any case is '!'
+		
+		data definitions in SECTION .DATA:
+			all data definitions include their size
+			they must be ended with character ':'
+			the data definition must be done in one line, therefore breaking the line by enter, is invalid
+			section .DATA must be declared ALWAYS at the end of the file after section .CODE
+			they obey the naming as for the labels (see below)
+			data types are:
+				db to define 1 to n bytes as string
+				dw to define 1 WORD data
+				dd to define 1 DWORD data
+				dq to define 1 QWORD data
+				dX (and not dx to be confused with dx register) to define 1 XMMWORD data
+
+			all numeric data must be goven in hexadecimal form like 0xFF
+			to define a string of characters use '' and not ""
+			all special characters such as \n and \t must be defined inside '' for the string
+
+			example:
+				[SECTION .DATA]
+				string_to_be_printed: db 'LiBOS assembler version 0.00\n\0'
+				_@@__rgb_black_mask: dw 0x0000
+				simd_operation_data: dX 0xFFFFFFFF000000001111111122222222
+
+		several label examples:
+			__label@@__assembler12F0:
+			loop:
+			end_of_subroutine_v@u32@u32p@function:
+	
+		upper/lower case:
+			all instructions include lower case mnemonics
+			all memory sizes are upper case
+			all numbers are in hexadecimal with 0x initiation like 0xFFAABBC7
+			to define a simd 128-bit data from integer values use: 0xAAAAAAAABBBBBBBBCCCCCCCCDDDDDDDD
+			all addresses should be 32-bits hexadecimal numbers
+			all numbers should be 32-bits hexadecimal like 0x00000042 instead of only 0x42
+			all numbers for 16-bit instructions are hexadecimal 16-bits like 'mov cx, 0x45FA'
+			all numbers for 8-bit instructions are hexadecimal 8-bits like 'mov cl, 0x4B'
+
+		defining numeric tokens:
+			in order to mark two or more positions in the entire file for further analysis,
+			there is the machanism called 'numeric token'. For instance, we have a subroutine somewhere.
+			We would like to know, during the runtime, the sizeof this particular subroutine.
+			The way to do it is via numeroc token definition.
+
+			Example:
+				...
+				_subroutine_1:
+					$subroutine_1_start
+						push ebp
+						mov ebp, esp
+						mov eax, DWORD[some_address]
+						xor edi, edi					
+						add eax, edi
+						mov esp, ebp
+						pop ebp
+						ret
+					$subroutine_1_end
+
+				_subroutine_2
+					...
+ 
+				Therefore the quantity ($subroutine_1_start - $subroutine_1_end) gives the size of _subroutine_1.
+			The way to define a proper numeric token is to start with a '$' character and follow up with any other
+			characters, numbers expcep '!' character.
+
+			Note that defining two or more similar numeric tokens leads to the whole program crash.
+			Note that you should not finish your numeric token with a ':' character, otherwise LiBOSASSEMBLER 
+			takes it into account as a label.
+ 
+		jumps:
+			there are two types of jumps and for each, there are two supported modes.
+			the first type of jump is normal far jump to anywhere
+			the second type is conditional jumps based on values in EFLAGS register.
+			for each jump type explained above, the suppoted modew can be either direct immediate-32-bit or indirect addressing
+			including labels.
+
+			Example:
+				...
+				jmp 0xFFFFDDAA
+				jmp DWORD[_a_label:]
+				jmp DWORD[eax+0xFFFFAA12]
+				jmp DWORD[esp]				
+				...
+ 				jne 0xFFAA2345
+				je  DWORD[mem]
+				jnz ...
+				jz  ...
+				...	
+
+		calls:
+			there are examples for call as following. Note that there is no 
+			case as "call _some_label:", and instead it MUST be the form "call DWORD[_some_label:]".
+
+			Example:
+				...
+				call 0xFFFFDDAA
+				call DWORD[_a_label:]
+				call DWORD[eax+0xFFFFAA12]
+				call DWORD[esp]					
+
+		ALL IN ALL, THE NUMBERING, ADDRESSING, AND INSTRUCTIONS ARE 'STRONGLY TYPED'
