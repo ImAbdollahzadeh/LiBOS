@@ -1,0 +1,116 @@
+[LiBOSASM 32-bit]
+[ORIGIN 0x01000000]
+[SECTION .CODE]
+_@@__ext_loader__@@_:
+	push   ebp
+	mov    ebp,         esp
+	mov    eax,         DWORD[ebp+0x00000008]
+	mov    ebx,         DWORD[ebp+0x0000000C]
+	;----------------------------------------------------------------------now eax is pointer to the name string
+	;----------------------------------------------------------------------now ebx is pointer to 1KB binary data
+	mov    ecx,         DWORD[0x0104837C]
+	mov    esi,         0x01000000
+_find_next_free_ext_chunk:
+	add    esi,         0x00000400
+	sub    ecx,         0x00000001
+	cmp    ecx,         0x00000000
+	jne    _find_next_free_ext_chunk:
+	push   esi
+	;----------------------------------------------------------------------keep esi's value for later uses
+	mov    ecx,         0x00000400
+_copy_bytes:
+	xor    edx,         edx
+	mov    dl,          BYTE[ebx]
+	mov    BYTE[esi],   dl
+	add    ebx,         0x00000001
+	add    esi,         0x00000001
+	cmp    ecx,         0x00000000
+	jne    _copy_bytes:
+	mov    ecx,         DWORD[0x01048380]
+	;----------------------------------------------------------------------now ecx contains the address of start_of_global_ext_table
+_create_new_global_ext_table_entry:
+	xor    edx,         edx
+	mov    dl,          BYTE[ecx]
+	cmp    dl,          0x00
+	je     _found_entry:
+	add    ecx,         0x00000084
+	;----------------------------------------------------------------------one step = 132 bytes
+	jmp    _create_new_global_ext_table_entry:
+	xor    esi,         esi
+_found_entry:
+	xor    edx,         edx
+	mov    dl,          BYTE[eax]
+	cmp    dl,          0x00
+	je     _set_entry_address:
+	mov    BYTE[ecx],   dl
+	add    eax,         0x00000001
+	add    ecx,         0x00000001
+	add    esi,         0x00000001
+	jmp    _found_entry:
+_set_entry_address:
+	mov    BYTE[ecx],   0x00
+	add    esi,         0x00000001
+	add    ecx,         0x00000001
+	cmp    esi,         0x00000080
+	jne    _set_entry_address:
+	pop    esi
+	mov    DWORD[ecx],  esi
+_update_global_ext_table_count:
+	mov    ecx,         DWORD[0x0104837C]
+	add    DWORD[ecx],  0x00000001
+	mov    esp,         ebp
+	pop    ebp
+	ret
+[SECTION .DATA]
+	_@@__ext_loader__@@_LiBOSASM_internal_data_buffer: dd 0xFFFFFFFF
+
+........ DUMP OUTPUT BUFFER ....................................
+        00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
+................................................................
+00:     4c 69 42 4f 53 5f 45 58 54 5f 49 4d 41 47 45 12 
+10:     00 00 00 49 6d 61 6e 5f 41 62 64 6f 6c 6c 61 68 
+20:     7a 61 64 65 68 0b 00 00 00 30 31 5f 4d 61 72 5f 
+30:     32 30 32 30 40 00 00 00 02 01 00 00 40 01 00 00 
+40:     55 89 e5 8b 85 08 00 00 00 8b 9d 0c 00 00 00 8b 
+50:     0d 7c 83 04 01 be 00 00 00 01 81 c6 00 04 00 00 
+60:     81 e9 01 00 00 00 81 f9 00 00 00 00 0f 85 e8 ff 
+70:     ff 00 56 b9 00 04 00 00 31 d2 8a 17 88 16 81 c3 
+80:     01 00 00 00 81 c6 01 00 00 00 81 f9 00 00 00 00 
+90:     0f 85 e2 ff ff 00 8b 0d 80 83 04 01 31 d2 8a 15 
+a0:     80 fa 00 0f 84 6c 00 00 01 81 c1 84 00 00 00 00 
+b0:     31 f6 31 d2 8a 15 80 fa 00 0f 84 8e 00 00 01 88 
+c0:     11 81 c0 01 00 00 00 81 c1 01 00 00 00 81 c6 01 
+d0:     00 00 00 00 c6 01 00 81 c6 01 00 00 00 81 c1 01 
+e0:     00 00 00 81 fe 80 00 00 00 0f 85 e5 ff ff 00 5e 
+f0:     89 31 8b 0d 7c 83 04 01 81 01 01 00 00 00 89 ec 
+100:     5d c3 5f 40 40 5f 5f 65 78 74 5f 6c 6f 61 64 65 
+110:     72 5f 5f 40 40 5f 4c 69 42 4f 53 41 53 4d 5f 69 
+120:     6e 74 65 72 6e 61 6c 5f 64 61 74 61 5f 62 75 66 
+130:     66 65 72 3a 04 00 00 00 ff ff ff ff 04 00 00 00 
+140:     
+........ DUMP OUTPUT BUFFER (ASCII) ............................
+        00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
+................................................................
+00:     L  i  B  O  S  _  E  X  T  _  I  M  A  G  E  .  
+10:     .  .  .  I  m  a  n  _  A  b  d  o  l  l  a  h  
+20:     z  a  d  e  h  .  .  .  .  0  1  _  M  a  r  _  
+30:     2  0  2  0  @  .  .  .  .  .  .  .  @  .  .  .  
+40:     U  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  
+50:     .  |  .  .  .  .  .  .  .  .  .  .  .  .  .  .  
+60:     .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  
+70:     .  .  V  .  .  .  .  .  1  .  .  .  .  .  .  .  
+80:     .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  
+90:     .  .  .  .  .  .  .  .  .  .  .  .  1  .  .  .  
+a0:     .  .  .  .  .  l  .  .  .  .  .  .  .  .  .  .  
+b0:     1  .  1  .  .  .  .  .  .  .  .  .  .  .  .  .  
+c0:     .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  
+d0:     .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  
+e0:     .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  ^  
+f0:     .  1  .  .  |  .  .  .  .  .  .  .  .  .  .  .  
+100:     ]  .  _  @  @  _  _  e  x  t  _  l  o  a  d  e  
+110:     r  _  _  @  @  _  L  i  B  O  S  A  S  M  _  i  
+120:     n  t  e  r  n  a  l  _  d  a  t  a  _  b  u  f  
+130:     f  e  r  :  .  .  .  .  .  .  .  .  .  .  .  .  
+140:     
+................................................................
+

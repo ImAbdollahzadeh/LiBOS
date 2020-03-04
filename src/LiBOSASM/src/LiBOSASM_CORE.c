@@ -6,7 +6,7 @@
 unsigned int ProgramCounter = 0;
 unsigned int parse_level    = 0xFF;
 unsigned char output_buffer[16*1024 /* for nor 16 KiB */];
-
+unsigned int  origin = 0;
 //....................................................................................................................................
 
 NUMERIC_TOKEN table_of_numeric_tokens[0xFFFF];
@@ -101,6 +101,19 @@ unsigned int is_numeric_token(const char* str)
 	unsigned int length = string_length(str);
 	if(*str == '$' && str[length-1] != ':')
 		return 1;
+	return 0;
+}
+
+//....................................................................................................................................
+
+unsigned int is_comment(const char* str)
+{
+	unsigned int length = string_length(str);
+	if(*str == ';')
+	{
+		printf("comment:%s\n", str);
+		return 1;
+	}
 	return 0;
 }
 
@@ -236,7 +249,12 @@ void map_machine_codes(TRIPLE_PACKET* tp)
 	char* s = tp->str1;
 	if(*s != '!')
 	{
-		if( in_opcodes(s) )
+		if( is_comment(s) )
+		{
+			//printf("c");
+			tp->mod1 = 'c';
+		}
+		else if( in_opcodes(s) )
 		{
 			//printf("o");
 			tp->mod1 = 'o';
@@ -394,7 +412,12 @@ void lex(TRIPLE_PACKET* tp, const char* line)
 			f++;
 		else
 		{
-			if(*f == '[')
+			if(*f == ';') // the whole line is comment
+			{
+				while(*f != '\n')
+					f++;
+			}
+			else if(*f == '[')
 			{
 				while(*f != ']')
 				{
@@ -440,7 +463,7 @@ void lex(TRIPLE_PACKET* tp, const char* line)
 	}
 FINALIZE:
 	//printf("%s %s %s => ", tp->str1, tp->str2, tp->str3);
-	map_machine_codes(tp);	
+	map_machine_codes(tp);
 }
 
 //....................................................................................................................................
@@ -506,6 +529,8 @@ void _selection_stub(TRIPLE_PACKET* tp)
 		handle_data_section(tp);
 	else if( tp->mod1 == 'N' )
 		handle_numeric_table(tp);
+	else if( tp->mod1 == 'c' )
+		handle_comment(tp);
 	
 	else {}
 }
@@ -619,7 +644,7 @@ void handle_labels(TRIPLE_PACKET* tp, unsigned int* PC)
  	{
  		if( _strcmp(label, table_of_labels[i].string) )
  		{
- 			table_of_labels[i].address = *PC;
+ 			table_of_labels[i].address = *PC + origin; // CONCENTRATE HERE
 			return;
  		}
  	}
@@ -762,6 +787,41 @@ void zero_programCounter(void)
 unsigned int get_programCounter(void)
 {
 	return ProgramCounter;
+}
+
+//....................................................................................................................................
+
+void extract_origin(TRIPLE_PACKET* tp, unsigned int counts)
+{
+	unsigned int i = 0;
+	char tmp[128];
+	while(i < counts)
+	{
+		if( tp[i].mod1 == 'D' )
+		{
+			if( _contain(tp[i].str1, "ORIGIN") )
+			{
+				/*there should be 0x inside it otherwise an error */
+				char* c = tp[i].str1;
+				while(*c != '0')
+					c++;
+
+				if( *c == '0' && *(c+1) == 'x' )
+				{
+					unsigned int cnt = 0;
+					while(*c != ']')
+					{
+						tmp[cnt] = *c++;
+						cnt++;
+					}
+					tmp[cnt] = '\0';
+					break;
+				}
+			}
+		}
+		i++;
+	}
+	origin = (void*)( address_string_to_hex(tmp) );
 }
 
 //....................................................................................................................................
@@ -1093,7 +1153,7 @@ void handle_numeric_table(TRIPLE_PACKET* tp)
 			}
 		}
 		table_of_numeric_tokens[table_of_numeric_tokens_count].string = tp->str1;
-		table_of_numeric_tokens[table_of_numeric_tokens_count].PC     = pc;
+		table_of_numeric_tokens[table_of_numeric_tokens_count].PC     = pc + origin; // CONCENTRATE HERE
 		table_of_numeric_tokens_count++;
 	}
 }
@@ -1105,7 +1165,7 @@ void dump_numeric_table(void)
 	unsigned int i;
 	printf("........ DUMP TABLE OF NUMERIC TOKEN ...........................\n");
 	for(i=0; i<table_of_numeric_tokens_count; i++)
-		printf("entry %u: string = %s, PC = %u\n", i, table_of_numeric_tokens[i].string, table_of_numeric_tokens[i].PC);
+		printf("entry %u: string = %s, PC = 0x%x\n", i, table_of_numeric_tokens[i].string, table_of_numeric_tokens[i].PC);
 	printf("................................................................\n");
 }
 
@@ -1121,6 +1181,13 @@ unsigned int get_table_of_data_count()
 DATA_SECTION_ENTRIES* get_table_of_data()
 {
 	return data_entries_table;
+}
+
+//....................................................................................................................................
+
+void handle_comment(TRIPLE_PACKET* tp)
+{
+	/* nothing */
 }
 
 //....................................................................................................................................

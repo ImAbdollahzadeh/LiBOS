@@ -270,120 +270,144 @@ void convert_mov_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 					{
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_EAX);
+						modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "ecx") )
 					{
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_ECX);
+						modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "edx") )
 					{
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_EDX);
+						modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "ebx") )
 					{
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_EBX);
+						modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "esp") )
 					{
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_ESP);
+						modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "ebp") )
 					{opc |= _16_32;
 						modrm |= MODRM_REG(IMM_EBP);
+					 modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "esi") )
 					{
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_ESI);
+						modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "edi") )
 					{
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_EDI);
+						modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "ax") )
 					{
 						prefix = 0x66;
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_AX);
+						modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "cx") )
 					{
 						prefix = 0x66;
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_CX);
+						modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "dx") )
 					{
 						prefix = 0x66;
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_DX);
+						modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "bx") )
 					{
 						prefix = 0x66;
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_BX);
+						modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "sp") )
 					{
 						prefix = 0x66;
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_SP);
+						modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "bp") )
 					{
 						prefix = 0x66;
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_BP);
+						modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "si") )
 					{
 						prefix = 0x66;
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_SI);
+						modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "di") )
 					{
 						prefix = 0x66;
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_DI);
+						modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "al") )
 					{
 						modrm |= MODRM_REG(IMM_AL);
+						modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "cl") )
 					{
 						modrm |= MODRM_REG(IMM_CL);
+						modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "dl") )
 					{
 						modrm |= MODRM_REG(IMM_DL);
+						modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "bl") )
 					{
 						modrm |= MODRM_REG(IMM_BL);
+						modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "ah") )
 					{
 						modrm |= MODRM_REG(IMM_AH);
+						modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "ch") )
 					{
 						modrm |= MODRM_REG(IMM_CH);
+						modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "dh") )
 					{
 						modrm |= MODRM_REG(IMM_DH);
+						modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "bh") )
 					{
 						modrm |= MODRM_REG(IMM_BH);
+						modrm |= MODRM_DISP32;
 					}
 					else {}
 					

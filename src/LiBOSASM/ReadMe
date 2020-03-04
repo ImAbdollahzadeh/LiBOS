@@ -111,6 +111,17 @@
 				je  DWORD[mem]
 				jnz ...
 				jz  ...
-				...		
+				...	
+
+		calls:
+			there are examples for call as following. Note that there is no 
+			case as "call _some_label:", and instead it MUST be the form "call DWORD[_some_label:]".
+
+			Example:
+				...
+				call 0xFFFFDDAA
+				call DWORD[_a_label:]
+				call DWORD[eax+0xFFFFAA12]
+				call DWORD[esp]					
 
 		ALL IN ALL, THE NUMBERING, ADDRESSING, AND INSTRUCTIONS ARE 'STRONGLY TYPED'
