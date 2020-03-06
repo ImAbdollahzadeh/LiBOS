@@ -50,17 +50,6 @@ void convert_jmp_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 	
 	unsigned int    table_of_labels_count = get_table_of_labels_count();
 	SYMBOLIC_LABEL* table_of_labels       = get_table_of_labels();
-	
-	//for(i=0; i< table_of_labels_count;i++)
-	//{
-	//	if( _strcmp(src, table_of_labels[i].string) )
-	//	{
-	//		//address = table_of_labels[i].address;
-	//		//opc = 0x11;
-	//		*PC += 5;
-	//		goto CONVERT_JMP_END;
-	//	}
-	//}
 
 	if( _strcmp(src, "eax") )
 	{
@@ -476,6 +465,7 @@ THERE ARE ONLY 2 MODES
 				chp[*PC+0] = opc;
 				chp[*PC+1] = modrm;
 				unsigned int n = table_of_labels[i].address - 6; // sizeof this instruction in form of 0F 85 xx xx xx xx
+				n -= *PC; // from the begining of the SECTION .CODE which is in our case is (0x00 + origin address)
 				n += 0x0000000; // TODO ~> REPLACE WITH REAL ORIGIN VALUE
 				_construct_string_from_hex(displacement32, n);
 				which_displacement = (1<<1);

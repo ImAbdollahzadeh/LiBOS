@@ -64,6 +64,7 @@ typedef struct _DATA_SECTION_ENTRIES {
     char           data_name[128];
     unsigned int   data_size;
     unsigned char* data_buffer;
+	unsigned int   data_buffer_2; 
     DATA_TYPE      data_type;
 } DATA_SECTION_ENTRIES;
 
@@ -188,5 +189,6 @@ void                  dump_data_section_table_entries               (void);
 void                  dump_numeric_table                            (void);
 void                  print_file                                    (char* file);
 void                  extract_origin                                (TRIPLE_PACKET* tp, unsigned int counts);
+void                  append_data_section_after_code_section        (void);
 
 #endif // !__LIBOSASM__H__

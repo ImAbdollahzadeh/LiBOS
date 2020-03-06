@@ -1,0 +1,66 @@
+[LiBOSASM 32-bit]
+[ORIGIN 0x00000000]
+[SECTION .CODE]
+__@@_get_global_ext_table_attributes_@@__:
+	push ebp
+	mov  ebp, esp
+	mov  ecx, DWORD[ebp+0x00000008]
+	cmp  ecx, 0x00000000
+	je   __@@_get_global_ext_table_address_@@__:
+	cmp  ecx, 0x00000001
+	je   __@@_get_global_ext_table_count_@@__:
+	mov  eax, DWORD[LiBOS_internal_@@_get_global_ext_table_attributes_@@_:]
+	mov  DWORD[ebp+0x0000000C], eax
+	jmp  DWORD[__@@_get_global_ext_table_attributes_end_@@__:]
+__@@_get_global_ext_table_address_@@__:
+	mov  eax, DWORD[0x01048380]
+	mov  DWORD[ebp+0x0000000C], eax
+	jmp  DWORD[__@@_get_global_ext_table_attributes_end_@@__:]
+__@@_get_global_ext_table_count_@@__:
+	mov  eax, DWORD[0x0104837C]
+	mov  DWORD[ebp+0x0000000C], eax
+	jmp  DWORD[__@@_get_global_ext_table_attributes_end_@@__:]
+__@@_get_global_ext_table_attributes_end_@@__:
+	mov  esp, ebp
+	pop  ebp
+	ret
+[SECTION .DATA]
+	LiBOS_internal_@@_get_global_ext_table_attributes_@@_: dd 0xFFFFFFFF
+
+........ DUMP OUTPUT BUFFER ....................................
+        00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
+................................................................
+00:     4c 69 42 4f 53 5f 45 58 54 5f 49 4d 41 47 45 12 
+10:     00 00 00 49 6d 61 6e 5f 41 62 64 6f 6c 6c 61 68 
+20:     7a 61 64 65 68 0b 00 00 00 30 31 5f 4d 61 72 5f 
+30:     32 30 32 30 40 00 00 00 9b 00 00 00 dd 00 00 00 
+40:     55 89 e5 8b 8d 08 00 00 00 81 f9 00 00 00 00 0f 
+50:     84 1e 00 00 00 81 f9 01 00 00 00 0f 84 24 00 00 
+60:     00 8b 05 80 8e e4 00 89 85 0c 00 00 00 ff 25 57 
+70:     00 00 00 8b 05 80 83 04 01 89 85 0c 00 00 00 ff 
+80:     25 57 00 00 00 8b 05 7c 83 04 01 89 85 0c 00 00 
+90:     00 ff 25 57 00 00 00 89 ec 5d c3 4c 69 42 4f 53 
+a0:     5f 69 6e 74 65 72 6e 61 6c 5f 40 40 5f 67 65 74 
+b0:     5f 67 6c 6f 62 61 6c 5f 65 78 74 5f 74 61 62 6c 
+c0:     65 5f 61 74 74 72 69 62 75 74 65 73 5f 40 40 5f 
+d0:     3a 04 00 00 00 ff ff ff ff 04 00 00 00 
+
+........ DUMP OUTPUT BUFFER (ASCII) ............................
+        00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
+................................................................
+00:     L  i  B  O  S  _  E  X  T  _  I  M  A  G  E  .  
+10:     .  .  .  I  m  a  n  _  A  b  d  o  l  l  a  h  
+20:     z  a  d  e  h  .  .  .  .  0  1  _  M  a  r  _  
+30:     2  0  2  0  @  .  .  .  .  .  .  .  .  .  .  .  
+40:     U  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  
+50:     .  .  .  .  .  .  .  .  .  .  .  .  .  $  .  .  
+60:     .  .  .  .  .  .  .  .  .  .  .  .  .  .  %  W  
+70:     .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  
+80:     %  W  .  .  .  .  .  |  .  .  .  .  .  .  .  .  
+90:     .  .  %  W  .  .  .  .  .  ]  .  L  i  B  O  S  
+a0:     _  i  n  t  e  r  n  a  l  _  @  @  _  g  e  t  
+b0:     _  g  l  o  b  a  l  _  e  x  t  _  t  a  b  l  
+c0:     e  _  a  t  t  r  i  b  u  t  e  s  _  @  @  _  
+d0:     :  .  .  .  .  .  .  .  .  .  .  .  .  
+................................................................
+

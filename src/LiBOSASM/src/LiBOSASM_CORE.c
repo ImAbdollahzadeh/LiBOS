@@ -414,7 +414,7 @@ void lex(TRIPLE_PACKET* tp, const char* line)
 		{
 			if(*f == ';') // the whole line is comment
 			{
-				while(*f != '\n')
+				while(*f != '\0')
 					f++;
 			}
 			else if(*f == '[')
@@ -1044,6 +1044,7 @@ void dump_output_beffer(void)
 		if( !jumper )
 		{
 			printf("\n%x:     ", column_counter);
+			//printf("\n", column_counter);
 			column_counter += 0x10;
 			jumper = 0x10;
 		}
@@ -1110,7 +1111,7 @@ void dump_data_section_table_entries(void)
 				printf("%llx\n",                  *(unsigned long long*)(data_entries_table[i].data_buffer));
 				break;
 		}
-		
+		printf("    data_buffer_address 0x%x\n", data_entries_table[i].data_buffer_2);
 	}
 	printf("................................................................\n");
 }
@@ -1188,6 +1189,21 @@ DATA_SECTION_ENTRIES* get_table_of_data()
 void handle_comment(TRIPLE_PACKET* tp)
 {
 	/* nothing */
+}
+
+//....................................................................................................................................
+
+void append_data_section_after_code_section(void)
+{
+	unsigned int pc = get_programCounter();
+	unsigned int i;
+	DATA_SECTION_ENTRIES* ds = get_table_of_data();
+	printf("data: pc = %x\n", pc);
+	for(i = 0; i < data_entries_table_count; i++)
+	{
+		ds[i].data_buffer_2 = pc + origin;
+		pc += ds[i].data_size;
+	}
 }
 
 //....................................................................................................................................

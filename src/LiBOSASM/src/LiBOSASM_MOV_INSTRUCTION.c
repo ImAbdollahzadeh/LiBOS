@@ -270,182 +270,148 @@ void convert_mov_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 					{
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_EAX);
-						modrm |= MODRM_DISP32;
+						//modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "ecx") )
 					{
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_ECX);
-						modrm |= MODRM_DISP32;
+						//modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "edx") )
 					{
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_EDX);
-						modrm |= MODRM_DISP32;
+						//modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "ebx") )
 					{
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_EBX);
-						modrm |= MODRM_DISP32;
+						//modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "esp") )
 					{
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_ESP);
-						modrm |= MODRM_DISP32;
+						//modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "ebp") )
 					{opc |= _16_32;
 						modrm |= MODRM_REG(IMM_EBP);
-					 modrm |= MODRM_DISP32;
+					 	//modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "esi") )
 					{
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_ESI);
-						modrm |= MODRM_DISP32;
+						//modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "edi") )
 					{
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_EDI);
-						modrm |= MODRM_DISP32;
+						//modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "ax") )
 					{
 						prefix = 0x66;
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_AX);
-						modrm |= MODRM_DISP32;
+						//modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "cx") )
 					{
 						prefix = 0x66;
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_CX);
-						modrm |= MODRM_DISP32;
+						//modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "dx") )
 					{
 						prefix = 0x66;
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_DX);
-						modrm |= MODRM_DISP32;
+						//modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "bx") )
 					{
 						prefix = 0x66;
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_BX);
-						modrm |= MODRM_DISP32;
+						//modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "sp") )
 					{
 						prefix = 0x66;
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_SP);
-						modrm |= MODRM_DISP32;
+						//modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "bp") )
 					{
 						prefix = 0x66;
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_BP);
-						modrm |= MODRM_DISP32;
+						//modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "si") )
 					{
 						prefix = 0x66;
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_SI);
-						modrm |= MODRM_DISP32;
+						//modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "di") )
 					{
 						prefix = 0x66;
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_DI);
-						modrm |= MODRM_DISP32;
+						//modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "al") )
 					{
 						modrm |= MODRM_REG(IMM_AL);
-						modrm |= MODRM_DISP32;
+						//modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "cl") )
 					{
 						modrm |= MODRM_REG(IMM_CL);
-						modrm |= MODRM_DISP32;
+						//modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "dl") )
 					{
 						modrm |= MODRM_REG(IMM_DL);
-						modrm |= MODRM_DISP32;
+						//modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "bl") )
 					{
 						modrm |= MODRM_REG(IMM_BL);
-						modrm |= MODRM_DISP32;
+						//modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "ah") )
 					{
 						modrm |= MODRM_REG(IMM_AH);
-						modrm |= MODRM_DISP32;
+						//modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "ch") )
 					{
 						modrm |= MODRM_REG(IMM_CH);
-						modrm |= MODRM_DISP32;
+						//modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "dh") )
 					{
 						modrm |= MODRM_REG(IMM_DH);
-						modrm |= MODRM_DISP32;
+						//modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "bh") )
 					{
 						modrm |= MODRM_REG(IMM_BH);
-						modrm |= MODRM_DISP32;
+						//modrm |= MODRM_DISP32;
 					}
 					else {}
 					
-					if( _contain(tp->str3, "VALUE[") ) /* *** VERY SPECIAL CASE *** */
-					{
-						if( !_contain(tp->str3, ":") )// therefore there is a LABEL
-						{
-							printf("error using VALUE\n");
-							return;
-						}
-						extract_from_memory_displacement_as_value(tp->str3, displacement32);
-						opc = 0xB8; // mov reg, imm32 !
-						if     ( _strcmp(tp->str2, "eax") ) opc |= IMM_EAX;
-						else if( _strcmp(tp->str2, "ecx") ) opc |= IMM_ECX;
-						else if( _strcmp(tp->str2, "edx") ) opc |= IMM_EDX;
-						else if( _strcmp(tp->str2, "ebx") ) opc |= IMM_EBX;
-						else if( _strcmp(tp->str2, "esp") ) opc |= IMM_ESP;
-						else if( _strcmp(tp->str2, "ebp") ) opc |= IMM_EBP;
-						else if( _strcmp(tp->str2, "esi") ) opc |= IMM_ESI;
-						else if( _strcmp(tp->str2, "edi") ) opc |= IMM_EDI;
-						
-						if( pl == PARSE_LEVEL_2 )
-							printf("opcode: 0x%x, ", opc);
-						chp[*PC+0] = opc;
-						*PC = *PC + 1;
-						if( pl == PARSE_LEVEL_2 )
-							printf("imm: %c%c %c%c %c%c %c%c, ", 
-								displacement32[0], displacement32[1], displacement32[2], displacement32[3],
-								displacement32[4], displacement32[5], displacement32[6], displacement32[7]);
-							chp[*PC+0] = byte_string_to_byte(displacement32[0], displacement32[1]);
-							chp[*PC+1] = byte_string_to_byte(displacement32[2], displacement32[3]);
-							chp[*PC+2] = byte_string_to_byte(displacement32[4], displacement32[5]);
-							chp[*PC+3] = byte_string_to_byte(displacement32[6], displacement32[7]);
-							*PC = *PC + 4;
-						return;
-					}
-					
-					else if( _contain(tp->str3, "DWORD[") )
+					if( _contain(tp->str3, "DWORD[") )
 					{
 						if( _contain(tp->str3, "eax") )
 						{
@@ -1278,11 +1244,17 @@ void convert_mov_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 						}
 						if( _contain(tp->str2, "ebp") )
 						{
-							modrm |= (1<<6); // now the mode is [MEMORY+DISP8]
+							modrm |= (1<<7); // now the mode is [MEMORY+DISP32]
 							modrm |= 0x05;   // now ebp selected
-							displacement8[0] = '0';
-							displacement8[1] = '0';
-							which_displacement = (1<<3);
+							displacement32[0] = '0';
+							displacement32[1] = '0';
+							displacement32[2] = '0';
+							displacement32[3] = '0';
+							displacement32[4] = '0';
+							displacement32[5] = '0';
+							displacement32[6] = '0';
+							displacement32[7] = '0';
+							which_displacement = (1<<1);
 						}
 						if( _contain(tp->str2, "esi") )
 						{
@@ -1295,9 +1267,8 @@ void convert_mov_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 						
 						if( _contain(tp->str2, "+") ) // it has a displacement
 						{
-							// for now suppose only 8-bit displacement
-							extract_from_memory_displacement8(tp->str2, displacement8);
-							which_displacement = (1<<3);
+							extract_from_memory_displacement32(tp->str2, displacement32);
+							which_displacement = (1<<1);
 						}
 					}
 					
