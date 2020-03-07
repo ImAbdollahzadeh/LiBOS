@@ -1,11 +1,11 @@
 
 
 ----------------------------------------------------
-EXT |GET |STR |V0  |FIND|    |...    |1K  |GLOB|GLOB|
-LODR|GLOB|CMP |PRNT|EXT |    |       |DATA|EXT |CNTS|
-    |TABL|    |    |ADDR|    |       |SECT|TABL|    |
-    |ATTR|    |    |    |    |       |    |    |    |
-    |    |    |    |    |    |       |    |    |    |
+EXT |GET |STR |STR |V0  |FIND|...    |1K  |GLOB|GLOB|
+LODR|GLOB|CMP |LNGT|PRNT|EXT |       |DATA|EXT |CNTS|
+    |EXT |    |    |    |ADDR|       |SECT|TABL|    |
+    |TABL|    |    |    |    |       |    |    |    |
+    |ATTR|    |    |    |    |       |RSV |    |    |
 ----------------------------------------------------
 0x  |0x  |0x  |0x  |0x  |0x  |...    |0x  |0x  |0x  |
 0100|0100|0100|0100|0100|0100|       |0103|0104|0104|
@@ -13,3 +13,7 @@ LODR|GLOB|CMP |PRNT|EXT |    |       |DATA|EXT |CNTS|
     |    |    |    |    |    |       |    |    |    |
     |    |    |    |    |    |       |    |    |    |
 ----------------------------------------------------
+
+RSV: reserved. Do not use
+CNTS: constants
+

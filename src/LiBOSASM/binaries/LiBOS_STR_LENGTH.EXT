@@ -1,0 +1,53 @@
+[LiBOSASM 32-bit]
+[ORIGIN 0x01000C00]
+[SECTON .CODE]
+	;----------------------------LiBOS_str_length(char* string, DWORD* ret_val)
+LiBOS_str_length:
+	push ebp
+	mov  ebp, esp
+	mov  eax, DWORD[ebp+0x00000008]
+	xor  ecx, ecx
+_repeat_1:
+	xor  edx, edx
+	mov  dl, BYTE[eax]
+	add  ecx, 0x00000001
+	add  eax, 0x00000001
+	cmp  dl, 0x00
+	jne  _repeat_1:
+	sub  ecx, 0x00000001
+	mov  DWORD[ebp+0x0000000C], ecx
+	mov  esp, ebp
+	pop  ebp
+	ret
+[SECTION .DATA]
+	_@@_libos_string_length_int: dd 0xFFFFFFFF
+
+........ DUMP OUTPUT BUFFER ....................................
+        00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
+................................................................
+00:     4c 69 42 4f 53 5f 45 58 54 5f 49 4d 41 47 45 12 
+10:     00 00 00 49 6d 61 6e 5f 41 62 64 6f 6c 6c 61 68 
+20:     7a 61 64 65 68 0b 00 00 00 30 31 5f 4d 61 72 5f 
+30:     32 30 32 30 40 00 00 00 74 00 00 00 9c 00 00 00 
+40:     55 89 e5 8b 85 08 00 00 00 31 c9 31 d2 8a 10 81 
+50:     c1 01 00 00 00 81 c0 01 00 00 00 80 fa 00 0f 85 
+60:     27 0c 00 01 81 e9 01 00 00 00 89 8d 0c 00 00 00 
+70:     89 ec 5d c3 5f 40 40 5f 6c 69 62 6f 73 5f 73 74 
+80:     72 69 6e 67 5f 6c 65 6e 67 74 68 5f 69 6e 74 3a 
+90:     04 00 00 00 ff ff ff ff 04 00 00 00 
+
+........ DUMP OUTPUT BUFFER (ASCII) ............................
+        00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
+................................................................
+00:     L  i  B  O  S  _  E  X  T  _  I  M  A  G  E  .  
+10:     .  .  .  I  m  a  n  _  A  b  d  o  l  l  a  h  
+20:     z  a  d  e  h  .  .  .  .  0  1  _  M  a  r  _  
+30:     2  0  2  0  @  .  .  .  t  .  .  .  .  .  .  .  
+40:     U  .  .  .  .  .  .  .  .  1  .  1  .  .  .  .  
+50:     .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  
+60:     '  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  
+70:     .  .  ]  .  _  @  @  _  l  i  b  o  s  _  s  t  
+80:     r  i  n  g  _  l  e  n  g  t  h  _  i  n  t  :  
+90:     .  .  .  .  .  .  .  .  .  .  .  .  
+................................................................
+

@@ -270,104 +270,104 @@ void convert_mov_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 					{
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_EAX);
-						//modrm |= MODRM_DISP32;
+						modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "ecx") )
 					{
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_ECX);
-						//modrm |= MODRM_DISP32;
+						modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "edx") )
 					{
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_EDX);
-						//modrm |= MODRM_DISP32;
+						modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "ebx") )
 					{
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_EBX);
-						//modrm |= MODRM_DISP32;
+						modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "esp") )
 					{
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_ESP);
-						//modrm |= MODRM_DISP32;
+						modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "ebp") )
 					{opc |= _16_32;
 						modrm |= MODRM_REG(IMM_EBP);
-					 	//modrm |= MODRM_DISP32;
+					 	modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "esi") )
 					{
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_ESI);
-						//modrm |= MODRM_DISP32;
+						modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "edi") )
 					{
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_EDI);
-						//modrm |= MODRM_DISP32;
+						modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "ax") )
 					{
 						prefix = 0x66;
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_AX);
-						//modrm |= MODRM_DISP32;
+						modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "cx") )
 					{
 						prefix = 0x66;
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_CX);
-						//modrm |= MODRM_DISP32;
+						modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "dx") )
 					{
 						prefix = 0x66;
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_DX);
-						//modrm |= MODRM_DISP32;
+						modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "bx") )
 					{
 						prefix = 0x66;
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_BX);
-						//modrm |= MODRM_DISP32;
+						modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "sp") )
 					{
 						prefix = 0x66;
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_SP);
-						//modrm |= MODRM_DISP32;
+						modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "bp") )
 					{
 						prefix = 0x66;
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_BP);
-						//modrm |= MODRM_DISP32;
+						modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "si") )
 					{
 						prefix = 0x66;
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_SI);
-						//modrm |= MODRM_DISP32;
+						modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "di") )
 					{
 						prefix = 0x66;
 						opc |= _16_32;
 						modrm |= MODRM_REG(IMM_DI);
-						//modrm |= MODRM_DISP32;
+						modrm |= MODRM_DISP32;
 					}
 					else if( _strcmp(tp->str2, "al") )
 					{
@@ -416,18 +416,22 @@ void convert_mov_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 						if( _contain(tp->str3, "eax") )
 						{
 							modrm |= IMM_EAX;
+							modrm &= ~(MODRM_DISP32);
 						}
 						if( _contain(tp->str3, "ecx") )
 						{
 							modrm |= IMM_ECX;
+							modrm &= ~(MODRM_DISP32);
 						}
 						if( _contain(tp->str3, "edx") )
 						{
 							modrm |= IMM_EDX;
+							modrm &= ~(MODRM_DISP32);
 						}
 						if( _contain(tp->str3, "ebx") )
 						{
 							modrm |= IMM_EBX;
+							modrm &= ~(MODRM_DISP32);
 						}
 						if( _contain(tp->str3, "esp") )
 						{
@@ -439,11 +443,13 @@ void convert_mov_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 							// [EBX+EDI*scale] an scale is either of 1,2,4,8. Here EBX is base, and EDI is index
 							// for us: [ESP] -> [0+ESP*1]
 							sib   |= ((IMM_ESP << 3) | IMM_ESP);
+							modrm &= ~(MODRM_DISP32);
 						}
 						if( _contain(tp->str3, "ebp") )
 						{
 							modrm |= (1<<7); // now the mode is [MEMORY+DISP8]
 							modrm |= 0x05;   // now ebp selected
+							modrm &= ~(MODRM_DISP32);
 							displacement32[0] = '0';
 							displacement32[1] = '0';
 							displacement32[2] = '0';
@@ -457,10 +463,12 @@ void convert_mov_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 						if( _contain(tp->str3, "esi") )
 						{
 							modrm |= IMM_ESI;
+							modrm &= ~(MODRM_DISP32);
 						}
 						if( _contain(tp->str3, "edi") )
 						{
 							modrm |= IMM_EDI;
+							modrm &= ~(MODRM_DISP32);
 						}
 						
 						if( _contain(tp->str3, "+") ) // it has a displacement
@@ -477,10 +485,62 @@ void convert_mov_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 						}
 						
 						else if( _contain(tp->str3, ":") )// therefore there is a LABEL
+						/* 
+							it is like his mov eax, DWORD[a_label:]
+							what we need here is the address of a_label:
+							it is a DWORD
+							therefore it must be handelled completely different here
+						*/
 						{
-							modrm |= 0x05;
-							extract_from_memory_displacement_as_address(tp->str3, displacement32);
-							which_displacement = (1<<1);
+							opc = 0xB8; // OP_REG_IMM !
+							if( _strcmp(tp->str2, "eax") )
+							{
+								opc |= IMM_EAX;
+							}
+							else if( _strcmp(tp->str2, "ecx") )
+							{
+								opc |= IMM_ECX;
+							}
+							else if( _strcmp(tp->str2, "edx") )
+							{
+								opc |= IMM_EDX;
+							}
+							else if( _strcmp(tp->str2, "ebx") )
+							{
+								opc |= IMM_EBX;
+							}
+							else if( _strcmp(tp->str2, "esp") )
+							{
+								opc |= IMM_ESP;
+							}
+							else if( _strcmp(tp->str2, "ebp") )
+							{
+								opc |= IMM_EBP;
+							}
+							else if( _strcmp(tp->str2, "esi") )
+							{
+								opc |= IMM_ESI;
+							}
+							else if( _strcmp(tp->str2, "edi") )
+							{
+								opc |= IMM_EDI;
+							}
+							char IMM32[8];
+							extract_from_memory_displacement_as_address(tp->str3, IMM32);
+							if( pl == PARSE_LEVEL_2 )
+								printf("opcode: 0x%x, ", opc);
+							chp[*PC+0] = opc;
+							*PC = *PC + 1;
+							if( pl == PARSE_LEVEL_2 )
+								printf("label_address: %c%c %c%c %c%c %c%c\n", 
+								   IMM32[0], IMM32[1], IMM32[2], IMM32[3],
+								   IMM32[4], IMM32[5], IMM32[6], IMM32[7]);
+							chp[*PC+0] = byte_string_to_byte(IMM32[0], IMM32[1]);
+							chp[*PC+1] = byte_string_to_byte(IMM32[2], IMM32[3]);
+							chp[*PC+2] = byte_string_to_byte(IMM32[4], IMM32[5]);
+							chp[*PC+3] = byte_string_to_byte(IMM32[6], IMM32[7]);
+							*PC = *PC + 4;
+							return;
 						}
 					}
 					

@@ -644,7 +644,7 @@ void handle_labels(TRIPLE_PACKET* tp, unsigned int* PC)
  	{
  		if( _strcmp(label, table_of_labels[i].string) )
  		{
- 			table_of_labels[i].address = *PC + origin; // CONCENTRATE HERE
+ 			table_of_labels[i].address = *PC + origin + 0x40; // CONCENTRATE HERE
 			return;
  		}
  	}
@@ -1154,7 +1154,7 @@ void handle_numeric_table(TRIPLE_PACKET* tp)
 			}
 		}
 		table_of_numeric_tokens[table_of_numeric_tokens_count].string = tp->str1;
-		table_of_numeric_tokens[table_of_numeric_tokens_count].PC     = pc + origin; // CONCENTRATE HERE
+		table_of_numeric_tokens[table_of_numeric_tokens_count].PC     = pc + origin + 0x40; // CONCENTRATE HERE
 		table_of_numeric_tokens_count++;
 	}
 }
@@ -1195,14 +1195,16 @@ void handle_comment(TRIPLE_PACKET* tp)
 
 void append_data_section_after_code_section(void)
 {
-	unsigned int pc = get_programCounter();
+	unsigned int pc = get_programCounter() + 0x40; // CONCENTRATE HERE
 	unsigned int i;
 	DATA_SECTION_ENTRIES* ds = get_table_of_data();
-	printf("data: pc = %x\n", pc);
 	for(i = 0; i < data_entries_table_count; i++)
 	{
-		ds[i].data_buffer_2 = pc + origin;
-		pc += ds[i].data_size;
+		ds[i].data_buffer_2 = 
+			pc + origin +
+			string_length(ds[i].data_name) /* sizeof name string */ + 
+			0x04                           /* sizeof value */       ; 
+		pc += (string_length(ds[i].data_name) + 0x04 + ds[i].data_size + 0x04);
 	}
 }
 
