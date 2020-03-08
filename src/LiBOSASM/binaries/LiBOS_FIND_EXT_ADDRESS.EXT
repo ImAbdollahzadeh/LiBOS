@@ -12,7 +12,7 @@ _@@__find_ext_address__@@_:
 	push   eax
 	mov    ecx,                   0x01000400
 	add    ecx,                   0x00000040
-	call   DWORD[ecx]
+	call   ecx
 ;--------call_LiBOS_GET_GLOBAL_EXT_TABLE_ATTRIBUTES.EXT_entry_point
 	pop    eax
 	pop    eax
@@ -23,7 +23,7 @@ _@@__find_ext_address__@@_:
 	push   eax
 	mov    ecx,                   0x01000400
 	add    ecx,                   0x00000040
-	call   DWORD[ecx]
+	call   ecx
 ;--------call_LiBOS_GET_GLOBAL_EXT_TABLE_ATTRIBUTES.EXT_entry_point
 	pop    eax
 	pop    eax
@@ -42,7 +42,7 @@ _look_for_entry_name_match:
 	push   eax
 	mov    eax,                   DWORD[_tab_address:]
 	push   eax
-	call   DWORD[edx]
+	call   edx
 	pop    eax
 	pop    eax
 	pop    eax
@@ -83,12 +83,12 @@ __@@libos_find_ext_address_end@@__:
 20:     7a 61 64 65 68 0b 00 00 00 30 31 5f 4d 61 72 5f 
 30:     32 30 32 30 40 00 00 00 ff 00 00 00 7c 01 00 00 
 40:     55 89 e5 b8 00 00 00 00 50 b8 5b 15 00 01 50 b9 
-50:     00 04 00 01 81 c1 40 00 00 00 ff 11 58 58 b8 01 
+50:     00 04 00 01 81 c1 40 00 00 00 ff d1 58 58 b8 01 
 60:     00 00 00 50 b8 74 15 00 01 50 b9 00 04 00 01 81 
-70:     c1 40 00 00 00 ff 11 58 58 b8 5b 15 00 01 8b 08 
+70:     c1 40 00 00 00 ff d1 58 58 b8 5b 15 00 01 8b 08 
 80:     ba 00 08 00 01 81 c2 40 00 00 00 81 f9 00 00 00 
 90:     00 0f 84 9a 14 00 01 b8 44 15 00 01 50 8b 80 08 
-a0:     00 00 00 50 b8 74 15 00 01 50 ff 12 58 58 58 81 
+a0:     00 00 00 50 b8 74 15 00 01 50 ff d2 58 58 58 81 
 b0:     f8 01 00 00 00 0f 84 5b 14 00 01 bb 74 15 00 01 
 c0:     8b 32 81 c6 84 00 00 00 89 33 81 e9 00 00 00 00 
 d0:     ff 25 8b 14 00 01 bb 74 15 00 01 8b 02 81 c0 80 

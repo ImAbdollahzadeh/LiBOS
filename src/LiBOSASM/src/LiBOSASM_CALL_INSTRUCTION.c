@@ -31,6 +31,7 @@ void convert_call_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 /*
 	call 0xAABBCCDD ~> 9A DD CC BB AA 00 00 meaning 0x0000:0xAABBCCDD segment-offset addressing mode
 	call DWORD[label:]
+	call label:
 */
 {
 	if( get_parse_level() == PARSE_LEVEL_2 )
@@ -51,6 +52,7 @@ void convert_call_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 	unsigned char modrm = 0;
 	unsigned char sib = 0;
 	char* src = tp->str2;
+	unsigned int length = string_length(src);
 	
 	unsigned int    table_of_labels_count = get_table_of_labels_count();
 	SYMBOLIC_LABEL* table_of_labels       = get_table_of_labels();
@@ -201,6 +203,15 @@ void convert_call_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 		opc = 0x9A; // jump far to pre16:ptr32
 		modrm = 0;
 		encode_u32(src, displacement32);
+		which_displacement = (1<<1);
+		segment_active     = 1;
+	}
+	
+	else if( (src[length - 1] == ':') && (!_contain(src, "DWORD[")) ) 
+	{
+		opc = 0x9A; // jump far to pre16:ptr32
+		modrm = 0;
+		extract_from_memory_displacement_as_address(src, displacement32);
 		which_displacement = (1<<1);
 		segment_active     = 1;
 	}

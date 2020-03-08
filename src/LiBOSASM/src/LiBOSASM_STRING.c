@@ -332,6 +332,16 @@ void extract_from_memory_displacement_as_address(const char* s, char* dspl)
 				}
 			}
 			
+			for(j=0; j<tab_cnt; j++)
+			{
+				if( _strcmp(tab[j].string, s) )
+				{
+					unsigned int trg = tab[j].address;
+					_construct_string_from_hex(dspl, trg);
+					return;
+				}
+			}
+			
 			DATA_SECTION_ENTRIES* ttab = get_table_of_data();
 			tab_cnt                    = get_table_of_data_count();
 			for(j=0; j<tab_cnt; j++)
