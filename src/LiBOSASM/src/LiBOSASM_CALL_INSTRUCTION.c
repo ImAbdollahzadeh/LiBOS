@@ -46,7 +46,7 @@ void convert_call_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 	unsigned int i;
 	unsigned char displacement32[8];
 	unsigned char which_displacement = 0; // BIT(1) : 32, BIT(2) : 16, and BIT(3) : 8
-	unsigned short code_segment16[4] = {'0','0','0','0'};
+	unsigned short code_segment16[4] = {'0','8','0','0'};
 	unsigned char segment_active = 0; //TRUE = active, FALSE = disactive
 	unsigned char opc = 0;
 	unsigned char modrm = 0;
@@ -259,7 +259,7 @@ CONVERT_CALL_END:
 	{
 		if( pl == PARSE_LEVEL_2 )
 			printf("segment: %c%c %c%c, ", code_segment16[0], code_segment16[1], code_segment16[2], code_segment16[3]);
-		chp[*PC+0] = 0;
+		chp[*PC+0] = 0x08;
 		chp[*PC+1] = 0;
 		*PC = *PC + 2;
 	}

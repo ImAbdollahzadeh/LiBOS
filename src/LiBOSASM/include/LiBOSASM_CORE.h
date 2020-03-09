@@ -190,5 +190,6 @@ void                  dump_numeric_table                            (void);
 void                  print_file                                    (char* file);
 void                  extract_origin                                (TRIPLE_PACKET* tp, unsigned int counts);
 void                  append_data_section_after_code_section        (void);
+unsigned int          get_origin                                    (void);
 
 #endif // !__LIBOSASM__H__

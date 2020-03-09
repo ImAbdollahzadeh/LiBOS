@@ -449,7 +449,7 @@ void convert_mov_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 						{
 							modrm |= (1<<7); // now the mode is [MEMORY+DISP8]
 							modrm |= 0x05;   // now ebp selected
-							modrm &= ~(MODRM_DISP32);
+							//::::::::::::..modrm &= ~(MODRM_DISP32);
 							displacement32[0] = '0';
 							displacement32[1] = '0';
 							displacement32[2] = '0';

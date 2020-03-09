@@ -41,12 +41,13 @@ void convert_jmp_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 	unsigned int i;
 	unsigned char displacement32[8];
 	unsigned char which_displacement = 0; // BIT(1) : 32, BIT(2) : 16, and BIT(3) : 8
-	unsigned short code_segment16[4] = {'0','0','0','0'};
+	unsigned short code_segment16[4] = {'0','8','0','0'};
 	unsigned char segment_active = 0; //TRUE = active, FALSE = disactive
 	unsigned char opc = 0;
 	unsigned char modrm = 0;
 	unsigned char sib = 0;
 	char* src = tp->str2;
+	unsigned int length = string_length(src);
 	
 	unsigned int    table_of_labels_count = get_table_of_labels_count();
 	SYMBOLIC_LABEL* table_of_labels       = get_table_of_labels();
@@ -228,6 +229,36 @@ void convert_jmp_instruction(TRIPLE_PACKET* tp, unsigned int* PC)
 		segment_active     = 1;
 	}
 	
+	else if( (src[length - 1] == ':') && (!_contain(src, "DWORD[")) ) 
+	{
+		//.opc = 0xEA; // jump far to pre16:ptr32
+		//.modrm = 0;
+		//.extract_from_memory_displacement_as_address(src, displacement32);
+		//.which_displacement = (1<<1);
+		//.segment_active     = 1;
+		for(i=0; i<table_of_labels_count; i++)
+		{
+			if( _strcmp(src, table_of_labels[i].string) )
+			{
+				displacement32[0] = '0';
+				displacement32[1] = '0';
+				displacement32[2] = '0';
+				displacement32[3] = '0';
+				displacement32[4] = '0';
+				displacement32[5] = '0';
+				displacement32[6] = '0';
+				displacement32[7] = '0';
+				opc   = 0xE9;
+				modrm = 0;
+				unsigned int n = table_of_labels[i].address - 5 - get_origin(); // sizeof this instruction in form of E9 xx xx xx xx
+				n -= (*PC + 0x40);
+				n += 0x0000000; // TODO ~> REPLACE WITH REAL ORIGIN VALUE
+				_construct_string_from_hex(displacement32, n);
+				which_displacement = (1<<1);
+			}
+		}
+	}
+	
 	else {}
 	
 CONVERT_JMP_END:
@@ -271,7 +302,7 @@ CONVERT_JMP_END:
 	{
 		if( pl == PARSE_LEVEL_2 )
 			printf("segment: %c%c %c%c, ", code_segment16[0], code_segment16[1], code_segment16[2], code_segment16[3]);
-		chp[*PC+0] = 0;
+		chp[*PC+0] = 0x08;
 		chp[*PC+1] = 0;
 		*PC = *PC + 2;
 	}
@@ -325,8 +356,8 @@ THERE ARE ONLY 2 MODES
 		modrm = 0x85;
 		chp[*PC+0] = opc;
 		chp[*PC+1] = modrm;
-		unsigned int n = _create_hex_value(src) - 6; // sizeof this instruction in form of 0F 85 xx xx xx xx
-		n -= *PC; // from the begining of the SECTION .CODE which is in our case is (0x00 + origin address)
+		unsigned int n = _create_hex_value(src) - 6 - get_origin(); // sizeof this instruction in form of 0F 85 xx xx xx xx
+		n -= (*PC + 0x40); // from the begining of the SECTION .CODE which is in our case is (0x00 + origin address)
 		n += 0x0000000; // TODO ~> REPLACE WITH REAL ORIGIN VALUE
 		_construct_string_from_hex(displacement32, n);
 		which_displacement = (1<<1);
@@ -351,8 +382,8 @@ THERE ARE ONLY 2 MODES
 				modrm = 0x85;
 				chp[*PC+0] = opc;
 				chp[*PC+1] = modrm;
-				unsigned int n = table_of_labels[i].address - 6; // sizeof this instruction in form of 0F 85 xx xx xx xx
-				n -= *PC;
+				unsigned int n = table_of_labels[i].address - 6 - get_origin(); // sizeof this instruction in form of 0F 85 xx xx xx xx
+				n -= (*PC + 0x40);
 				n += 0x0000000; // TODO ~> REPLACE WITH REAL ORIGIN VALUE
 				_construct_string_from_hex(displacement32, n);
 				which_displacement = (1<<1);
@@ -438,8 +469,8 @@ THERE ARE ONLY 2 MODES
 		modrm = 0x84;
 		chp[*PC+0] = opc;
 		chp[*PC+1] = modrm;
-		unsigned int n = _create_hex_value(src) - 6; // sizeof this instruction in form of 0F 85 xx xx xx xx
-		n -= *PC; // from the begining of the SECTION .CODE which is in our case is (0x00 + origin address)
+		unsigned int n = _create_hex_value(src) - 6 - get_origin(); // sizeof this instruction in form of 0F 85 xx xx xx xx
+		n -= (*PC + 0x40); // from the begining of the SECTION .CODE which is in our case is (0x00 + origin address)
 		n += 0x0000000; // TODO ~> REPLACE WITH REAL ORIGIN VALUE
 		_construct_string_from_hex(displacement32, n);
 		which_displacement = (1<<1);
@@ -464,8 +495,8 @@ THERE ARE ONLY 2 MODES
 				modrm = 0x84;
 				chp[*PC+0] = opc;
 				chp[*PC+1] = modrm;
-				unsigned int n = table_of_labels[i].address - 6; // sizeof this instruction in form of 0F 85 xx xx xx xx
-				n -= *PC; // from the begining of the SECTION .CODE which is in our case is (0x00 + origin address)
+				unsigned int n = table_of_labels[i].address - 6- get_origin(); // sizeof this instruction in form of 0F 85 xx xx xx xx
+				n -= (*PC + 0x40); // from the begining of the SECTION .CODE which is in our case is (0x00 + origin address)
 				n += 0x0000000; // TODO ~> REPLACE WITH REAL ORIGIN VALUE
 				_construct_string_from_hex(displacement32, n);
 				which_displacement = (1<<1);

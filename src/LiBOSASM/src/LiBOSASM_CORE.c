@@ -1048,8 +1048,11 @@ void dump_output_beffer(void)
 			column_counter += 0x10;
 			jumper = 0x10;
 		}
+		
+		//printf((unsigned int)(swap_buffer[i]) < 0x10 ? "\\x0%x" : "\\x%x", swap_buffer[i]);
 	}
 	
+	printf("COUNT=%i\n", count);
 	printf("\n................................................................\n");
 	
 	printf("........ DUMP OUTPUT BUFFER (ASCII) ............................\n");
@@ -1206,6 +1209,13 @@ void append_data_section_after_code_section(void)
 			0x04                           /* sizeof value */       ; 
 		pc += (string_length(ds[i].data_name) + 0x04 + ds[i].data_size + 0x04);
 	}
+}
+
+//....................................................................................................................................
+
+unsigned int get_origin(void)
+{
+	return origin;
 }
 
 //....................................................................................................................................
