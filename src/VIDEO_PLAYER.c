@@ -180,79 +180,6 @@ static INT_16 decode_node_value_bits(UINT_8 cat, UINT_8* byte, INT_8* bit, INT_8
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-static void idct_coefficient(JPG* jpg, float* Fuv, float* res, float back_dc_value)
-{
-	float* result = &(res[0]);
-	Fuv[0] += back_dc_value;
-
-	_uv_transform_00(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_01(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_02(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_03(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_04(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_05(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_06(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_07(result, Fuv); result = &(res[1]);
-	_uv_transform_10(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_11(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_12(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_13(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_14(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_15(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_16(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_17(result, Fuv); result = &(res[2]);
-	_uv_transform_20(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_21(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_22(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_23(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_24(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_25(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_26(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_27(result, Fuv); result = &(res[3]);
-	_uv_transform_30(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_31(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_32(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_33(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_34(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_35(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_36(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_37(result, Fuv); result = &(res[4]);
-	_uv_transform_40(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_41(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_42(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_43(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_44(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_45(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_46(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_47(result, Fuv); result = &(res[5]);
-	_uv_transform_50(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_51(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_52(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_53(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_54(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_55(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_56(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_57(result, Fuv); result = &(res[6]);
-	_uv_transform_60(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_61(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_62(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_63(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_64(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_65(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_66(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_67(result, Fuv); result = &(res[7]);
-	_uv_transform_70(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_71(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_72(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_73(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_74(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_75(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_76(result, Fuv); result = (float*)((PHYSICAL_ADDRESS(result) + 32));
-	_uv_transform_77(result, Fuv);
-}
-
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
 static void IDCT(JPG* jpg)
 {
 	UINT_32 i, counter = 0;
@@ -260,41 +187,41 @@ static void IDCT(JPG* jpg)
 	float* unordered_YCbCr_mcus        = *(jpg->ptr_to_unordered_YCbCr_mcus);
 
 	// Y component
-	idct_coefficient(jpg, &(all_mcus_coefficients_float[0]),   &(unordered_YCbCr_mcus[0]), 0.0f);
-	idct_coefficient(jpg, &(all_mcus_coefficients_float[64]),  &(unordered_YCbCr_mcus[64]),  all_mcus_coefficients_float[0]);
-	idct_coefficient(jpg, &(all_mcus_coefficients_float[128]), &(unordered_YCbCr_mcus[128]), all_mcus_coefficients_float[64]);
-	idct_coefficient(jpg, &(all_mcus_coefficients_float[192]), &(unordered_YCbCr_mcus[192]), all_mcus_coefficients_float[128]);
+	_uv_transform(&(unordered_YCbCr_mcus[0]),   &(all_mcus_coefficients_float[0]),   0.0f);
+	_uv_transform(&(unordered_YCbCr_mcus[64]),  &(all_mcus_coefficients_float[64]),  all_mcus_coefficients_float[0]);
+	_uv_transform(&(unordered_YCbCr_mcus[128]), &(all_mcus_coefficients_float[128]), all_mcus_coefficients_float[64]);
+	_uv_transform(&(unordered_YCbCr_mcus[192]), &(all_mcus_coefficients_float[192]), all_mcus_coefficients_float[128]);
 	counter = 384;
 
 	for (i = 0; i < jpg->number_of_mcu; i++)
 	{
-		idct_coefficient(jpg, &(all_mcus_coefficients_float[counter]), &(unordered_YCbCr_mcus[counter]), all_mcus_coefficients_float[counter - 192]);
+		_uv_transform(&(unordered_YCbCr_mcus[counter]), &(all_mcus_coefficients_float[counter]), all_mcus_coefficients_float[counter - 192]);
 		counter += 64;
-		idct_coefficient(jpg, &(all_mcus_coefficients_float[counter]), &(unordered_YCbCr_mcus[counter]), all_mcus_coefficients_float[counter - 64]);
+		_uv_transform(&(unordered_YCbCr_mcus[counter]), &(all_mcus_coefficients_float[counter]), all_mcus_coefficients_float[counter - 64]);
 		counter += 64;
-		idct_coefficient(jpg, &(all_mcus_coefficients_float[counter]), &(unordered_YCbCr_mcus[counter]), all_mcus_coefficients_float[counter - 64]);
+		_uv_transform(&(unordered_YCbCr_mcus[counter]), &(all_mcus_coefficients_float[counter]), all_mcus_coefficients_float[counter - 64]);
 		counter += 64;
-		idct_coefficient(jpg, &(all_mcus_coefficients_float[counter]), &(unordered_YCbCr_mcus[counter]), all_mcus_coefficients_float[counter - 64]);
+		_uv_transform(&(unordered_YCbCr_mcus[counter]), &(all_mcus_coefficients_float[counter]), all_mcus_coefficients_float[counter - 64]);
 		counter += 192;
 	}
 
 	// Cb component
-	idct_coefficient(jpg, &(all_mcus_coefficients_float[256]), &(unordered_YCbCr_mcus[256]), 0.0f);
+	_uv_transform(&(unordered_YCbCr_mcus[256]), &(all_mcus_coefficients_float[256]), 0.0f);
 	counter = 640;
 
 	for (i = 0; i < jpg->number_of_mcu; i++)
 	{
-		idct_coefficient(jpg, &(all_mcus_coefficients_float[counter]), &(unordered_YCbCr_mcus[counter]), all_mcus_coefficients_float[counter - 384]);
+		_uv_transform(&(unordered_YCbCr_mcus[counter]), &(all_mcus_coefficients_float[counter]), all_mcus_coefficients_float[counter - 384]);
 		counter += 384;
 	}
 
 	// Cr component
-	idct_coefficient(jpg, &(all_mcus_coefficients_float[320]), &(unordered_YCbCr_mcus[320]), 0.0f);
+	_uv_transform(&(unordered_YCbCr_mcus[320]), &(all_mcus_coefficients_float[320]), 0.0f);
 	counter = 704;
 
 	for (i = 0; i < jpg->number_of_mcu; i++)
 	{
-		idct_coefficient(jpg, &(all_mcus_coefficients_float[counter]), &(unordered_YCbCr_mcus[counter]), all_mcus_coefficients_float[counter - 384]);
+		_uv_transform(&(unordered_YCbCr_mcus[counter]), &(all_mcus_coefficients_float[counter]), all_mcus_coefficients_float[counter - 384]);
 		counter += 384;
 	}
 }
@@ -766,7 +693,7 @@ void play(VIDEO_PLAYER* video_player, INT_8* file_address)
 	UINT_8*  buffer = jpg->compressed_data;
 	BINPAPER bp     = PaperOpen(file_address);
 	
-	PaperRead(&bp, buffer, (512 * 1024));
+	PaperRead(&bp, buffer, (512 * 1024), 0);
 	
 	populate_jpg_info_from_file(jpg, buffer);
 }
@@ -810,7 +737,7 @@ UINT_32 regiser_video_player(VIDEO_PLAYER* video_player, UINT_8* framebuffer_poi
 	video_player->jpg_object->ptr_to_r                           = &tmp_video_player_jpg_object_r;
 	video_player->jpg_object->ptr_to_g                           = &tmp_video_player_jpg_object_g;
 	video_player->jpg_object->ptr_to_b                           = &tmp_video_player_jpg_object_b;
-	video_player->jpg_object->rgb                                =  /*rgb;//*/framebuffer_pointer;
+	video_player->jpg_object->rgb                                = rgb;//*/framebuffer_pointer;
 	
 	if(vpDebug)
 	{
@@ -822,6 +749,13 @@ UINT_32 regiser_video_player(VIDEO_PLAYER* video_player, UINT_8* framebuffer_poi
 		printk("Address of b:^\n",                           PHYSICAL_ADDRESS(tmp_video_player_jpg_object_b));
 	}
 	
+	UINT_32 avx_buffer = 0;
+	_check_avx(&avx_buffer);
+	if(avx_buffer & BIT(28))
+		printk("CPU SUPPORTS AVX\n");
+	else
+		printk("CPU DOES NOT SUPPORT AVX\n");
+
 	return TRUE;
 }
 

@@ -67,7 +67,7 @@ UINT_32 ReadBiosBlock( SATA* hd, UINT_32 partitionOffset )
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-UINT_32 ReadOperation( HDPARAMS DriveVolume, DESCRIPTOR* descriptor, UINT_8* Buffer, UINT_32 Bytes )
+UINT_32 ReadOperation( HDPARAMS DriveVolume, DESCRIPTOR* descriptor, UINT_8* Buffer, UINT_32 Bytes, UINT_8 ect_size_operation )
 {
 	UINT_32        status;
 	UINT_32        paperCluster  = 0; 
@@ -84,7 +84,7 @@ UINT_32 ReadOperation( HDPARAMS DriveVolume, DESCRIPTOR* descriptor, UINT_8* Buf
 	UINT_64 tree                  = descriptor->tree;
 	UINT_8  descriptor_tree_count = (UINT_8)(tree >> 56);
 	UINT_8  validity_descriptor   = (descriptor->validity & 0x0000FF00) >> 8;
-    
+
 	if(descriptor_tree_count != validity_descriptor)
 	{
 		panic("provided paper descriptor could not pass the sanity-validity\n");
@@ -103,14 +103,24 @@ UINT_32 ReadOperation( HDPARAMS DriveVolume, DESCRIPTOR* descriptor, UINT_8* Buf
 		which_dirent = (tree & ((UINT_64)(0x0F) << i)) >> i;
 		paperCluster  = (((UINT_32)(dirent[which_dirent].firstClusterHigh) << 16)) | (((UINT_32)dirent[which_dirent].firstClusterLow));
 		paperSector   = data + secpclus * (paperCluster - 2);
-		//.status       = (descriptor_tree_count==1) ? read(&hd->abar->ports[hd->sata_port_number], paperSector, 0, 1, Buffer)
-		//.	                                      : read(&hd->abar->ports[hd->sata_port_number], paperSector, 0, 1, (UINT_8*)&dirent[0]);
-		//.
+		//printk("---------------------------\n");
+		//printk("---------------------------\n");
+		//printk("---------------------------\n");
+		
 		//printk("SectorPerCluster: %\n", secpclus);
 		//printk("BytesPerSector: %\n", (UINT_32)bps);
 		if(descriptor_tree_count==1)
 		{
-			INT_32 SIZE = dirent[which_dirent].size; // file's byte size
+			INT_32 SIZE = dirent[which_dirent].size;
+			
+			// only for ect size retrieve
+			if(ect_size_operation == 0x01)
+			{
+				*(UINT_32*)Buffer = (UINT_32)SIZE;
+				//printk("ect size=%\n", (UINT_32)SIZE);
+				return 1;
+			}
+			
 			//printk("file size: % bytes\n", (UINT_32)SIZE);
 			UINT_32 next_paper_cluster = paperCluster;
 			//printk("first cluster:^\n", next_paper_cluster);
@@ -118,52 +128,64 @@ UINT_32 ReadOperation( HDPARAMS DriveVolume, DESCRIPTOR* descriptor, UINT_8* Buf
 			UINT_32 n_sector = 0;
 			UINT_8* main_buffer = (UINT_8*)(&Buffer[0]);
 			UINT_32 sector_offset = 0;
+			
+			
+			
+			
+			
+			/* for <1KB EXT files */
+			unsigned int how_many_0x200 =  1 + (SIZE / 0x200);
+			//printk("how many 0x200? ~> %\n", how_many_0x200);
+			read(&hd->abar->ports[hd->sata_port_number], (paperSector + sector_offset), 0, how_many_0x200, main_buffer);
+			goto __END__;
+			
+			
+			
+			
+			
+			
 			while(SIZE > 0)
 			{
 				paperSector = data + (secpclus * (next_paper_cluster - 2));
 				sector_offset = 0;
 				
+				/* for video stuff */
 				while(sector_offset < secpclus)
 				{
 					read(&hd->abar->ports[hd->sata_port_number], (paperSector + sector_offset), 0, 16, main_buffer);
 					main_buffer = (UINT_8*)((void*)(PHYSICAL_ADDRESS(main_buffer) + (8192)));
 					SIZE -= (8192);
-					n_sector+=16;
+					//n_sector+=16;
 					sector_offset+=16;
 				}
-
-				//printk("% sector read\n", n_sector);
 				
-				UINT_32 Fat_sector_for_current_cluster = Fat_start + ((next_paper_cluster << 2) >> 9);
+				UINT_32 Fat_sector_for_current_cluster = Fat_start + (next_paper_cluster >> 7);
 				read(&hd->abar->ports[hd->sata_port_number], Fat_sector_for_current_cluster, 0, 1, fat_buffer);
 				
-				UINT_32 Fat_offset_in_sector_for_current_cluster = ((next_paper_cluster << 2) - 1) % 512;
+				UINT_32 Fat_offset_in_sector_for_current_cluster = ((next_paper_cluster << 2) - 1) & 511;
 				UINT_8* tmp_ptr = (UINT_8*)((void*)(&fat_buffer[Fat_offset_in_sector_for_current_cluster]));
 				//__LiBOS_HexDump((void*)tmp_ptr, 4, "");
-
-				UINT_32 pt = (*(UINT_32*)tmp_ptr) & 0x0FFFFFFF;
-				//SWAP_ENDIANNESS(tmp_ptr, &pt);
-				next_paper_cluster = pt;
+				next_paper_cluster = (*(UINT_32*)tmp_ptr) & 0x0FFFFFFF;
 				//printk("next cluster:^\n", next_paper_cluster);
 			}
 		}
 		else
 			status = read(&hd->abar->ports[hd->sata_port_number], paperSector, 0, 1, (UINT_8*)&dirent[0]);
 		
-		if (!status)
-		{
-			panic("Reading 'PORT & PAPERS' failed\n");
-			return 0;
-		}
+		//:if (!status)
+		//:{
+		//:	panic("Reading 'PORT & PAPERS' failed\n");
+		//:	return 0;
+		//:}
 		
 		i += 4;
 		descriptor_tree_count--;
 	}
 	
-	
-	Buffer[dirent[which_dirent].size] = '\0';
-	//.printk((char*)Buffer);
-	//.printk("\n");
+__END__:
+	//Buffer[dirent[which_dirent].size] = '\0';
+	//printk((char*)Buffer);
+	//printk("\n");
 	
 	return 1;
 }

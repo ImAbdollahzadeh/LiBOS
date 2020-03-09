@@ -23,7 +23,7 @@ typedef struct _BINPAPER {
 
 BINPAPER PaperOpen  ( INT_8* name_address );
 UINT_32  PaperClose ( BINPAPER* paper );	
-UINT_32  PaperRead  ( BINPAPER* paper, UINT_8* Buffer, UINT_32 Bytes );
+UINT_32  PaperRead  ( BINPAPER* paper, UINT_8* Buffer, UINT_32 Bytes, UINT_8 ect_size_operation );
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 

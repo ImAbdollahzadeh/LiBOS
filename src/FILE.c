@@ -5,7 +5,7 @@
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ GLOBAL AND STATIC VARIABLES
 
 DESCRIPTOR OpenOperation(HDPARAMS DriveVolume, INT_8* DosPath);
-UINT_32    ReadOperation(HDPARAMS DriveVolume, DESCRIPTOR* descriptor, UINT_8* Buffer, UINT_32 Bytes);
+UINT_32    ReadOperation(HDPARAMS DriveVolume, DESCRIPTOR* descriptor, UINT_8* Buffer, UINT_32 Bytes, UINT_8 ect_size_operation);
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
@@ -66,7 +66,7 @@ UINT_32 PaperClose(BINPAPER* paper)
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-UINT_32 PaperRead(BINPAPER* paper, UINT_8* Buffer, UINT_32 Bytes)
+UINT_32 PaperRead(BINPAPER* paper, UINT_8* Buffer, UINT_32 Bytes, UINT_8 ect_size_operation)
 {
 	UINT_32 status = 0;
 	HDPARAMS Drive;
@@ -90,7 +90,7 @@ UINT_32 PaperRead(BINPAPER* paper, UINT_8* Buffer, UINT_32 Bytes)
 	}
 	
 	Drive = DriveEntry();
-	status = ReadOperation(Drive, &paper->paperDescriptor, Buffer, Bytes);
+	status = ReadOperation(Drive, &paper->paperDescriptor, Buffer, Bytes, ect_size_operation);
 	if (!status)
 	{
 		panic("Paper read failed\n");

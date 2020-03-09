@@ -8,12 +8,15 @@ section .data
 	DECIMALSYMB             equ '%'
 	HEXADECIMALSYMB         equ '^'
 	CONSOLE_OUTPUT_COLOR    equ 0x02
-
+	STRING : db "Iman Abdollahzadeh", 0
+	STRING_SIZE equ $ - STRING
 ;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 section .text
 	extern PARGS_LIST
 	extern printk_impl
+	global _execute_ect
+	global _LiBOSASM_load_ext_image
 	global printk
 	global IDTLoad
 	global GDTLoad
@@ -562,7 +565,7 @@ END_OF_CHECK_FS:
 
 CHECK_ES:
 	push ebp
-    	mov  ebp, esp
+	mov  ebp, esp
 	mov  cx,  0x10
 	mov  eax, [ebp + 8]
 	mov  bx,  es
@@ -575,12 +578,48 @@ CHECK_ES_FAILURE:
 	mov DWORD [eax], 0x00
 END_OF_CHECK_ES:
 	mov  esp, ebp
-    	pop  ebp
-    	ret
+	pop  ebp
+	ret
 
 ;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 WM:
 	WBINVD
 
-;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ _execute_ect(void);
+
+_execute_ect:
+	push ebp 
+	mov ebp, esp
+
+	mov eax, STRING
+	mov ebx, STRING_SIZE
+	push ebx
+	push eax
+	xor ebx, ebx
+	mov eax, dword[0xBF500004]
+	call eax
+	pop eax
+	pop ebx
+	mov esp, ebp
+	pop ebp
+	ret
+
+;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ _LiBOSASM_load_ext_image(char* path, void* buffer);
+
+_LiBOSASM_load_ext_image:
+	push ebp 
+	mov  ebp, esp
+	mov  eax, DWORD[ebp + 8]
+	mov  ebx, DWORD[ebp + 12]
+	push ebx
+	push eax
+
+	call 0x01000040
+
+	pop  eax
+	pop  ebx
+	mov  esp, ebp
+	pop  ebp
+	ret
+

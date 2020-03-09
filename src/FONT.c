@@ -1,7 +1,8 @@
 #include "../include/FONT.h"
 
+#define _0x00BLACK 0x00000000
+
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ GLOBAL AND STATIC VARIABLES
-#define _0x00BLACK 0
 
 UINT_32 A_data[432] = {
 	0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, _0x00BLACK, _0x00BLACK, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
@@ -367,7 +368,6 @@ UINT_32 Z_data[432] = {
 	0xFFFFFFFF, _0x00BLACK, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, _0x00BLACK, 0xFFFFFFFF,
 	_0x00BLACK, _0x00BLACK, _0x00BLACK, _0x00BLACK, _0x00BLACK, _0x00BLACK, _0x00BLACK, _0x00BLACK, 0xFFFFFFFF,
 };
-
 UINT_32 a_data[432] = {
 	0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
 	0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
@@ -735,27 +735,19 @@ UINT_32 z_data[432] = {
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
+extern void _asm_draw_character(UINT_32* src, UINT_32* trg, UINT_32 stride, UINT_32 background_color);
+extern void _sse_draw_character(UINT_32* src, UINT_32* trg, UINT_32* background_color);
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
 static void draw_character_on_window_buffer_at(UINT_32* character, WINDOW* wnd, UINT_32 relative_x_in_window, UINT_32 relative_y_in_window, UINT_32 background_color)
 {
 	UINT_32* trg = (UINT_32*)(wnd->buffer + ((relative_y_in_window * wnd->rect.width + relative_x_in_window) << 2));
 	UINT_32* src = character;
+	_asm_draw_character(src, trg, (wnd->rect.width << 2) - 36, background_color);
 	
-	UINT_8 h = 12;
-	UINT_8 w = 9;
-	while(h--)
-	{
-		while(w--)
-		{
-			if((*src) & (0xFF000000)) 
-			{
-				*trg++ = background_color;
-				src++;
-			}
-			else *trg++ = *src++;
-		}
-		trg = PHYSICAL_ADDRESS(trg) + (wnd->rect.width << 2) - 36;
-		w = 9;
-	}
+	//TODO: UINT_32 TMP[4] = {background_color, background_color, background_color, background_color};
+	//TODO: _sse_draw_character(src, trg, TMP);
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -823,20 +815,14 @@ static void draw_character(INT_8 character, WINDOW* wnd, UINT_32 x, UINT_32 y, U
 
 void draw_string(const INT_8* string, WINDOW* wnd, UINT_32 x, UINT_32 y, UINT_32 background_color)
 {
-	UINT_32 sz = 0;
-	INT_8* ptr = (INT_8*)string;
-	while(*ptr++)
-		sz++;
-	
-	UINT_32 i = 0;
-	while(sz--)
+	INT_8 ch = 0;
+	while(ch = *string)
 	{
-		if((string[i] == 'g') || (string[i] == 'j') || (string[i] == 'p') || (string[i] == 'q') || (string[i] == 'y'))
-			draw_character(string[i], wnd, x, y + 4, background_color);
+		if((ch == 'g') || (ch == 'j') || (ch == 'p') || (ch == 'q') || (ch == 'y'))
+			draw_character(*string++, wnd, x, y + 4, background_color);
 		else
-			draw_character(string[i], wnd, x, y, background_color);
+			draw_character(*string++, wnd, x, y, background_color);
 		x += 9;
-		i++;
 	}
 }
 

@@ -43,6 +43,7 @@ void*   Alloc ( UINT_32 bytes, UINT_32 alignment, UINT_32 boundary );
 void    Free  ( void* ptr );
 UINT_32 mread (const UINT_32, const UINT_32);
 void    mwrite(const UINT_32, const UINT_32, const UINT_32);
+
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 #endif //! _MEMORY__H__

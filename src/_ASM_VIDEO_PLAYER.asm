@@ -1053,4420 +1053,3553 @@ DUMMY:                   dd  128.0
 
 section .text
 
-global _uv_transform_00
-global _uv_transform_01
-global _uv_transform_02
-global _uv_transform_03
-global _uv_transform_04
-global _uv_transform_05
-global _uv_transform_06
-global _uv_transform_07
-global _uv_transform_10
-global _uv_transform_11
-global _uv_transform_12
-global _uv_transform_13
-global _uv_transform_14
-global _uv_transform_15
-global _uv_transform_16
-global _uv_transform_17
-global _uv_transform_20
-global _uv_transform_21
-global _uv_transform_22
-global _uv_transform_23
-global _uv_transform_24
-global _uv_transform_25
-global _uv_transform_26
-global _uv_transform_27
-global _uv_transform_30
-global _uv_transform_31
-global _uv_transform_32
-global _uv_transform_33
-global _uv_transform_34
-global _uv_transform_35
-global _uv_transform_36
-global _uv_transform_37
-global _uv_transform_40
-global _uv_transform_41
-global _uv_transform_42
-global _uv_transform_43
-global _uv_transform_44
-global _uv_transform_45
-global _uv_transform_46
-global _uv_transform_47
-global _uv_transform_50
-global _uv_transform_51
-global _uv_transform_52
-global _uv_transform_53
-global _uv_transform_54
-global _uv_transform_55
-global _uv_transform_56
-global _uv_transform_57
-global _uv_transform_60
-global _uv_transform_61
-global _uv_transform_62
-global _uv_transform_63
-global _uv_transform_64
-global _uv_transform_65
-global _uv_transform_66
-global _uv_transform_67
-global _uv_transform_70
-global _uv_transform_71
-global _uv_transform_72
-global _uv_transform_73
-global _uv_transform_74
-global _uv_transform_75
-global _uv_transform_76
-global _uv_transform_77
+global _uv_transform
 global _ycc_to_rgb
 global _final_rgb_sorting
 global _activate_sse
+global _check_avx
 global _short_to_float
 global _float_to_UINT_8
-; ......................................................... void _uv_transform_00(float* result, float* Fuv);
 
-_uv_transform_00:
+; ......................................................... void _uv_transform(float* result, float* Fuv, float back_dc_value);
+; ......................................................... WHAT IT DOES:
+; ......................................................... Fuv[0] += back_dc_value;
+; ......................................................... result = &(res[0]);
+; ......................................................... TRANSFORM(result, Fuv); result = (float*)(PHYSICAL_ADDRESS(result) + 32);
+; ......................................................... ...
+; ......................................................... result = &(res[1]);
+; ......................................................... TRANSFORM(result, Fuv); result = (float*)(PHYSICAL_ADDRESS(result) + 32);
+; ......................................................... ...
+
+_uv_transform:
 push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+mov    ebp,  esp
+mov    eax,  [ebp + 8 ]  ;get result pointer
+mov    esi,  [ebp + 12]  ;get Fuv pointer
+movss  xmm7, [ebp + 16]
+addss  xmm7, [esi]
+movss  [esi], xmm7
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_00_0]
-mulps  xmm2, [coefficients_00_2]
-mulps  xmm4, [coefficients_00_4]
 mulps  xmm1, [coefficients_00_1]
+mulps  xmm2, [coefficients_00_2]
 mulps  xmm3, [coefficients_00_3]
+mulps  xmm4, [coefficients_00_4]
 mulps  xmm5, [coefficients_00_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_00_6]
+mulps  xmm7, [coefficients_00_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_00_6]
-mulps  xmm2, [coefficients_00_8]
-mulps  xmm4, [coefficients_00_10]
-mulps  xmm1, [coefficients_00_7]
-mulps  xmm3, [coefficients_00_9]
-mulps  xmm5, [coefficients_00_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_00_8]
+mulps  xmm1, [coefficients_00_9]
+mulps  xmm2, [coefficients_00_10]
+mulps  xmm3, [coefficients_00_11]
+mulps  xmm4, [coefficients_00_12]
+mulps  xmm5, [coefficients_00_14]
+mulps  xmm6, [coefficients_00_13]
+mulps  xmm7, [coefficients_00_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_00_12]
-mulps  xmm2, [coefficients_00_14]
-mulps  xmm1, [coefficients_00_13]
-mulps  xmm3, [coefficients_00_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_01:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_01_0]
-mulps  xmm2, [coefficients_01_2]
-mulps  xmm4, [coefficients_01_4]
 mulps  xmm1, [coefficients_01_1]
+mulps  xmm2, [coefficients_01_2]
 mulps  xmm3, [coefficients_01_3]
+mulps  xmm4, [coefficients_01_4]
 mulps  xmm5, [coefficients_01_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_01_6]
+mulps  xmm7, [coefficients_01_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_01_6]
-mulps  xmm2, [coefficients_01_8]
-mulps  xmm4, [coefficients_01_10]
-mulps  xmm1, [coefficients_01_7]
-mulps  xmm3, [coefficients_01_9]
-mulps  xmm5, [coefficients_01_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_01_8]
+mulps  xmm1, [coefficients_01_9]
+mulps  xmm2, [coefficients_01_10]
+mulps  xmm3, [coefficients_01_11]
+mulps  xmm4, [coefficients_01_12]
+mulps  xmm5, [coefficients_01_14]
+mulps  xmm6, [coefficients_01_13]
+mulps  xmm7, [coefficients_01_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_01_12]
-mulps  xmm2, [coefficients_01_14]
-mulps  xmm1, [coefficients_01_13]
-mulps  xmm3, [coefficients_01_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_02:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_02_0]
-mulps  xmm2, [coefficients_02_2]
-mulps  xmm4, [coefficients_02_4]
 mulps  xmm1, [coefficients_02_1]
+mulps  xmm2, [coefficients_02_2]
 mulps  xmm3, [coefficients_02_3]
+mulps  xmm4, [coefficients_02_4]
 mulps  xmm5, [coefficients_02_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_02_6]
+mulps  xmm7, [coefficients_02_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_02_6]
-mulps  xmm2, [coefficients_02_8]
-mulps  xmm4, [coefficients_02_10]
-mulps  xmm1, [coefficients_02_7]
-mulps  xmm3, [coefficients_02_9]
-mulps  xmm5, [coefficients_02_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_02_8]
+mulps  xmm1, [coefficients_02_9]
+mulps  xmm2, [coefficients_02_10]
+mulps  xmm3, [coefficients_02_11]
+mulps  xmm4, [coefficients_02_12]
+mulps  xmm5, [coefficients_02_14]
+mulps  xmm6, [coefficients_02_13]
+mulps  xmm7, [coefficients_02_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_02_12]
-mulps  xmm2, [coefficients_02_14]
-mulps  xmm1, [coefficients_02_13]
-mulps  xmm3, [coefficients_02_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_03:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_03_0]
-mulps  xmm2, [coefficients_03_2]
-mulps  xmm4, [coefficients_03_4]
 mulps  xmm1, [coefficients_03_1]
+mulps  xmm2, [coefficients_03_2]
 mulps  xmm3, [coefficients_03_3]
+mulps  xmm4, [coefficients_03_4]
 mulps  xmm5, [coefficients_03_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_03_6]
+mulps  xmm7, [coefficients_03_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_03_6]
-mulps  xmm2, [coefficients_03_8]
-mulps  xmm4, [coefficients_03_10]
-mulps  xmm1, [coefficients_03_7]
-mulps  xmm3, [coefficients_03_9]
-mulps  xmm5, [coefficients_03_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_03_8]
+mulps  xmm1, [coefficients_03_9]
+mulps  xmm2, [coefficients_03_10]
+mulps  xmm3, [coefficients_03_11]
+mulps  xmm4, [coefficients_03_12]
+mulps  xmm5, [coefficients_03_14]
+mulps  xmm6, [coefficients_03_13]
+mulps  xmm7, [coefficients_03_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_03_12]
-mulps  xmm2, [coefficients_03_14]
-mulps  xmm1, [coefficients_03_13]
-mulps  xmm3, [coefficients_03_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_04:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_04_0]
-mulps  xmm2, [coefficients_04_2]
-mulps  xmm4, [coefficients_04_4]
 mulps  xmm1, [coefficients_04_1]
+mulps  xmm2, [coefficients_04_2]
 mulps  xmm3, [coefficients_04_3]
+mulps  xmm4, [coefficients_04_4]
 mulps  xmm5, [coefficients_04_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_04_6]
+mulps  xmm7, [coefficients_04_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_04_6]
-mulps  xmm2, [coefficients_04_8]
-mulps  xmm4, [coefficients_04_10]
-mulps  xmm1, [coefficients_04_7]
-mulps  xmm3, [coefficients_04_9]
-mulps  xmm5, [coefficients_04_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_04_8]
+mulps  xmm1, [coefficients_04_9]
+mulps  xmm2, [coefficients_04_10]
+mulps  xmm3, [coefficients_04_11]
+mulps  xmm4, [coefficients_04_12]
+mulps  xmm5, [coefficients_04_14]
+mulps  xmm6, [coefficients_04_13]
+mulps  xmm7, [coefficients_04_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_04_12]
-mulps  xmm2, [coefficients_04_14]
-mulps  xmm1, [coefficients_04_13]
-mulps  xmm3, [coefficients_04_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; .........................................................
-
-_uv_transform_05:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_05_0]
-mulps  xmm2, [coefficients_05_2]
-mulps  xmm4, [coefficients_05_4]
 mulps  xmm1, [coefficients_05_1]
+mulps  xmm2, [coefficients_05_2]
 mulps  xmm3, [coefficients_05_3]
+mulps  xmm4, [coefficients_05_4]
 mulps  xmm5, [coefficients_05_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_05_6]
+mulps  xmm7, [coefficients_05_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_05_6]
-mulps  xmm2, [coefficients_05_8]
-mulps  xmm4, [coefficients_05_10]
-mulps  xmm1, [coefficients_05_7]
-mulps  xmm3, [coefficients_05_9]
-mulps  xmm5, [coefficients_05_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_05_8]
+mulps  xmm1, [coefficients_05_9]
+mulps  xmm2, [coefficients_05_10]
+mulps  xmm3, [coefficients_05_11]
+mulps  xmm4, [coefficients_05_12]
+mulps  xmm5, [coefficients_05_14]
+mulps  xmm6, [coefficients_05_13]
+mulps  xmm7, [coefficients_05_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_05_12]
-mulps  xmm2, [coefficients_05_14]
-mulps  xmm1, [coefficients_05_13]
-mulps  xmm3, [coefficients_05_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_06:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_06_0]
-mulps  xmm2, [coefficients_06_2]
-mulps  xmm4, [coefficients_06_4]
 mulps  xmm1, [coefficients_06_1]
+mulps  xmm2, [coefficients_06_2]
 mulps  xmm3, [coefficients_06_3]
+mulps  xmm4, [coefficients_06_4]
 mulps  xmm5, [coefficients_06_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_06_6]
+mulps  xmm7, [coefficients_06_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_06_6]
-mulps  xmm2, [coefficients_06_8]
-mulps  xmm4, [coefficients_06_10]
-mulps  xmm1, [coefficients_06_7]
-mulps  xmm3, [coefficients_06_9]
-mulps  xmm5, [coefficients_06_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_06_8]
+mulps  xmm1, [coefficients_06_9]
+mulps  xmm2, [coefficients_06_10]
+mulps  xmm3, [coefficients_06_11]
+mulps  xmm4, [coefficients_06_12]
+mulps  xmm5, [coefficients_06_14]
+mulps  xmm6, [coefficients_06_13]
+mulps  xmm7, [coefficients_06_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_06_12]
-mulps  xmm2, [coefficients_06_14]
-mulps  xmm1, [coefficients_06_13]
-mulps  xmm3, [coefficients_06_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; .........................................................
-
-_uv_transform_07:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_07_0]
-mulps  xmm2, [coefficients_07_2]
-mulps  xmm4, [coefficients_07_4]
 mulps  xmm1, [coefficients_07_1]
+mulps  xmm2, [coefficients_07_2]
 mulps  xmm3, [coefficients_07_3]
+mulps  xmm4, [coefficients_07_4]
 mulps  xmm5, [coefficients_07_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_07_6]
+mulps  xmm7, [coefficients_07_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_07_6]
-mulps  xmm2, [coefficients_07_8]
-mulps  xmm4, [coefficients_07_10]
-mulps  xmm1, [coefficients_07_7]
-mulps  xmm3, [coefficients_07_9]
-mulps  xmm5, [coefficients_07_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_07_8]
+mulps  xmm1, [coefficients_07_9]
+mulps  xmm2, [coefficients_07_10]
+mulps  xmm3, [coefficients_07_11]
+mulps  xmm4, [coefficients_07_12]
+mulps  xmm5, [coefficients_07_14]
+mulps  xmm6, [coefficients_07_13]
+mulps  xmm7, [coefficients_07_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_07_12]
-mulps  xmm2, [coefficients_07_14]
-mulps  xmm1, [coefficients_07_13]
-mulps  xmm3, [coefficients_07_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-; .........................................................
-_uv_transform_10:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+sub eax, 220
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_10_0]
-mulps  xmm2, [coefficients_10_2]
-mulps  xmm4, [coefficients_10_4]
 mulps  xmm1, [coefficients_10_1]
+mulps  xmm2, [coefficients_10_2]
 mulps  xmm3, [coefficients_10_3]
+mulps  xmm4, [coefficients_10_4]
 mulps  xmm5, [coefficients_10_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_10_6]
+mulps  xmm7, [coefficients_10_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_10_6]
-mulps  xmm2, [coefficients_10_8]
-mulps  xmm4, [coefficients_10_10]
-mulps  xmm1, [coefficients_10_7]
-mulps  xmm3, [coefficients_10_9]
-mulps  xmm5, [coefficients_10_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_10_8]
+mulps  xmm1, [coefficients_10_9]
+mulps  xmm2, [coefficients_10_10]
+mulps  xmm3, [coefficients_10_11]
+mulps  xmm4, [coefficients_10_12]
+mulps  xmm5, [coefficients_10_14]
+mulps  xmm6, [coefficients_10_13]
+mulps  xmm7, [coefficients_10_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_10_12]
-mulps  xmm2, [coefficients_10_14]
-mulps  xmm1, [coefficients_10_13]
-mulps  xmm3, [coefficients_10_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_11:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_11_0]
-mulps  xmm2, [coefficients_11_2]
-mulps  xmm4, [coefficients_11_4]
 mulps  xmm1, [coefficients_11_1]
+mulps  xmm2, [coefficients_11_2]
 mulps  xmm3, [coefficients_11_3]
+mulps  xmm4, [coefficients_11_4]
 mulps  xmm5, [coefficients_11_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_11_6]
+mulps  xmm7, [coefficients_11_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_11_6]
-mulps  xmm2, [coefficients_11_8]
-mulps  xmm4, [coefficients_11_10]
-mulps  xmm1, [coefficients_11_7]
-mulps  xmm3, [coefficients_11_9]
-mulps  xmm5, [coefficients_11_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_11_8]
+mulps  xmm1, [coefficients_11_9]
+mulps  xmm2, [coefficients_11_10]
+mulps  xmm3, [coefficients_11_11]
+mulps  xmm4, [coefficients_11_12]
+mulps  xmm5, [coefficients_11_14]
+mulps  xmm6, [coefficients_11_13]
+mulps  xmm7, [coefficients_11_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_11_12]
-mulps  xmm2, [coefficients_11_14]
-mulps  xmm1, [coefficients_11_13]
-mulps  xmm3, [coefficients_11_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_12:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_12_0]
-mulps  xmm2, [coefficients_12_2]
-mulps  xmm4, [coefficients_12_4]
 mulps  xmm1, [coefficients_12_1]
+mulps  xmm2, [coefficients_12_2]
 mulps  xmm3, [coefficients_12_3]
+mulps  xmm4, [coefficients_12_4]
 mulps  xmm5, [coefficients_12_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_12_6]
+mulps  xmm7, [coefficients_12_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_12_6]
-mulps  xmm2, [coefficients_12_8]
-mulps  xmm4, [coefficients_12_10]
-mulps  xmm1, [coefficients_12_7]
-mulps  xmm3, [coefficients_12_9]
-mulps  xmm5, [coefficients_12_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_12_8]
+mulps  xmm1, [coefficients_12_9]
+mulps  xmm2, [coefficients_12_10]
+mulps  xmm3, [coefficients_12_11]
+mulps  xmm4, [coefficients_12_12]
+mulps  xmm5, [coefficients_12_14]
+mulps  xmm6, [coefficients_12_13]
+mulps  xmm7, [coefficients_12_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_12_12]
-mulps  xmm2, [coefficients_12_14]
-mulps  xmm1, [coefficients_12_13]
-mulps  xmm3, [coefficients_12_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_13:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_13_0]
-mulps  xmm2, [coefficients_13_2]
-mulps  xmm4, [coefficients_13_4]
 mulps  xmm1, [coefficients_13_1]
+mulps  xmm2, [coefficients_13_2]
 mulps  xmm3, [coefficients_13_3]
+mulps  xmm4, [coefficients_13_4]
 mulps  xmm5, [coefficients_13_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_13_6]
+mulps  xmm7, [coefficients_13_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_13_6]
-mulps  xmm2, [coefficients_13_8]
-mulps  xmm4, [coefficients_13_10]
-mulps  xmm1, [coefficients_13_7]
-mulps  xmm3, [coefficients_13_9]
-mulps  xmm5, [coefficients_13_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_13_8]
+mulps  xmm1, [coefficients_13_9]
+mulps  xmm2, [coefficients_13_10]
+mulps  xmm3, [coefficients_13_11]
+mulps  xmm4, [coefficients_13_12]
+mulps  xmm5, [coefficients_13_14]
+mulps  xmm6, [coefficients_13_13]
+mulps  xmm7, [coefficients_13_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_13_12]
-mulps  xmm2, [coefficients_13_14]
-mulps  xmm1, [coefficients_13_13]
-mulps  xmm3, [coefficients_13_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_14:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_14_0]
-mulps  xmm2, [coefficients_14_2]
-mulps  xmm4, [coefficients_14_4]
 mulps  xmm1, [coefficients_14_1]
+mulps  xmm2, [coefficients_14_2]
 mulps  xmm3, [coefficients_14_3]
+mulps  xmm4, [coefficients_14_4]
 mulps  xmm5, [coefficients_14_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_14_6]
+mulps  xmm7, [coefficients_14_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_14_6]
-mulps  xmm2, [coefficients_14_8]
-mulps  xmm4, [coefficients_14_10]
-mulps  xmm1, [coefficients_14_7]
-mulps  xmm3, [coefficients_14_9]
-mulps  xmm5, [coefficients_14_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_14_8]
+mulps  xmm1, [coefficients_14_9]
+mulps  xmm2, [coefficients_14_10]
+mulps  xmm3, [coefficients_14_11]
+mulps  xmm4, [coefficients_14_12]
+mulps  xmm5, [coefficients_14_14]
+mulps  xmm6, [coefficients_14_13]
+mulps  xmm7, [coefficients_14_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_14_12]
-mulps  xmm2, [coefficients_14_14]
-mulps  xmm1, [coefficients_14_13]
-mulps  xmm3, [coefficients_14_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; .........................................................
-
-_uv_transform_15:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_15_0]
-mulps  xmm2, [coefficients_15_2]
-mulps  xmm4, [coefficients_15_4]
 mulps  xmm1, [coefficients_15_1]
+mulps  xmm2, [coefficients_15_2]
 mulps  xmm3, [coefficients_15_3]
+mulps  xmm4, [coefficients_15_4]
 mulps  xmm5, [coefficients_15_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_15_6]
+mulps  xmm7, [coefficients_15_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_15_6]
-mulps  xmm2, [coefficients_15_8]
-mulps  xmm4, [coefficients_15_10]
-mulps  xmm1, [coefficients_15_7]
-mulps  xmm3, [coefficients_15_9]
-mulps  xmm5, [coefficients_15_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_15_8]
+mulps  xmm1, [coefficients_15_9]
+mulps  xmm2, [coefficients_15_10]
+mulps  xmm3, [coefficients_15_11]
+mulps  xmm4, [coefficients_15_12]
+mulps  xmm5, [coefficients_15_14]
+mulps  xmm6, [coefficients_15_13]
+mulps  xmm7, [coefficients_15_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_15_12]
-mulps  xmm2, [coefficients_15_14]
-mulps  xmm1, [coefficients_15_13]
-mulps  xmm3, [coefficients_15_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_16:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_16_0]
-mulps  xmm2, [coefficients_16_2]
-mulps  xmm4, [coefficients_16_4]
 mulps  xmm1, [coefficients_16_1]
+mulps  xmm2, [coefficients_16_2]
 mulps  xmm3, [coefficients_16_3]
+mulps  xmm4, [coefficients_16_4]
 mulps  xmm5, [coefficients_16_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_16_6]
+mulps  xmm7, [coefficients_16_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_16_6]
-mulps  xmm2, [coefficients_16_8]
-mulps  xmm4, [coefficients_16_10]
-mulps  xmm1, [coefficients_16_7]
-mulps  xmm3, [coefficients_16_9]
-mulps  xmm5, [coefficients_16_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_16_8]
+mulps  xmm1, [coefficients_16_9]
+mulps  xmm2, [coefficients_16_10]
+mulps  xmm3, [coefficients_16_11]
+mulps  xmm4, [coefficients_16_12]
+mulps  xmm5, [coefficients_16_14]
+mulps  xmm6, [coefficients_16_13]
+mulps  xmm7, [coefficients_16_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_16_12]
-mulps  xmm2, [coefficients_16_14]
-mulps  xmm1, [coefficients_16_13]
-mulps  xmm3, [coefficients_16_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; .........................................................
-
-_uv_transform_17:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_17_0]
-mulps  xmm2, [coefficients_17_2]
-mulps  xmm4, [coefficients_17_4]
 mulps  xmm1, [coefficients_17_1]
+mulps  xmm2, [coefficients_17_2]
 mulps  xmm3, [coefficients_17_3]
+mulps  xmm4, [coefficients_17_4]
 mulps  xmm5, [coefficients_17_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_17_6]
+mulps  xmm7, [coefficients_17_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_17_6]
-mulps  xmm2, [coefficients_17_8]
-mulps  xmm4, [coefficients_17_10]
-mulps  xmm1, [coefficients_17_7]
-mulps  xmm3, [coefficients_17_9]
-mulps  xmm5, [coefficients_17_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_17_8]
+mulps  xmm1, [coefficients_17_9]
+mulps  xmm2, [coefficients_17_10]
+mulps  xmm3, [coefficients_17_11]
+mulps  xmm4, [coefficients_17_12]
+mulps  xmm5, [coefficients_17_14]
+mulps  xmm6, [coefficients_17_13]
+mulps  xmm7, [coefficients_17_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_17_12]
-mulps  xmm2, [coefficients_17_14]
-mulps  xmm1, [coefficients_17_13]
-mulps  xmm3, [coefficients_17_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-; .........................................................
-_uv_transform_20:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+sub eax, 220
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_20_0]
-mulps  xmm2, [coefficients_20_2]
-mulps  xmm4, [coefficients_20_4]
 mulps  xmm1, [coefficients_20_1]
+mulps  xmm2, [coefficients_20_2]
 mulps  xmm3, [coefficients_20_3]
+mulps  xmm4, [coefficients_20_4]
 mulps  xmm5, [coefficients_20_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_20_6]
+mulps  xmm7, [coefficients_20_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_20_6]
-mulps  xmm2, [coefficients_20_8]
-mulps  xmm4, [coefficients_20_10]
-mulps  xmm1, [coefficients_20_7]
-mulps  xmm3, [coefficients_20_9]
-mulps  xmm5, [coefficients_20_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_20_8]
+mulps  xmm1, [coefficients_20_9]
+mulps  xmm2, [coefficients_20_10]
+mulps  xmm3, [coefficients_20_11]
+mulps  xmm4, [coefficients_20_12]
+mulps  xmm5, [coefficients_20_14]
+mulps  xmm6, [coefficients_20_13]
+mulps  xmm7, [coefficients_20_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_20_12]
-mulps  xmm2, [coefficients_20_14]
-mulps  xmm1, [coefficients_20_13]
-mulps  xmm3, [coefficients_20_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_21:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_21_0]
-mulps  xmm2, [coefficients_21_2]
-mulps  xmm4, [coefficients_21_4]
 mulps  xmm1, [coefficients_21_1]
+mulps  xmm2, [coefficients_21_2]
 mulps  xmm3, [coefficients_21_3]
+mulps  xmm4, [coefficients_21_4]
 mulps  xmm5, [coefficients_21_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_21_6]
+mulps  xmm7, [coefficients_21_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_21_6]
-mulps  xmm2, [coefficients_21_8]
-mulps  xmm4, [coefficients_21_10]
-mulps  xmm1, [coefficients_21_7]
-mulps  xmm3, [coefficients_21_9]
-mulps  xmm5, [coefficients_21_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_21_8]
+mulps  xmm1, [coefficients_21_9]
+mulps  xmm2, [coefficients_21_10]
+mulps  xmm3, [coefficients_21_11]
+mulps  xmm4, [coefficients_21_12]
+mulps  xmm5, [coefficients_21_14]
+mulps  xmm6, [coefficients_21_13]
+mulps  xmm7, [coefficients_21_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_21_12]
-mulps  xmm2, [coefficients_21_14]
-mulps  xmm1, [coefficients_21_13]
-mulps  xmm3, [coefficients_21_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_22:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_22_0]
-mulps  xmm2, [coefficients_22_2]
-mulps  xmm4, [coefficients_22_4]
 mulps  xmm1, [coefficients_22_1]
+mulps  xmm2, [coefficients_22_2]
 mulps  xmm3, [coefficients_22_3]
+mulps  xmm4, [coefficients_22_4]
 mulps  xmm5, [coefficients_22_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_22_6]
+mulps  xmm7, [coefficients_22_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_22_6]
-mulps  xmm2, [coefficients_22_8]
-mulps  xmm4, [coefficients_22_10]
-mulps  xmm1, [coefficients_22_7]
-mulps  xmm3, [coefficients_22_9]
-mulps  xmm5, [coefficients_22_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_22_8]
+mulps  xmm1, [coefficients_22_9]
+mulps  xmm2, [coefficients_22_10]
+mulps  xmm3, [coefficients_22_11]
+mulps  xmm4, [coefficients_22_12]
+mulps  xmm5, [coefficients_22_14]
+mulps  xmm6, [coefficients_22_13]
+mulps  xmm7, [coefficients_22_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_22_12]
-mulps  xmm2, [coefficients_22_14]
-mulps  xmm1, [coefficients_22_13]
-mulps  xmm3, [coefficients_22_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_23:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_23_0]
-mulps  xmm2, [coefficients_23_2]
-mulps  xmm4, [coefficients_23_4]
 mulps  xmm1, [coefficients_23_1]
+mulps  xmm2, [coefficients_23_2]
 mulps  xmm3, [coefficients_23_3]
+mulps  xmm4, [coefficients_23_4]
 mulps  xmm5, [coefficients_23_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_23_6]
+mulps  xmm7, [coefficients_23_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_23_6]
-mulps  xmm2, [coefficients_23_8]
-mulps  xmm4, [coefficients_23_10]
-mulps  xmm1, [coefficients_23_7]
-mulps  xmm3, [coefficients_23_9]
-mulps  xmm5, [coefficients_23_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_23_8]
+mulps  xmm1, [coefficients_23_9]
+mulps  xmm2, [coefficients_23_10]
+mulps  xmm3, [coefficients_23_11]
+mulps  xmm4, [coefficients_23_12]
+mulps  xmm5, [coefficients_23_14]
+mulps  xmm6, [coefficients_23_13]
+mulps  xmm7, [coefficients_23_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_23_12]
-mulps  xmm2, [coefficients_23_14]
-mulps  xmm1, [coefficients_23_13]
-mulps  xmm3, [coefficients_23_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_24:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_24_0]
-mulps  xmm2, [coefficients_24_2]
-mulps  xmm4, [coefficients_24_4]
 mulps  xmm1, [coefficients_24_1]
+mulps  xmm2, [coefficients_24_2]
 mulps  xmm3, [coefficients_24_3]
+mulps  xmm4, [coefficients_24_4]
 mulps  xmm5, [coefficients_24_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_24_6]
+mulps  xmm7, [coefficients_24_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_24_6]
-mulps  xmm2, [coefficients_24_8]
-mulps  xmm4, [coefficients_24_10]
-mulps  xmm1, [coefficients_24_7]
-mulps  xmm3, [coefficients_24_9]
-mulps  xmm5, [coefficients_24_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_24_8]
+mulps  xmm1, [coefficients_24_9]
+mulps  xmm2, [coefficients_24_10]
+mulps  xmm3, [coefficients_24_11]
+mulps  xmm4, [coefficients_24_12]
+mulps  xmm5, [coefficients_24_14]
+mulps  xmm6, [coefficients_24_13]
+mulps  xmm7, [coefficients_24_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_24_12]
-mulps  xmm2, [coefficients_24_14]
-mulps  xmm1, [coefficients_24_13]
-mulps  xmm3, [coefficients_24_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; .........................................................
-
-_uv_transform_25:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_25_0]
-mulps  xmm2, [coefficients_25_2]
-mulps  xmm4, [coefficients_25_4]
 mulps  xmm1, [coefficients_25_1]
+mulps  xmm2, [coefficients_25_2]
 mulps  xmm3, [coefficients_25_3]
+mulps  xmm4, [coefficients_25_4]
 mulps  xmm5, [coefficients_25_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_25_6]
+mulps  xmm7, [coefficients_25_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_25_6]
-mulps  xmm2, [coefficients_25_8]
-mulps  xmm4, [coefficients_25_10]
-mulps  xmm1, [coefficients_25_7]
-mulps  xmm3, [coefficients_25_9]
-mulps  xmm5, [coefficients_25_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_25_8]
+mulps  xmm1, [coefficients_25_9]
+mulps  xmm2, [coefficients_25_10]
+mulps  xmm3, [coefficients_25_11]
+mulps  xmm4, [coefficients_25_12]
+mulps  xmm5, [coefficients_25_14]
+mulps  xmm6, [coefficients_25_13]
+mulps  xmm7, [coefficients_25_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_25_12]
-mulps  xmm2, [coefficients_25_14]
-mulps  xmm1, [coefficients_25_13]
-mulps  xmm3, [coefficients_25_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_26:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_26_0]
-mulps  xmm2, [coefficients_26_2]
-mulps  xmm4, [coefficients_26_4]
 mulps  xmm1, [coefficients_26_1]
+mulps  xmm2, [coefficients_26_2]
 mulps  xmm3, [coefficients_26_3]
+mulps  xmm4, [coefficients_26_4]
 mulps  xmm5, [coefficients_26_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_26_6]
+mulps  xmm7, [coefficients_26_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_26_6]
-mulps  xmm2, [coefficients_26_8]
-mulps  xmm4, [coefficients_26_10]
-mulps  xmm1, [coefficients_26_7]
-mulps  xmm3, [coefficients_26_9]
-mulps  xmm5, [coefficients_26_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_26_8]
+mulps  xmm1, [coefficients_26_9]
+mulps  xmm2, [coefficients_26_10]
+mulps  xmm3, [coefficients_26_11]
+mulps  xmm4, [coefficients_26_12]
+mulps  xmm5, [coefficients_26_14]
+mulps  xmm6, [coefficients_26_13]
+mulps  xmm7, [coefficients_26_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_26_12]
-mulps  xmm2, [coefficients_26_14]
-mulps  xmm1, [coefficients_26_13]
-mulps  xmm3, [coefficients_26_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; .........................................................
-
-_uv_transform_27:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_27_0]
-mulps  xmm2, [coefficients_27_2]
-mulps  xmm4, [coefficients_27_4]
 mulps  xmm1, [coefficients_27_1]
+mulps  xmm2, [coefficients_27_2]
 mulps  xmm3, [coefficients_27_3]
+mulps  xmm4, [coefficients_27_4]
 mulps  xmm5, [coefficients_27_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_27_6]
+mulps  xmm7, [coefficients_27_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_27_6]
-mulps  xmm2, [coefficients_27_8]
-mulps  xmm4, [coefficients_27_10]
-mulps  xmm1, [coefficients_27_7]
-mulps  xmm3, [coefficients_27_9]
-mulps  xmm5, [coefficients_27_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_27_8]
+mulps  xmm1, [coefficients_27_9]
+mulps  xmm2, [coefficients_27_10]
+mulps  xmm3, [coefficients_27_11]
+mulps  xmm4, [coefficients_27_12]
+mulps  xmm5, [coefficients_27_14]
+mulps  xmm6, [coefficients_27_13]
+mulps  xmm7, [coefficients_27_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_27_12]
-mulps  xmm2, [coefficients_27_14]
-mulps  xmm1, [coefficients_27_13]
-mulps  xmm3, [coefficients_27_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; .........................................................
-_uv_transform_30:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+sub eax, 220
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_30_0]
-mulps  xmm2, [coefficients_30_2]
-mulps  xmm4, [coefficients_30_4]
 mulps  xmm1, [coefficients_30_1]
+mulps  xmm2, [coefficients_30_2]
 mulps  xmm3, [coefficients_30_3]
+mulps  xmm4, [coefficients_30_4]
 mulps  xmm5, [coefficients_30_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_30_6]
+mulps  xmm7, [coefficients_30_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_30_6]
-mulps  xmm2, [coefficients_30_8]
-mulps  xmm4, [coefficients_30_10]
-mulps  xmm1, [coefficients_30_7]
-mulps  xmm3, [coefficients_30_9]
-mulps  xmm5, [coefficients_30_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_30_8]
+mulps  xmm1, [coefficients_30_9]
+mulps  xmm2, [coefficients_30_10]
+mulps  xmm3, [coefficients_30_11]
+mulps  xmm4, [coefficients_30_12]
+mulps  xmm5, [coefficients_30_14]
+mulps  xmm6, [coefficients_30_13]
+mulps  xmm7, [coefficients_30_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_30_12]
-mulps  xmm2, [coefficients_30_14]
-mulps  xmm1, [coefficients_30_13]
-mulps  xmm3, [coefficients_30_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_31:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_31_0]
-mulps  xmm2, [coefficients_31_2]
-mulps  xmm4, [coefficients_31_4]
 mulps  xmm1, [coefficients_31_1]
+mulps  xmm2, [coefficients_31_2]
 mulps  xmm3, [coefficients_31_3]
+mulps  xmm4, [coefficients_31_4]
 mulps  xmm5, [coefficients_31_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_31_6]
+mulps  xmm7, [coefficients_31_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_31_6]
-mulps  xmm2, [coefficients_31_8]
-mulps  xmm4, [coefficients_31_10]
-mulps  xmm1, [coefficients_31_7]
-mulps  xmm3, [coefficients_31_9]
-mulps  xmm5, [coefficients_31_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_31_8]
+mulps  xmm1, [coefficients_31_9]
+mulps  xmm2, [coefficients_31_10]
+mulps  xmm3, [coefficients_31_11]
+mulps  xmm4, [coefficients_31_12]
+mulps  xmm5, [coefficients_31_14]
+mulps  xmm6, [coefficients_31_13]
+mulps  xmm7, [coefficients_31_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_31_12]
-mulps  xmm2, [coefficients_31_14]
-mulps  xmm1, [coefficients_31_13]
-mulps  xmm3, [coefficients_31_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_32:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_32_0]
-mulps  xmm2, [coefficients_32_2]
-mulps  xmm4, [coefficients_32_4]
 mulps  xmm1, [coefficients_32_1]
+mulps  xmm2, [coefficients_32_2]
 mulps  xmm3, [coefficients_32_3]
+mulps  xmm4, [coefficients_32_4]
 mulps  xmm5, [coefficients_32_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_32_6]
+mulps  xmm7, [coefficients_32_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_32_6]
-mulps  xmm2, [coefficients_32_8]
-mulps  xmm4, [coefficients_32_10]
-mulps  xmm1, [coefficients_32_7]
-mulps  xmm3, [coefficients_32_9]
-mulps  xmm5, [coefficients_32_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_32_8]
+mulps  xmm1, [coefficients_32_9]
+mulps  xmm2, [coefficients_32_10]
+mulps  xmm3, [coefficients_32_11]
+mulps  xmm4, [coefficients_32_12]
+mulps  xmm5, [coefficients_32_14]
+mulps  xmm6, [coefficients_32_13]
+mulps  xmm7, [coefficients_32_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_32_12]
-mulps  xmm2, [coefficients_32_14]
-mulps  xmm1, [coefficients_32_13]
-mulps  xmm3, [coefficients_32_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_33:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_33_0]
-mulps  xmm2, [coefficients_33_2]
-mulps  xmm4, [coefficients_33_4]
 mulps  xmm1, [coefficients_33_1]
+mulps  xmm2, [coefficients_33_2]
 mulps  xmm3, [coefficients_33_3]
+mulps  xmm4, [coefficients_33_4]
 mulps  xmm5, [coefficients_33_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_33_6]
+mulps  xmm7, [coefficients_33_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_33_6]
-mulps  xmm2, [coefficients_33_8]
-mulps  xmm4, [coefficients_33_10]
-mulps  xmm1, [coefficients_33_7]
-mulps  xmm3, [coefficients_33_9]
-mulps  xmm5, [coefficients_33_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_33_8]
+mulps  xmm1, [coefficients_33_9]
+mulps  xmm2, [coefficients_33_10]
+mulps  xmm3, [coefficients_33_11]
+mulps  xmm4, [coefficients_33_12]
+mulps  xmm5, [coefficients_33_14]
+mulps  xmm6, [coefficients_33_13]
+mulps  xmm7, [coefficients_33_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_33_12]
-mulps  xmm2, [coefficients_33_14]
-mulps  xmm1, [coefficients_33_13]
-mulps  xmm3, [coefficients_33_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_34:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_34_0]
-mulps  xmm2, [coefficients_34_2]
-mulps  xmm4, [coefficients_34_4]
 mulps  xmm1, [coefficients_34_1]
+mulps  xmm2, [coefficients_34_2]
 mulps  xmm3, [coefficients_34_3]
+mulps  xmm4, [coefficients_34_4]
 mulps  xmm5, [coefficients_34_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_34_6]
+mulps  xmm7, [coefficients_34_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_34_6]
-mulps  xmm2, [coefficients_34_8]
-mulps  xmm4, [coefficients_34_10]
-mulps  xmm1, [coefficients_34_7]
-mulps  xmm3, [coefficients_34_9]
-mulps  xmm5, [coefficients_34_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_34_8]
+mulps  xmm1, [coefficients_34_9]
+mulps  xmm2, [coefficients_34_10]
+mulps  xmm3, [coefficients_34_11]
+mulps  xmm4, [coefficients_34_12]
+mulps  xmm5, [coefficients_34_14]
+mulps  xmm6, [coefficients_34_13]
+mulps  xmm7, [coefficients_34_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_34_12]
-mulps  xmm2, [coefficients_34_14]
-mulps  xmm1, [coefficients_34_13]
-mulps  xmm3, [coefficients_34_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; .........................................................
-
-_uv_transform_35:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_35_0]
-mulps  xmm2, [coefficients_35_2]
-mulps  xmm4, [coefficients_35_4]
 mulps  xmm1, [coefficients_35_1]
+mulps  xmm2, [coefficients_35_2]
 mulps  xmm3, [coefficients_35_3]
+mulps  xmm4, [coefficients_35_4]
 mulps  xmm5, [coefficients_35_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_35_6]
+mulps  xmm7, [coefficients_35_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_35_6]
-mulps  xmm2, [coefficients_35_8]
-mulps  xmm4, [coefficients_35_10]
-mulps  xmm1, [coefficients_35_7]
-mulps  xmm3, [coefficients_35_9]
-mulps  xmm5, [coefficients_35_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_35_8]
+mulps  xmm1, [coefficients_35_9]
+mulps  xmm2, [coefficients_35_10]
+mulps  xmm3, [coefficients_35_11]
+mulps  xmm4, [coefficients_35_12]
+mulps  xmm5, [coefficients_35_14]
+mulps  xmm6, [coefficients_35_13]
+mulps  xmm7, [coefficients_35_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_35_12]
-mulps  xmm2, [coefficients_35_14]
-mulps  xmm1, [coefficients_35_13]
-mulps  xmm3, [coefficients_35_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_36:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_36_0]
-mulps  xmm2, [coefficients_36_2]
-mulps  xmm4, [coefficients_36_4]
 mulps  xmm1, [coefficients_36_1]
+mulps  xmm2, [coefficients_36_2]
 mulps  xmm3, [coefficients_36_3]
+mulps  xmm4, [coefficients_36_4]
 mulps  xmm5, [coefficients_36_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_36_6]
+mulps  xmm7, [coefficients_36_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_36_6]
-mulps  xmm2, [coefficients_36_8]
-mulps  xmm4, [coefficients_36_10]
-mulps  xmm1, [coefficients_36_7]
-mulps  xmm3, [coefficients_36_9]
-mulps  xmm5, [coefficients_36_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_36_8]
+mulps  xmm1, [coefficients_36_9]
+mulps  xmm2, [coefficients_36_10]
+mulps  xmm3, [coefficients_36_11]
+mulps  xmm4, [coefficients_36_12]
+mulps  xmm5, [coefficients_36_14]
+mulps  xmm6, [coefficients_36_13]
+mulps  xmm7, [coefficients_36_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_36_12]
-mulps  xmm2, [coefficients_36_14]
-mulps  xmm1, [coefficients_36_13]
-mulps  xmm3, [coefficients_36_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; .........................................................
-
-_uv_transform_37:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_37_0]
-mulps  xmm2, [coefficients_37_2]
-mulps  xmm4, [coefficients_37_4]
 mulps  xmm1, [coefficients_37_1]
+mulps  xmm2, [coefficients_37_2]
 mulps  xmm3, [coefficients_37_3]
+mulps  xmm4, [coefficients_37_4]
 mulps  xmm5, [coefficients_37_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_37_6]
+mulps  xmm7, [coefficients_37_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_37_6]
-mulps  xmm2, [coefficients_37_8]
-mulps  xmm4, [coefficients_37_10]
-mulps  xmm1, [coefficients_37_7]
-mulps  xmm3, [coefficients_37_9]
-mulps  xmm5, [coefficients_37_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_37_8]
+mulps  xmm1, [coefficients_37_9]
+mulps  xmm2, [coefficients_37_10]
+mulps  xmm3, [coefficients_37_11]
+mulps  xmm4, [coefficients_37_12]
+mulps  xmm5, [coefficients_37_14]
+mulps  xmm6, [coefficients_37_13]
+mulps  xmm7, [coefficients_37_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_37_12]
-mulps  xmm2, [coefficients_37_14]
-mulps  xmm1, [coefficients_37_13]
-mulps  xmm3, [coefficients_37_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-		
-_uv_transform_40:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+sub eax, 220
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_40_0]
-mulps  xmm2, [coefficients_40_2]
-mulps  xmm4, [coefficients_40_4]
 mulps  xmm1, [coefficients_40_1]
+mulps  xmm2, [coefficients_40_2]
 mulps  xmm3, [coefficients_40_3]
+mulps  xmm4, [coefficients_40_4]
 mulps  xmm5, [coefficients_40_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_40_6]
+mulps  xmm7, [coefficients_40_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_40_6]
-mulps  xmm2, [coefficients_40_8]
-mulps  xmm4, [coefficients_40_10]
-mulps  xmm1, [coefficients_40_7]
-mulps  xmm3, [coefficients_40_9]
-mulps  xmm5, [coefficients_40_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_40_8]
+mulps  xmm1, [coefficients_40_9]
+mulps  xmm2, [coefficients_40_10]
+mulps  xmm3, [coefficients_40_11]
+mulps  xmm4, [coefficients_40_12]
+mulps  xmm5, [coefficients_40_14]
+mulps  xmm6, [coefficients_40_13]
+mulps  xmm7, [coefficients_40_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_40_12]
-mulps  xmm2, [coefficients_40_14]
-mulps  xmm1, [coefficients_40_13]
-mulps  xmm3, [coefficients_40_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_41:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_41_0]
-mulps  xmm2, [coefficients_41_2]
-mulps  xmm4, [coefficients_41_4]
 mulps  xmm1, [coefficients_41_1]
+mulps  xmm2, [coefficients_41_2]
 mulps  xmm3, [coefficients_41_3]
+mulps  xmm4, [coefficients_41_4]
 mulps  xmm5, [coefficients_41_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_41_6]
+mulps  xmm7, [coefficients_41_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_41_6]
-mulps  xmm2, [coefficients_41_8]
-mulps  xmm4, [coefficients_41_10]
-mulps  xmm1, [coefficients_41_7]
-mulps  xmm3, [coefficients_41_9]
-mulps  xmm5, [coefficients_41_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_41_8]
+mulps  xmm1, [coefficients_41_9]
+mulps  xmm2, [coefficients_41_10]
+mulps  xmm3, [coefficients_41_11]
+mulps  xmm4, [coefficients_41_12]
+mulps  xmm5, [coefficients_41_14]
+mulps  xmm6, [coefficients_41_13]
+mulps  xmm7, [coefficients_41_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_41_12]
-mulps  xmm2, [coefficients_41_14]
-mulps  xmm1, [coefficients_41_13]
-mulps  xmm3, [coefficients_41_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_42:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_42_0]
-mulps  xmm2, [coefficients_42_2]
-mulps  xmm4, [coefficients_42_4]
 mulps  xmm1, [coefficients_42_1]
+mulps  xmm2, [coefficients_42_2]
 mulps  xmm3, [coefficients_42_3]
+mulps  xmm4, [coefficients_42_4]
 mulps  xmm5, [coefficients_42_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_42_6]
+mulps  xmm7, [coefficients_42_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_42_6]
-mulps  xmm2, [coefficients_42_8]
-mulps  xmm4, [coefficients_42_10]
-mulps  xmm1, [coefficients_42_7]
-mulps  xmm3, [coefficients_42_9]
-mulps  xmm5, [coefficients_42_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_42_8]
+mulps  xmm1, [coefficients_42_9]
+mulps  xmm2, [coefficients_42_10]
+mulps  xmm3, [coefficients_42_11]
+mulps  xmm4, [coefficients_42_12]
+mulps  xmm5, [coefficients_42_14]
+mulps  xmm6, [coefficients_42_13]
+mulps  xmm7, [coefficients_42_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_42_12]
-mulps  xmm2, [coefficients_42_14]
-mulps  xmm1, [coefficients_42_13]
-mulps  xmm3, [coefficients_42_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_43:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_43_0]
-mulps  xmm2, [coefficients_43_2]
-mulps  xmm4, [coefficients_43_4]
 mulps  xmm1, [coefficients_43_1]
+mulps  xmm2, [coefficients_43_2]
 mulps  xmm3, [coefficients_43_3]
+mulps  xmm4, [coefficients_43_4]
 mulps  xmm5, [coefficients_43_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_43_6]
+mulps  xmm7, [coefficients_43_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_43_6]
-mulps  xmm2, [coefficients_43_8]
-mulps  xmm4, [coefficients_43_10]
-mulps  xmm1, [coefficients_43_7]
-mulps  xmm3, [coefficients_43_9]
-mulps  xmm5, [coefficients_43_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_43_8]
+mulps  xmm1, [coefficients_43_9]
+mulps  xmm2, [coefficients_43_10]
+mulps  xmm3, [coefficients_43_11]
+mulps  xmm4, [coefficients_43_12]
+mulps  xmm5, [coefficients_43_14]
+mulps  xmm6, [coefficients_43_13]
+mulps  xmm7, [coefficients_43_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_43_12]
-mulps  xmm2, [coefficients_43_14]
-mulps  xmm1, [coefficients_43_13]
-mulps  xmm3, [coefficients_43_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_44:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_44_0]
-mulps  xmm2, [coefficients_44_2]
-mulps  xmm4, [coefficients_44_4]
 mulps  xmm1, [coefficients_44_1]
+mulps  xmm2, [coefficients_44_2]
 mulps  xmm3, [coefficients_44_3]
+mulps  xmm4, [coefficients_44_4]
 mulps  xmm5, [coefficients_44_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_44_6]
+mulps  xmm7, [coefficients_44_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_44_6]
-mulps  xmm2, [coefficients_44_8]
-mulps  xmm4, [coefficients_44_10]
-mulps  xmm1, [coefficients_44_7]
-mulps  xmm3, [coefficients_44_9]
-mulps  xmm5, [coefficients_44_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_44_8]
+mulps  xmm1, [coefficients_44_9]
+mulps  xmm2, [coefficients_44_10]
+mulps  xmm3, [coefficients_44_11]
+mulps  xmm4, [coefficients_44_12]
+mulps  xmm5, [coefficients_44_14]
+mulps  xmm6, [coefficients_44_13]
+mulps  xmm7, [coefficients_44_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_44_12]
-mulps  xmm2, [coefficients_44_14]
-mulps  xmm1, [coefficients_44_13]
-mulps  xmm3, [coefficients_44_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; .........................................................
-
-_uv_transform_45:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_45_0]
-mulps  xmm2, [coefficients_45_2]
-mulps  xmm4, [coefficients_45_4]
 mulps  xmm1, [coefficients_45_1]
+mulps  xmm2, [coefficients_45_2]
 mulps  xmm3, [coefficients_45_3]
+mulps  xmm4, [coefficients_45_4]
 mulps  xmm5, [coefficients_45_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_45_6]
+mulps  xmm7, [coefficients_45_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_45_6]
-mulps  xmm2, [coefficients_45_8]
-mulps  xmm4, [coefficients_45_10]
-mulps  xmm1, [coefficients_45_7]
-mulps  xmm3, [coefficients_45_9]
-mulps  xmm5, [coefficients_45_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_45_8]
+mulps  xmm1, [coefficients_45_9]
+mulps  xmm2, [coefficients_45_10]
+mulps  xmm3, [coefficients_45_11]
+mulps  xmm4, [coefficients_45_12]
+mulps  xmm5, [coefficients_45_14]
+mulps  xmm6, [coefficients_45_13]
+mulps  xmm7, [coefficients_45_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_45_12]
-mulps  xmm2, [coefficients_45_14]
-mulps  xmm1, [coefficients_45_13]
-mulps  xmm3, [coefficients_45_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_46:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_46_0]
-mulps  xmm2, [coefficients_46_2]
-mulps  xmm4, [coefficients_46_4]
 mulps  xmm1, [coefficients_46_1]
+mulps  xmm2, [coefficients_46_2]
 mulps  xmm3, [coefficients_46_3]
+mulps  xmm4, [coefficients_46_4]
 mulps  xmm5, [coefficients_46_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_46_6]
+mulps  xmm7, [coefficients_46_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_46_6]
-mulps  xmm2, [coefficients_46_8]
-mulps  xmm4, [coefficients_46_10]
-mulps  xmm1, [coefficients_46_7]
-mulps  xmm3, [coefficients_46_9]
-mulps  xmm5, [coefficients_46_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_46_8]
+mulps  xmm1, [coefficients_46_9]
+mulps  xmm2, [coefficients_46_10]
+mulps  xmm3, [coefficients_46_11]
+mulps  xmm4, [coefficients_46_12]
+mulps  xmm5, [coefficients_46_14]
+mulps  xmm6, [coefficients_46_13]
+mulps  xmm7, [coefficients_46_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_46_12]
-mulps  xmm2, [coefficients_46_14]
-mulps  xmm1, [coefficients_46_13]
-mulps  xmm3, [coefficients_46_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; .........................................................
-
-_uv_transform_47:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_47_0]
-mulps  xmm2, [coefficients_47_2]
-mulps  xmm4, [coefficients_47_4]
 mulps  xmm1, [coefficients_47_1]
+mulps  xmm2, [coefficients_47_2]
 mulps  xmm3, [coefficients_47_3]
+mulps  xmm4, [coefficients_47_4]
 mulps  xmm5, [coefficients_47_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_47_6]
+mulps  xmm7, [coefficients_47_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_47_6]
-mulps  xmm2, [coefficients_47_8]
-mulps  xmm4, [coefficients_47_10]
-mulps  xmm1, [coefficients_47_7]
-mulps  xmm3, [coefficients_47_9]
-mulps  xmm5, [coefficients_47_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_47_8]
+mulps  xmm1, [coefficients_47_9]
+mulps  xmm2, [coefficients_47_10]
+mulps  xmm3, [coefficients_47_11]
+mulps  xmm4, [coefficients_47_12]
+mulps  xmm5, [coefficients_47_14]
+mulps  xmm6, [coefficients_47_13]
+mulps  xmm7, [coefficients_47_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_47_12]
-mulps  xmm2, [coefficients_47_14]
-mulps  xmm1, [coefficients_47_13]
-mulps  xmm3, [coefficients_47_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_50:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+sub eax, 220
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_50_0]
-mulps  xmm2, [coefficients_50_2]
-mulps  xmm4, [coefficients_50_4]
 mulps  xmm1, [coefficients_50_1]
+mulps  xmm2, [coefficients_50_2]
 mulps  xmm3, [coefficients_50_3]
+mulps  xmm4, [coefficients_50_4]
 mulps  xmm5, [coefficients_50_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_50_6]
+mulps  xmm7, [coefficients_50_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_50_6]
-mulps  xmm2, [coefficients_50_8]
-mulps  xmm4, [coefficients_50_10]
-mulps  xmm1, [coefficients_50_7]
-mulps  xmm3, [coefficients_50_9]
-mulps  xmm5, [coefficients_50_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_50_8]
+mulps  xmm1, [coefficients_50_9]
+mulps  xmm2, [coefficients_50_10]
+mulps  xmm3, [coefficients_50_11]
+mulps  xmm4, [coefficients_50_12]
+mulps  xmm5, [coefficients_50_14]
+mulps  xmm6, [coefficients_50_13]
+mulps  xmm7, [coefficients_50_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_50_12]
-mulps  xmm2, [coefficients_50_14]
-mulps  xmm1, [coefficients_50_13]
-mulps  xmm3, [coefficients_50_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_51:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_51_0]
-mulps  xmm2, [coefficients_51_2]
-mulps  xmm4, [coefficients_51_4]
 mulps  xmm1, [coefficients_51_1]
+mulps  xmm2, [coefficients_51_2]
 mulps  xmm3, [coefficients_51_3]
+mulps  xmm4, [coefficients_51_4]
 mulps  xmm5, [coefficients_51_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_51_6]
+mulps  xmm7, [coefficients_51_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_51_6]
-mulps  xmm2, [coefficients_51_8]
-mulps  xmm4, [coefficients_51_10]
-mulps  xmm1, [coefficients_51_7]
-mulps  xmm3, [coefficients_51_9]
-mulps  xmm5, [coefficients_51_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_51_8]
+mulps  xmm1, [coefficients_51_9]
+mulps  xmm2, [coefficients_51_10]
+mulps  xmm3, [coefficients_51_11]
+mulps  xmm4, [coefficients_51_12]
+mulps  xmm5, [coefficients_51_14]
+mulps  xmm6, [coefficients_51_13]
+mulps  xmm7, [coefficients_51_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_51_12]
-mulps  xmm2, [coefficients_51_14]
-mulps  xmm1, [coefficients_51_13]
-mulps  xmm3, [coefficients_51_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_52:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_52_0]
-mulps  xmm2, [coefficients_52_2]
-mulps  xmm4, [coefficients_52_4]
 mulps  xmm1, [coefficients_52_1]
+mulps  xmm2, [coefficients_52_2]
 mulps  xmm3, [coefficients_52_3]
+mulps  xmm4, [coefficients_52_4]
 mulps  xmm5, [coefficients_52_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_52_6]
+mulps  xmm7, [coefficients_52_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_52_6]
-mulps  xmm2, [coefficients_52_8]
-mulps  xmm4, [coefficients_52_10]
-mulps  xmm1, [coefficients_52_7]
-mulps  xmm3, [coefficients_52_9]
-mulps  xmm5, [coefficients_52_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_52_8]
+mulps  xmm1, [coefficients_52_9]
+mulps  xmm2, [coefficients_52_10]
+mulps  xmm3, [coefficients_52_11]
+mulps  xmm4, [coefficients_52_12]
+mulps  xmm5, [coefficients_52_14]
+mulps  xmm6, [coefficients_52_13]
+mulps  xmm7, [coefficients_52_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_52_12]
-mulps  xmm2, [coefficients_52_14]
-mulps  xmm1, [coefficients_52_13]
-mulps  xmm3, [coefficients_52_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_53:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_53_0]
-mulps  xmm2, [coefficients_53_2]
-mulps  xmm4, [coefficients_53_4]
 mulps  xmm1, [coefficients_53_1]
+mulps  xmm2, [coefficients_53_2]
 mulps  xmm3, [coefficients_53_3]
+mulps  xmm4, [coefficients_53_4]
 mulps  xmm5, [coefficients_53_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_53_6]
+mulps  xmm7, [coefficients_53_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_53_6]
-mulps  xmm2, [coefficients_53_8]
-mulps  xmm4, [coefficients_53_10]
-mulps  xmm1, [coefficients_53_7]
-mulps  xmm3, [coefficients_53_9]
-mulps  xmm5, [coefficients_53_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_53_8]
+mulps  xmm1, [coefficients_53_9]
+mulps  xmm2, [coefficients_53_10]
+mulps  xmm3, [coefficients_53_11]
+mulps  xmm4, [coefficients_53_12]
+mulps  xmm5, [coefficients_53_14]
+mulps  xmm6, [coefficients_53_13]
+mulps  xmm7, [coefficients_53_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_53_12]
-mulps  xmm2, [coefficients_53_14]
-mulps  xmm1, [coefficients_53_13]
-mulps  xmm3, [coefficients_53_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_54:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_54_0]
-mulps  xmm2, [coefficients_54_2]
-mulps  xmm4, [coefficients_54_4]
 mulps  xmm1, [coefficients_54_1]
+mulps  xmm2, [coefficients_54_2]
 mulps  xmm3, [coefficients_54_3]
+mulps  xmm4, [coefficients_54_4]
 mulps  xmm5, [coefficients_54_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_54_6]
+mulps  xmm7, [coefficients_54_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_54_6]
-mulps  xmm2, [coefficients_54_8]
-mulps  xmm4, [coefficients_54_10]
-mulps  xmm1, [coefficients_54_7]
-mulps  xmm3, [coefficients_54_9]
-mulps  xmm5, [coefficients_54_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_54_8]
+mulps  xmm1, [coefficients_54_9]
+mulps  xmm2, [coefficients_54_10]
+mulps  xmm3, [coefficients_54_11]
+mulps  xmm4, [coefficients_54_12]
+mulps  xmm5, [coefficients_54_14]
+mulps  xmm6, [coefficients_54_13]
+mulps  xmm7, [coefficients_54_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_54_12]
-mulps  xmm2, [coefficients_54_14]
-mulps  xmm1, [coefficients_54_13]
-mulps  xmm3, [coefficients_54_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; .........................................................
-
-_uv_transform_55:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_55_0]
-mulps  xmm2, [coefficients_55_2]
-mulps  xmm4, [coefficients_55_4]
 mulps  xmm1, [coefficients_55_1]
+mulps  xmm2, [coefficients_55_2]
 mulps  xmm3, [coefficients_55_3]
+mulps  xmm4, [coefficients_55_4]
 mulps  xmm5, [coefficients_55_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_55_6]
+mulps  xmm7, [coefficients_55_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_55_6]
-mulps  xmm2, [coefficients_55_8]
-mulps  xmm4, [coefficients_55_10]
-mulps  xmm1, [coefficients_55_7]
-mulps  xmm3, [coefficients_55_9]
-mulps  xmm5, [coefficients_55_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_55_8]
+mulps  xmm1, [coefficients_55_9]
+mulps  xmm2, [coefficients_55_10]
+mulps  xmm3, [coefficients_55_11]
+mulps  xmm4, [coefficients_55_12]
+mulps  xmm5, [coefficients_55_14]
+mulps  xmm6, [coefficients_55_13]
+mulps  xmm7, [coefficients_55_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_55_12]
-mulps  xmm2, [coefficients_55_14]
-mulps  xmm1, [coefficients_55_13]
-mulps  xmm3, [coefficients_55_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_56:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_56_0]
-mulps  xmm2, [coefficients_56_2]
-mulps  xmm4, [coefficients_56_4]
 mulps  xmm1, [coefficients_56_1]
+mulps  xmm2, [coefficients_56_2]
 mulps  xmm3, [coefficients_56_3]
+mulps  xmm4, [coefficients_56_4]
 mulps  xmm5, [coefficients_56_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_56_6]
+mulps  xmm7, [coefficients_56_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_56_6]
-mulps  xmm2, [coefficients_56_8]
-mulps  xmm4, [coefficients_56_10]
-mulps  xmm1, [coefficients_56_7]
-mulps  xmm3, [coefficients_56_9]
-mulps  xmm5, [coefficients_56_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_56_8]
+mulps  xmm1, [coefficients_56_9]
+mulps  xmm2, [coefficients_56_10]
+mulps  xmm3, [coefficients_56_11]
+mulps  xmm4, [coefficients_56_12]
+mulps  xmm5, [coefficients_56_14]
+mulps  xmm6, [coefficients_56_13]
+mulps  xmm7, [coefficients_56_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_56_12]
-mulps  xmm2, [coefficients_56_14]
-mulps  xmm1, [coefficients_56_13]
-mulps  xmm3, [coefficients_56_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; .........................................................
-
-_uv_transform_57:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_57_0]
-mulps  xmm2, [coefficients_57_2]
-mulps  xmm4, [coefficients_57_4]
 mulps  xmm1, [coefficients_57_1]
+mulps  xmm2, [coefficients_57_2]
 mulps  xmm3, [coefficients_57_3]
+mulps  xmm4, [coefficients_57_4]
 mulps  xmm5, [coefficients_57_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_57_6]
+mulps  xmm7, [coefficients_57_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_57_6]
-mulps  xmm2, [coefficients_57_8]
-mulps  xmm4, [coefficients_57_10]
-mulps  xmm1, [coefficients_57_7]
-mulps  xmm3, [coefficients_57_9]
-mulps  xmm5, [coefficients_57_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_57_8]
+mulps  xmm1, [coefficients_57_9]
+mulps  xmm2, [coefficients_57_10]
+mulps  xmm3, [coefficients_57_11]
+mulps  xmm4, [coefficients_57_12]
+mulps  xmm5, [coefficients_57_14]
+mulps  xmm6, [coefficients_57_13]
+mulps  xmm7, [coefficients_57_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_57_12]
-mulps  xmm2, [coefficients_57_14]
-mulps  xmm1, [coefficients_57_13]
-mulps  xmm3, [coefficients_57_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_60:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+sub eax, 220
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_60_0]
-mulps  xmm2, [coefficients_60_2]
-mulps  xmm4, [coefficients_60_4]
 mulps  xmm1, [coefficients_60_1]
+mulps  xmm2, [coefficients_60_2]
 mulps  xmm3, [coefficients_60_3]
+mulps  xmm4, [coefficients_60_4]
 mulps  xmm5, [coefficients_60_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_60_6]
+mulps  xmm7, [coefficients_60_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_60_6]
-mulps  xmm2, [coefficients_60_8]
-mulps  xmm4, [coefficients_60_10]
-mulps  xmm1, [coefficients_60_7]
-mulps  xmm3, [coefficients_60_9]
-mulps  xmm5, [coefficients_60_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_60_8]
+mulps  xmm1, [coefficients_60_9]
+mulps  xmm2, [coefficients_60_10]
+mulps  xmm3, [coefficients_60_11]
+mulps  xmm4, [coefficients_60_12]
+mulps  xmm5, [coefficients_60_14]
+mulps  xmm6, [coefficients_60_13]
+mulps  xmm7, [coefficients_60_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_60_12]
-mulps  xmm2, [coefficients_60_14]
-mulps  xmm1, [coefficients_60_13]
-mulps  xmm3, [coefficients_60_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_61:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_61_0]
-mulps  xmm2, [coefficients_61_2]
-mulps  xmm4, [coefficients_61_4]
 mulps  xmm1, [coefficients_61_1]
+mulps  xmm2, [coefficients_61_2]
 mulps  xmm3, [coefficients_61_3]
+mulps  xmm4, [coefficients_61_4]
 mulps  xmm5, [coefficients_61_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_61_6]
+mulps  xmm7, [coefficients_61_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_61_6]
-mulps  xmm2, [coefficients_61_8]
-mulps  xmm4, [coefficients_61_10]
-mulps  xmm1, [coefficients_61_7]
-mulps  xmm3, [coefficients_61_9]
-mulps  xmm5, [coefficients_61_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_61_8]
+mulps  xmm1, [coefficients_61_9]
+mulps  xmm2, [coefficients_61_10]
+mulps  xmm3, [coefficients_61_11]
+mulps  xmm4, [coefficients_61_12]
+mulps  xmm5, [coefficients_61_14]
+mulps  xmm6, [coefficients_61_13]
+mulps  xmm7, [coefficients_61_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_61_12]
-mulps  xmm2, [coefficients_61_14]
-mulps  xmm1, [coefficients_61_13]
-mulps  xmm3, [coefficients_61_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_62:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_62_0]
-mulps  xmm2, [coefficients_62_2]
-mulps  xmm4, [coefficients_62_4]
 mulps  xmm1, [coefficients_62_1]
+mulps  xmm2, [coefficients_62_2]
 mulps  xmm3, [coefficients_62_3]
+mulps  xmm4, [coefficients_62_4]
 mulps  xmm5, [coefficients_62_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_62_6]
+mulps  xmm7, [coefficients_62_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_62_6]
-mulps  xmm2, [coefficients_62_8]
-mulps  xmm4, [coefficients_62_10]
-mulps  xmm1, [coefficients_62_7]
-mulps  xmm3, [coefficients_62_9]
-mulps  xmm5, [coefficients_62_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_62_8]
+mulps  xmm1, [coefficients_62_9]
+mulps  xmm2, [coefficients_62_10]
+mulps  xmm3, [coefficients_62_11]
+mulps  xmm4, [coefficients_62_12]
+mulps  xmm5, [coefficients_62_14]
+mulps  xmm6, [coefficients_62_13]
+mulps  xmm7, [coefficients_62_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_62_12]
-mulps  xmm2, [coefficients_62_14]
-mulps  xmm1, [coefficients_62_13]
-mulps  xmm3, [coefficients_62_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_63:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_63_0]
-mulps  xmm2, [coefficients_63_2]
-mulps  xmm4, [coefficients_63_4]
 mulps  xmm1, [coefficients_63_1]
+mulps  xmm2, [coefficients_63_2]
 mulps  xmm3, [coefficients_63_3]
+mulps  xmm4, [coefficients_63_4]
 mulps  xmm5, [coefficients_63_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_63_6]
+mulps  xmm7, [coefficients_63_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_63_6]
-mulps  xmm2, [coefficients_63_8]
-mulps  xmm4, [coefficients_63_10]
-mulps  xmm1, [coefficients_63_7]
-mulps  xmm3, [coefficients_63_9]
-mulps  xmm5, [coefficients_63_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_63_8]
+mulps  xmm1, [coefficients_63_9]
+mulps  xmm2, [coefficients_63_10]
+mulps  xmm3, [coefficients_63_11]
+mulps  xmm4, [coefficients_63_12]
+mulps  xmm5, [coefficients_63_14]
+mulps  xmm6, [coefficients_63_13]
+mulps  xmm7, [coefficients_63_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_63_12]
-mulps  xmm2, [coefficients_63_14]
-mulps  xmm1, [coefficients_63_13]
-mulps  xmm3, [coefficients_63_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_64:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_64_0]
-mulps  xmm2, [coefficients_64_2]
-mulps  xmm4, [coefficients_64_4]
 mulps  xmm1, [coefficients_64_1]
+mulps  xmm2, [coefficients_64_2]
 mulps  xmm3, [coefficients_64_3]
+mulps  xmm4, [coefficients_64_4]
 mulps  xmm5, [coefficients_64_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_64_6]
+mulps  xmm7, [coefficients_64_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_64_6]
-mulps  xmm2, [coefficients_64_8]
-mulps  xmm4, [coefficients_64_10]
-mulps  xmm1, [coefficients_64_7]
-mulps  xmm3, [coefficients_64_9]
-mulps  xmm5, [coefficients_64_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_64_8]
+mulps  xmm1, [coefficients_64_9]
+mulps  xmm2, [coefficients_64_10]
+mulps  xmm3, [coefficients_64_11]
+mulps  xmm4, [coefficients_64_12]
+mulps  xmm5, [coefficients_64_14]
+mulps  xmm6, [coefficients_64_13]
+mulps  xmm7, [coefficients_64_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_64_12]
-mulps  xmm2, [coefficients_64_14]
-mulps  xmm1, [coefficients_64_13]
-mulps  xmm3, [coefficients_64_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; .........................................................
-
-_uv_transform_65:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_65_0]
-mulps  xmm2, [coefficients_65_2]
-mulps  xmm4, [coefficients_65_4]
 mulps  xmm1, [coefficients_65_1]
+mulps  xmm2, [coefficients_65_2]
 mulps  xmm3, [coefficients_65_3]
+mulps  xmm4, [coefficients_65_4]
 mulps  xmm5, [coefficients_65_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_65_6]
+mulps  xmm7, [coefficients_65_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_65_6]
-mulps  xmm2, [coefficients_65_8]
-mulps  xmm4, [coefficients_65_10]
-mulps  xmm1, [coefficients_65_7]
-mulps  xmm3, [coefficients_65_9]
-mulps  xmm5, [coefficients_65_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_65_8]
+mulps  xmm1, [coefficients_65_9]
+mulps  xmm2, [coefficients_65_10]
+mulps  xmm3, [coefficients_65_11]
+mulps  xmm4, [coefficients_65_12]
+mulps  xmm5, [coefficients_65_14]
+mulps  xmm6, [coefficients_65_13]
+mulps  xmm7, [coefficients_65_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_65_12]
-mulps  xmm2, [coefficients_65_14]
-mulps  xmm1, [coefficients_65_13]
-mulps  xmm3, [coefficients_65_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_66:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_66_0]
-mulps  xmm2, [coefficients_66_2]
-mulps  xmm4, [coefficients_66_4]
 mulps  xmm1, [coefficients_66_1]
+mulps  xmm2, [coefficients_66_2]
 mulps  xmm3, [coefficients_66_3]
+mulps  xmm4, [coefficients_66_4]
 mulps  xmm5, [coefficients_66_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_66_6]
+mulps  xmm7, [coefficients_66_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_66_6]
-mulps  xmm2, [coefficients_66_8]
-mulps  xmm4, [coefficients_66_10]
-mulps  xmm1, [coefficients_66_7]
-mulps  xmm3, [coefficients_66_9]
-mulps  xmm5, [coefficients_66_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_66_8]
+mulps  xmm1, [coefficients_66_9]
+mulps  xmm2, [coefficients_66_10]
+mulps  xmm3, [coefficients_66_11]
+mulps  xmm4, [coefficients_66_12]
+mulps  xmm5, [coefficients_66_14]
+mulps  xmm6, [coefficients_66_13]
+mulps  xmm7, [coefficients_66_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_66_12]
-mulps  xmm2, [coefficients_66_14]
-mulps  xmm1, [coefficients_66_13]
-mulps  xmm3, [coefficients_66_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; .........................................................
-
-_uv_transform_67:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_67_0]
-mulps  xmm2, [coefficients_67_2]
-mulps  xmm4, [coefficients_67_4]
 mulps  xmm1, [coefficients_67_1]
+mulps  xmm2, [coefficients_67_2]
 mulps  xmm3, [coefficients_67_3]
+mulps  xmm4, [coefficients_67_4]
 mulps  xmm5, [coefficients_67_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_67_6]
+mulps  xmm7, [coefficients_67_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_67_6]
-mulps  xmm2, [coefficients_67_8]
-mulps  xmm4, [coefficients_67_10]
-mulps  xmm1, [coefficients_67_7]
-mulps  xmm3, [coefficients_67_9]
-mulps  xmm5, [coefficients_67_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_67_8]
+mulps  xmm1, [coefficients_67_9]
+mulps  xmm2, [coefficients_67_10]
+mulps  xmm3, [coefficients_67_11]
+mulps  xmm4, [coefficients_67_12]
+mulps  xmm5, [coefficients_67_14]
+mulps  xmm6, [coefficients_67_13]
+mulps  xmm7, [coefficients_67_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_67_12]
-mulps  xmm2, [coefficients_67_14]
-mulps  xmm1, [coefficients_67_13]
-mulps  xmm3, [coefficients_67_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_70:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+sub eax, 220
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_70_0]
-mulps  xmm2, [coefficients_70_2]
-mulps  xmm4, [coefficients_70_4]
 mulps  xmm1, [coefficients_70_1]
+mulps  xmm2, [coefficients_70_2]
 mulps  xmm3, [coefficients_70_3]
+mulps  xmm4, [coefficients_70_4]
 mulps  xmm5, [coefficients_70_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_70_6]
+mulps  xmm7, [coefficients_70_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_70_6]
-mulps  xmm2, [coefficients_70_8]
-mulps  xmm4, [coefficients_70_10]
-mulps  xmm1, [coefficients_70_7]
-mulps  xmm3, [coefficients_70_9]
-mulps  xmm5, [coefficients_70_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_70_8]
+mulps  xmm1, [coefficients_70_9]
+mulps  xmm2, [coefficients_70_10]
+mulps  xmm3, [coefficients_70_11]
+mulps  xmm4, [coefficients_70_12]
+mulps  xmm5, [coefficients_70_14]
+mulps  xmm6, [coefficients_70_13]
+mulps  xmm7, [coefficients_70_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_70_12]
-mulps  xmm2, [coefficients_70_14]
-mulps  xmm1, [coefficients_70_13]
-mulps  xmm3, [coefficients_70_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_71:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_71_0]
-mulps  xmm2, [coefficients_71_2]
-mulps  xmm4, [coefficients_71_4]
 mulps  xmm1, [coefficients_71_1]
+mulps  xmm2, [coefficients_71_2]
 mulps  xmm3, [coefficients_71_3]
+mulps  xmm4, [coefficients_71_4]
 mulps  xmm5, [coefficients_71_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_71_6]
+mulps  xmm7, [coefficients_71_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_71_6]
-mulps  xmm2, [coefficients_71_8]
-mulps  xmm4, [coefficients_71_10]
-mulps  xmm1, [coefficients_71_7]
-mulps  xmm3, [coefficients_71_9]
-mulps  xmm5, [coefficients_71_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_71_8]
+mulps  xmm1, [coefficients_71_9]
+mulps  xmm2, [coefficients_71_10]
+mulps  xmm3, [coefficients_71_11]
+mulps  xmm4, [coefficients_71_12]
+mulps  xmm5, [coefficients_71_14]
+mulps  xmm6, [coefficients_71_13]
+mulps  xmm7, [coefficients_71_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_71_12]
-mulps  xmm2, [coefficients_71_14]
-mulps  xmm1, [coefficients_71_13]
-mulps  xmm3, [coefficients_71_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_72:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_72_0]
-mulps  xmm2, [coefficients_72_2]
-mulps  xmm4, [coefficients_72_4]
 mulps  xmm1, [coefficients_72_1]
+mulps  xmm2, [coefficients_72_2]
 mulps  xmm3, [coefficients_72_3]
+mulps  xmm4, [coefficients_72_4]
 mulps  xmm5, [coefficients_72_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_72_6]
+mulps  xmm7, [coefficients_72_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_72_6]
-mulps  xmm2, [coefficients_72_8]
-mulps  xmm4, [coefficients_72_10]
-mulps  xmm1, [coefficients_72_7]
-mulps  xmm3, [coefficients_72_9]
-mulps  xmm5, [coefficients_72_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_72_8]
+mulps  xmm1, [coefficients_72_9]
+mulps  xmm2, [coefficients_72_10]
+mulps  xmm3, [coefficients_72_11]
+mulps  xmm4, [coefficients_72_12]
+mulps  xmm5, [coefficients_72_14]
+mulps  xmm6, [coefficients_72_13]
+mulps  xmm7, [coefficients_72_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_72_12]
-mulps  xmm2, [coefficients_72_14]
-mulps  xmm1, [coefficients_72_13]
-mulps  xmm3, [coefficients_72_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_73:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_73_0]
-mulps  xmm2, [coefficients_73_2]
-mulps  xmm4, [coefficients_73_4]
 mulps  xmm1, [coefficients_73_1]
+mulps  xmm2, [coefficients_73_2]
 mulps  xmm3, [coefficients_73_3]
+mulps  xmm4, [coefficients_73_4]
 mulps  xmm5, [coefficients_73_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_73_6]
+mulps  xmm7, [coefficients_73_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_73_6]
-mulps  xmm2, [coefficients_73_8]
-mulps  xmm4, [coefficients_73_10]
-mulps  xmm1, [coefficients_73_7]
-mulps  xmm3, [coefficients_73_9]
-mulps  xmm5, [coefficients_73_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_73_8]
+mulps  xmm1, [coefficients_73_9]
+mulps  xmm2, [coefficients_73_10]
+mulps  xmm3, [coefficients_73_11]
+mulps  xmm4, [coefficients_73_12]
+mulps  xmm5, [coefficients_73_14]
+mulps  xmm6, [coefficients_73_13]
+mulps  xmm7, [coefficients_73_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_73_12]
-mulps  xmm2, [coefficients_73_14]
-mulps  xmm1, [coefficients_73_13]
-mulps  xmm3, [coefficients_73_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_74:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_74_0]
-mulps  xmm2, [coefficients_74_2]
-mulps  xmm4, [coefficients_74_4]
 mulps  xmm1, [coefficients_74_1]
+mulps  xmm2, [coefficients_74_2]
 mulps  xmm3, [coefficients_74_3]
+mulps  xmm4, [coefficients_74_4]
 mulps  xmm5, [coefficients_74_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_74_6]
+mulps  xmm7, [coefficients_74_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_74_6]
-mulps  xmm2, [coefficients_74_8]
-mulps  xmm4, [coefficients_74_10]
-mulps  xmm1, [coefficients_74_7]
-mulps  xmm3, [coefficients_74_9]
-mulps  xmm5, [coefficients_74_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_74_8]
+mulps  xmm1, [coefficients_74_9]
+mulps  xmm2, [coefficients_74_10]
+mulps  xmm3, [coefficients_74_11]
+mulps  xmm4, [coefficients_74_12]
+mulps  xmm5, [coefficients_74_14]
+mulps  xmm6, [coefficients_74_13]
+mulps  xmm7, [coefficients_74_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_74_12]
-mulps  xmm2, [coefficients_74_14]
-mulps  xmm1, [coefficients_74_13]
-mulps  xmm3, [coefficients_74_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; .........................................................
-
-_uv_transform_75:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_75_0]
-mulps  xmm2, [coefficients_75_2]
-mulps  xmm4, [coefficients_75_4]
 mulps  xmm1, [coefficients_75_1]
+mulps  xmm2, [coefficients_75_2]
 mulps  xmm3, [coefficients_75_3]
+mulps  xmm4, [coefficients_75_4]
 mulps  xmm5, [coefficients_75_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_75_6]
+mulps  xmm7, [coefficients_75_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_75_6]
-mulps  xmm2, [coefficients_75_8]
-mulps  xmm4, [coefficients_75_10]
-mulps  xmm1, [coefficients_75_7]
-mulps  xmm3, [coefficients_75_9]
-mulps  xmm5, [coefficients_75_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_75_8]
+mulps  xmm1, [coefficients_75_9]
+mulps  xmm2, [coefficients_75_10]
+mulps  xmm3, [coefficients_75_11]
+mulps  xmm4, [coefficients_75_12]
+mulps  xmm5, [coefficients_75_14]
+mulps  xmm6, [coefficients_75_13]
+mulps  xmm7, [coefficients_75_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_75_12]
-mulps  xmm2, [coefficients_75_14]
-mulps  xmm1, [coefficients_75_13]
-mulps  xmm3, [coefficients_75_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; ......................................................... 
-
-_uv_transform_76:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_76_0]
-mulps  xmm2, [coefficients_76_2]
-mulps  xmm4, [coefficients_76_4]
 mulps  xmm1, [coefficients_76_1]
+mulps  xmm2, [coefficients_76_2]
 mulps  xmm3, [coefficients_76_3]
+mulps  xmm4, [coefficients_76_4]
 mulps  xmm5, [coefficients_76_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_76_6]
+mulps  xmm7, [coefficients_76_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_76_6]
-mulps  xmm2, [coefficients_76_8]
-mulps  xmm4, [coefficients_76_10]
-mulps  xmm1, [coefficients_76_7]
-mulps  xmm3, [coefficients_76_9]
-mulps  xmm5, [coefficients_76_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_76_8]
+mulps  xmm1, [coefficients_76_9]
+mulps  xmm2, [coefficients_76_10]
+mulps  xmm3, [coefficients_76_11]
+mulps  xmm4, [coefficients_76_12]
+mulps  xmm5, [coefficients_76_14]
+mulps  xmm6, [coefficients_76_13]
+mulps  xmm7, [coefficients_76_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_76_12]
-mulps  xmm2, [coefficients_76_14]
-mulps  xmm1, [coefficients_76_13]
-mulps  xmm3, [coefficients_76_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
-ret
-
-; .........................................................
-
-_uv_transform_77:
-push   ebp
-mov    ebp, esp
-mov    eax, [ebp + 8 ]  ;get result pointer
-mov    esi, [ebp + 12]  ;get Fuv pointer 
+movss  dword [eax], xmm0
+add    eax,  32
 movaps xmm0, [esi] 
 movaps xmm1, [esi+16] 
 movaps xmm2, [esi+32] 
 movaps xmm3, [esi+48] 
 movaps xmm4, [esi+64] 
 movaps xmm5, [esi+80] 
+movaps xmm6, [esi+96] 
+movaps xmm7, [esi+112]
 mulps  xmm0, [coefficients_77_0]
-mulps  xmm2, [coefficients_77_2]
-mulps  xmm4, [coefficients_77_4]
 mulps  xmm1, [coefficients_77_1]
+mulps  xmm2, [coefficients_77_2]
 mulps  xmm3, [coefficients_77_3]
+mulps  xmm4, [coefficients_77_4]
 mulps  xmm5, [coefficients_77_5]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+mulps  xmm6, [coefficients_77_6]
+mulps  xmm7, [coefficients_77_7]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
-movss dword [eax], xmm0
-movaps xmm0, [esi+96] 
-movaps xmm1, [esi+112] 
-movaps xmm2, [esi+128] 
-movaps xmm3, [esi+144] 
-movaps xmm4, [esi+160] 
-movaps xmm5, [esi+176] 
-mulps  xmm0, [coefficients_77_6]
-mulps  xmm2, [coefficients_77_8]
-mulps  xmm4, [coefficients_77_10]
-mulps  xmm1, [coefficients_77_7]
-mulps  xmm3, [coefficients_77_9]
-mulps  xmm5, [coefficients_77_11]
-addps  xmm0, xmm2
-addps  xmm0, xmm4
-addps  xmm1, xmm3
-addps  xmm1, xmm5
+movss  dword [eax], xmm0 
+movaps xmm0, [esi+128] 
+movaps xmm1, [esi+144] 
+movaps xmm2, [esi+160] 
+movaps xmm3, [esi+176] 
+movaps xmm4, [esi+192] 
+movaps xmm5, [esi+208] 
+movaps xmm6, [esi+224] 
+movaps xmm7, [esi+240]
+mulps  xmm0, [coefficients_77_8]
+mulps  xmm1, [coefficients_77_9]
+mulps  xmm2, [coefficients_77_10]
+mulps  xmm3, [coefficients_77_11]
+mulps  xmm4, [coefficients_77_12]
+mulps  xmm5, [coefficients_77_14]
+mulps  xmm6, [coefficients_77_13]
+mulps  xmm7, [coefficients_77_15]
 addps  xmm0, xmm1
+addps  xmm2, xmm3
+addps  xmm4, xmm5
+addps  xmm6, xmm7
+addps  xmm0, xmm2
+addps  xmm4, xmm6
+addps  xmm0, xmm4
 haddps xmm0, xmm1
 haddps xmm0, xmm1
 addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-movaps xmm0, [esi+192] 
-movaps xmm1, [esi+208] 
-movaps xmm2, [esi+224] 
-movaps xmm3, [esi+240]
-mulps  xmm0, [coefficients_77_12]
-mulps  xmm2, [coefficients_77_14]
-mulps  xmm1, [coefficients_77_13]
-mulps  xmm3, [coefficients_77_15]
-addps  xmm0, xmm2
-addps  xmm1, xmm3
-addps  xmm0, xmm1
-haddps xmm0, xmm1
-haddps xmm0, xmm1
 addss  xmm0, dword [DUMMY]
-addss  xmm0, dword [eax]
-movss dword [eax], xmm0
-mov esp, ebp
-pop	 ebp
+movss  dword [eax], xmm0
+mov    esp,  ebp
+pop    ebp
 ret
 
 ; ......................................................... void _ycc_to_rgb(float* y, float* cb, float* cr, float* r, float* g, float* b);
@@ -5583,6 +4716,20 @@ mov    cr0, eax
 mov    eax, cr4
 or     ax,  0x600
 mov    cr4, eax
+ret
+
+; .........................................................
+
+_check_avx:
+push   ebp 
+mov    ebp,     esp  
+mov    eax,     1
+xor    ecx,     ecx
+cpuid
+mov    eax,     [ebp+8]
+mov    [eax],   ecx
+mov    esp,     ebp
+pop    ebp
 ret
 
 ; .........................................................

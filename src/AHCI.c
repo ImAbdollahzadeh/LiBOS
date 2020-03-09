@@ -113,28 +113,29 @@ int read(HBA_PORT* port, UINT_32 startl, UINT_32 starth, UINT_32 count, UINT_8* 
 	
 	port->is = (UINT_32) -1;
 	int slot = FindCmdSlot(port);
-	if (slot == -1)
-	{
-		panic("slot=-1\n");
-		return 0;
-	}
+	//:::if (slot == -1)
+	//:::{
+	//:::	panic("slot=-1\n");
+	//:::	return 0;
+	//:::}
  
 	HBA_CMD_HEADER* cmdheader = (HBA_CMD_HEADER*)port->clb;
 	cmdheader += slot;
-	cmdheader->cfl = sizeof(FIS_REG_H2D)/sizeof(UINT_32);	// Command FIS size
-	cmdheader->w = 0;		                                    // Read from device
-	cmdheader->prdtl = (UINT_16)((count-1)>>4) + 1;	    // PRDT entries count
+	cmdheader->cfl = sizeof(FIS_REG_H2D) >> 2;       // Command FIS size
+	cmdheader->w = 0;                                // Read from device
+	cmdheader->prdtl = (UINT_16)((count-1)>>4) + 1;	 // PRDT entries count
  
 	HBA_CMD_TBL* cmdtbl = (HBA_CMD_TBL*)(cmdheader->ctba);
 	__LiBOS_MemZero(cmdtbl, sizeof(HBA_CMD_TBL) + (cmdheader->prdtl-1)*sizeof(HBA_PRDT_ENTRY));
  
 	// 8K bytes (16 sectors) per PRDT
-	for (i=0; i<cmdheader->prdtl-1; i++)
+	INT_32 tmp = cmdheader->prdtl-1;
+	for (i=0; i<tmp; i++)
 	{
 		cmdtbl->prdt_entry[i].dba = (UINT_32) buf;
-		cmdtbl->prdt_entry[i].dbc = 8*1024-1;	// 8K bytes (this value should always be set to 1 less than the actual value)
+		cmdtbl->prdt_entry[i].dbc = 8*1024-1; // 8K bytes (this value should always be set to 1 less than the actual value)
 		cmdtbl->prdt_entry[i].i = 1;
-		buf += 4*1024;	// 4K words
+		buf += 4096;	// 4K words
 		count -= 16;	// 16 sectors
 	}
 	// Last entry
@@ -162,13 +163,13 @@ int read(HBA_PORT* port, UINT_32 startl, UINT_32 starth, UINT_32 count, UINT_8* 
 	cmdfis->counth = (count >> 8) & 0xFF;
  
 	// The below loop waits until the port is no longer busy before issuing a new command
-	while ((port->tfd & (ATA_DEV_BUSY | ATA_DEV_DRQ)) && spin < 1000000)
-		spin++;
-	if (spin == 1000000)
-	{
-		panic("port is hung\n");
-		return 0;
-	}
+	while ((port->tfd & (ATA_DEV_BUSY | ATA_DEV_DRQ)) /*&& spin < 1000000*/);
+	//:::	spin++;
+	//:::if (spin == 1000000)
+	//:::{
+	//:::	panic("port is hung\n");
+	//:::	return 0;
+	//:::}
 	
 	port->ci = 1<<slot;	// Issue command
  
@@ -179,19 +180,19 @@ int read(HBA_PORT* port, UINT_32 startl, UINT_32 starth, UINT_32 count, UINT_8* 
 		// in the PxIS port field as well (1 << 5)
 		if ((port->ci & (1<<slot)) == 0) 
 			break;
-		if (port->is & HBA_PxIS_TFES)	// Task file error
-		{
-			printk("read disk error %\n", 0);
-			return 0;
-		}
+		//:::if (port->is & HBA_PxIS_TFES)	// Task file error
+		//:::{
+		//:::	printk("read disk error %\n", 0);
+		//:::	return 0;
+		//:::}
 	}
  	
-	//Check again
-	if (port->is & HBA_PxIS_TFES)
-	{
-		printk("read disk error %\n", 1);
-		return 0;
-	}
+	//:://Check again
+	//::if (port->is & HBA_PxIS_TFES)
+	//::{
+	//::	printk("read disk error %\n", 1);
+	//::	return 0;
+	//::}
  
 	return 1;
 }

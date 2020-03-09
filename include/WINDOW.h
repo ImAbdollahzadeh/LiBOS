@@ -5,10 +5,6 @@
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-typedef struct _ALPHANUMERIC {
-	UINT_32 pixels[4*7];
-} ALPHANUMERIC;
-
 enum {
 	lclick_event,
 	move_event,
