@@ -1,0 +1,88 @@
+section .text
+global _start
+global change_endian
+
+_start:
+	mov  eax, src
+	mov  ebx, trg
+	push ebx
+	push eax
+	call change_endian
+	pop  eax
+	pop  ebx
+	
+; debugging ------------------------------------------------
+	mov  ecx, trg
+	mov  edx, 10
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80 
+	
+	mov  eax, 1
+	int  0x80
+; ----------------------------------------------------------- 
+   
+   
+change_endian: ;void change_endian(char* src, char* trg)
+;
+; trg[0] = src[0]
+; trg[1] = src[1]
+; trg[2] = src[6]
+; trg[3] = src[7]
+; trg[4] = src[4]
+; trg[5] = src[5]
+; trg[6] = src[2]
+; trg[7] = src[3]
+; trg[8] = src[0]
+; trg[9] = src[1]
+;
+	push ebp
+	mov  ebp, esp
+	mov  eax, DWORD[ebp+0x08] ; eax contains the address of the src
+	mov  ebx, DWORD[ebp+0x0c] ; ebx contains the address of the trg
+	xor  ecx, ecx
+	xor  edx, edx
+	mov  cl, BYTE[eax]
+	mov  BYTE[ebx], cl
+	add  eax, 1
+	add  ebx, 1
+	mov  cl, BYTE[eax]
+	mov  BYTE[ebx], cl
+	add  ebx, 1
+	add  eax, 7
+	jmp  _swap_bytes
+_continue:
+    jmp  _swap_bytes
+_swap_bytes:
+    mov  cl, BYTE[eax]
+	mov  BYTE[ebx], cl
+	add  eax, 1
+	add  ebx, 1
+	mov  cl, BYTE[eax]
+	mov  BYTE[ebx], cl
+	sub  eax, 3
+	add  ebx, 1
+	add  edx, 1
+	cmp  edx, 10
+	je   _done
+	jmp  _continue
+_done:	
+    mov  esp, ebp
+    pop  ebp
+    ret
+
+	
+section .data
+	src: db '0x0001F5E5',0
+	trg: db '0x00000000',0
+
+
+	bytes ~>
+	{ 
+		0x55, 0x89, 0xE5, 0x8B, 0x45, 0x08, 0x8B, 0x5D, 0x0C, 0x31, 0xC9, 0x31, 0xD2, 0x8A, 0x08, 0x88, 
+		0x0B, 0x83, 0xC0, 0x01, 0x83, 0xC3, 0x01, 0x8A, 0x08, 0x88, 0x0B, 0x83, 0xC3, 0x01, 0x83, 0xC0, 
+		0x07, 0xEB, 0x02, 0xEB, 0x00, 0x8A, 0x08, 0x88, 0x0B, 0x83, 0xC0, 0x01, 0x83, 0xC3, 0x01, 0x8A, 
+		0x08, 0x88, 0x0B, 0x83, 0xE8, 0x03, 0x83, 0xC3, 0x01, 0x83, 0xC2, 0x01, 0x83, 0xFA, 0x0A, 0x74, 
+		0x02, 0xEB, 0xE0, 0x89, 0xEC, 0x5D, 0xC3 
+	}
+
