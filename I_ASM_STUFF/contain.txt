@@ -1,0 +1,169 @@
+section .text
+global _start
+global contain
+
+_start:
+    mov  eax, mother
+    mov  ebx, baby
+    mov  ecx, sts
+    push ecx
+    push ebx
+    push eax
+    call contain
+    pop  eax
+    pop  ebx
+    pop  ecx
+    
+; debugging ------------------------------------------------
+    mov ecx, DWORD[sts]
+    cmp ecx, 0
+    je  _print_false
+    cmp ecx, 1
+    je  _print_true
+    jmp _ENDING
+_print_false:
+    mov ecx, FALSE
+    mov edx, 5
+    mov ebx, 1
+    mov eax, 4
+    int 0x80
+    jmp _ENDING
+
+_print_true:
+    mov ecx, TRUE
+    mov edx, 5
+    mov ebx, 1
+    mov eax, 4
+    int 0x80
+
+_ENDING:
+    mov ecx, 0
+    mov edx, 1
+    mov ebx, 1
+    mov eax, 1
+    int 0x80
+; ----------------------------------------------------------- 
+   
+   
+contain: ;void _contain(char* string, char* substring, UINT_32* status) ~>status = 1 (if yes), ~>status = 0 (if not)
+    push ebp
+    mov  ebp, esp
+    mov  eax, DWORD[ebp+0x08]
+    mov  ebx, DWORD[ebp+0x0c]
+    xor  esi, esi ;strlen(string)
+    xor  edi, edi ;strlen(substring)
+    xor  ecx, ecx
+    push eax
+_len_determination_mother:
+    mov cl, BYTE[eax]
+    cmp cl, 0
+    je  _X
+    add eax, 1
+    add esi, 1
+    jmp _len_determination_mother
+_X:
+    pop  eax
+    push ebx
+    xor  ecx, ecx
+_len_determination_baby:
+    mov cl, BYTE[ebx]
+    cmp cl, 0
+    je  _Y
+    add ebx, 1
+    add edi, 1
+    jmp _len_determination_baby
+_Y:
+    pop  ebx
+    xor  ecx, ecx
+
+; if substring > string ~> result is for sure 0
+    mov  ecx, esi
+    sub  ecx, edi
+    cmp  ecx, 0
+    jl  _sure_false_when_string_lengths_violate
+    
+; if we made it until here, this is the time for real comparing bytes
+    xor  ecx, ecx
+    xor  edx, edx ;a counter
+    push eax
+    push ebx
+_perform_bytewise:
+    mov  cl, BYTE[eax]
+    mov  ch, BYTE[ebx]
+    cmp  ch, 0
+    je   _sure_true
+    cmp  ch, cl
+    jne  _reset_substring
+    add  ebx, 1
+    add  eax, 1
+    jmp  _perform_bytewise
+_reset_substring:
+    pop  ebx
+    pop  eax
+    add  eax, 1
+    push eax
+    push ebx
+    ; check for the very last possible comparison
+    mov  ecx, DWORD[ebp+8]
+    add  ecx, esi
+    add  ecx, 1
+    sub  ecx, eax
+    cmp  ecx, edi
+    je   _sure_false
+    
+push eax
+push ebx
+push ecx
+push edx
+mov ecx, HINT
+mov edx, 1
+mov ebx, 1
+mov eax, 4
+int 0x80
+pop edx
+pop ecx
+pop ebx
+pop eax
+    
+    
+    xor  ecx, ecx
+    jmp  _perform_bytewise
+_sure_false:
+    pop  ebx
+    pop  eax
+_sure_false_when_string_lengths_violate:
+    mov ecx, DWORD[ebp+16]
+    mov  DWORD[ecx], 0x00000000
+    jmp __end
+_sure_true:
+    pop  ebx
+    pop  eax
+    mov ecx, DWORD[ebp+16]
+    mov  DWORD[ecx], 0x00000001
+__end:
+    mov  esp, ebp
+    pop  ebp
+    ret
+    
+section .data
+    mother: db 'mov eax, DWORD[ebp+0x08]',0
+    baby:   db 'mov' ,0
+    sts:    dd 0xFFFFFFFF
+    FALSE:  db 'FALSE',0
+    TRUE:   db '_TRUE',0
+    HINT:db '+',0
+
+
+
+	bytes ~>
+	{ 
+		0x55, 0x89, 0xE5, 0x8B, 0x45, 0x08, 0x8B, 0x5D, 0x0C, 0x31, 0xF6, 0x31, 0xFF, 0x31, 0xC9, 0x50, 
+		0x8A, 0x08, 0x80, 0xF9, 0x00, 0x74, 0x08, 0x83, 0xC0, 0x01, 0x83, 0xC6, 0x01, 0xEB, 0xF1, 0x58, 
+		0x53, 0x31, 0xC9, 0x8A, 0x0B, 0x80, 0xF9, 0x00, 0x74, 0x08, 0x83, 0xC3, 0x01, 0x83, 0xC7, 0x01, 
+		0xEB, 0xF1, 0x5B, 0x31, 0xC9, 0x89, 0xF1, 0x29, 0xF9, 0x83, 0xF9, 0x00, 0x7C, 0x36, 0x31, 0xC9, 
+		0x31, 0xD2, 0x50, 0x53, 0x8A, 0x08, 0x8A, 0x2B, 0x80, 0xFD, 0x00, 0x74, 0x32, 0x38, 0xCD, 0x75, 
+		0x08, 0x83, 0xC3, 0x01, 0x83, 0xC0, 0x01, 0xEB, 0xEB, 0x5B, 0x58, 0x83, 0xC0, 0x01, 0x50, 0x53, 
+		0x8B, 0x4D, 0x08, 0x01, 0xF1, 0x83, 0xC1, 0x01, 0x29, 0xC1, 0x39, 0xF9, 0x74, 0x04, 0x31, 0xC9, 
+		0xEB, 0xD2, 0x5B, 0x58, 0x8B, 0x4D, 0x14, 0xC7, 0x01, 0x00, 0x00, 0x00, 0x00, 0xEB, 0x0B, 0x5B, 
+		0x58, 0x8B, 0x4D, 0x10, 0xC7, 0x01, 0x01, 0x00, 0x00, 0x00, 0x89, 0xEC, 0x5D, 0xC3 
+	}

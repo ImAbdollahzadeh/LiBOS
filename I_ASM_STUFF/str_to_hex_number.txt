@@ -1,0 +1,135 @@
+section .text
+global _start
+global contain
+
+_start:
+	mov  eax, string
+	mov  ebx, num
+	push ebx
+	push eax
+	call str2hex
+	pop  eax
+	pop  ebx
+	
+; debugging ------------------------------------------------
+	mov  ecx, print_begin
+	mov  edx, 2
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	
+	mov  ecx, 8
+	push ecx
+	
+	mov  eax, DWORD[num]
+_loop_printing:
+	cmp  ecx, 0
+	je   _done_printing
+	xor  edx, edx
+	mov  ebx, 0x10
+	div  ebx
+	add  edx, lookup_hex_table
+	mov  ecx, edx
+	mov  edx, 1
+	mov  ebx, 1
+	push eax
+	mov  eax, 4
+	int  0x80
+	pop  eax
+	
+	pop  ecx
+	sub  ecx, 1
+	push ecx
+	jmp  _loop_printing
+	
+_done_printing:
+	pop  ecx
+	mov  eax, 1
+	int  0x80
+; ----------------------------------------------------------- 
+   
+   
+str2hex: ;void str2hex(char* string, UINT_32* num)
+	push ebp
+	mov  ebp, esp
+	mov  eax, DWORD[ebp+0x08]
+	mov  ebx, DWORD[ebp+0x0c]
+	mov  DWORD[ebx], 0x00000000
+	
+; first of all check if it is a real hex-containing string
+	xor  ecx, ecx
+	mov  cl, BYTE[eax]
+	cmp  cl, '0'
+	jne  _error
+	add  eax, 1
+	mov  cl, BYTE[eax]
+	cmp  cl, 'x'
+	jne  _error
+	
+; now we know that eax starts with a in (0xaAbBcCdD) string
+	xor  edx, edx
+	mov  ebx, 8
+_start_iteration:
+	mov  cl, BYTE[eax]
+	mov  esi, lookup_hex_table
+_X:
+	mov  ch,  BYTE[esi]
+	cmp  ch, cl
+	je   _found_entry_in_lookup_table
+	add  esi, 1
+	jmp  _X
+_found_entry_in_lookup_table:
+	; now esi contains the right address of the byte from the lookup_hex_table
+	; and ch containg the right byte pointerd by esi, but we need a number between 0 and 15
+	sub esi, lookup_hex_table
+	; now esi contains one of the digts of the right number that should be assigned to the num
+	
+	; it would be ~> esi * (16 ^ ebx)
+	push ebx
+	push eax
+	mov  eax, 1
+_Y:
+	cmp  ebx, 0
+	je   _continue
+	imul eax, 16
+	sub  ebx, 1
+	jmp  _Y
+_continue:
+	; now eax = (16 ^ ebx)
+	imul esi, eax
+	pop  eax
+	pop  ebx
+	mov  edx, DWORD[ebp+0xc]
+	add  DWORD[edx], esi
+	xor  esi, esi
+	cmp  ebx, 0
+	je   _end
+	sub  ebx, 1
+	add  eax, 1
+	jmp  _start_iteration
+_error:
+	mov  ebx, DWORD[ebp+0xc]
+	mov  DWORD[ebx], 0
+_end:
+	mov  esp, ebp
+	pop  ebp
+	ret
+	
+section .data
+	string:			  db '0xFB1905C6',0
+	lookup_hex_table: db '0123456789ABCDEF', 0
+	num:			  dd 0xFFFFFFFF
+	print_begin:	  db '0x', 0
+
+
+	bytes ~>
+	{ 
+		0x55, 0x89, 0xE5, 0x8B, 0x45, 0x08, 0x8B, 0x5D, 0x0C, 0xC7, 0x03, 0x00, 0x00, 0x00, 0x00, 0x31, 
+		0xC9, 0x8A, 0x08, 0x80, 0xF9, 0x30, 0x75, 0x56, 0x83, 0xC0, 0x01, 0x8A, 0x08, 0x80, 0xF9, 0x78, 
+		0x75, 0x4C, 0x31, 0xD2, 0xBB, 0x08, 0x00, 0x00, 0x00, 0x8A, 0x08, 0xBE, 0xF4, 0xB9, 0xCD, 0x0D, 
+		0x8A, 0x2E, 0x38, 0xCD, 0x74, 0x05, 0x83, 0xC6, 0x01, 0xEB, 0xF5, 0x81, 0xEE, 0xF4, 0xB9, 0xCD, 
+		0x0D, 0x53, 0x50, 0xB8, 0x01, 0x00, 0x00, 0x00, 0x83, 0xFB, 0x00, 0x74, 0x08, 0x6B, 0xC0, 0x10, 
+		0x83, 0xEB, 0x01, 0xEB, 0xF3, 0x0F, 0xAF, 0xF0, 0x58, 0x5B, 0x8B, 0x55, 0x0C, 0x01, 0x32, 0x31, 
+		0xF6, 0x83, 0xFB, 0x00, 0x74, 0x11, 0x83, 0xEB, 0x01, 0x83, 0xC0, 0x01, 0xEB, 0xBB, 0x8B, 0x5D, 
+		0x0C, 0xC7, 0x03, 0x00, 0x00, 0x00, 0x00, 0x89, 0xEC, 0x5D, 0xC3 
+	}
