@@ -1,0 +1,108 @@
+section .text
+global _start
+global is_numeric_token
+
+_start:
+	mov  eax, string
+	mov  ebx, return
+	push ebx
+	push eax
+	call is_numeric_token
+	pop  eax
+	pop  ebx
+	
+; debugging ------------------------------------------------
+    mov  eax, DWORD[return]
+    cmp  eax, 0
+    je   _FALSE_PRINT
+    cmp  eax, 1
+    je   _TRUE_PRINT
+_FALSE_PRINT:
+	mov  ecx, FALSE
+	mov  edx, 5
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80 
+	jmp  _print_done
+	
+_TRUE_PRINT:
+	mov  ecx, _TRUE
+	mov  edx, 5
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	
+_print_done:
+	mov  eax, 1
+	int  0x80
+; ----------------------------------------------------------- 
+   
+is_numeric_token: ;void is_numeric_token(char* string, uint32* return)
+	push ebp
+	mov  ebp, esp
+	mov  eax, DWORD[ebp+0x8] ; eax contains the address of the string
+    push eax
+_start_length:
+	mov  bl, BYTE[eax]
+	cmp  bl, 0x00
+	je   _length_done
+	add  ecx, 1
+	add  eax, 1
+	jmp  _start_length
+_length_done:
+    pop  eax
+    xor  ebx, ebx
+    
+    ; the first character should not be '['
+    ; the last character should not be ']' or ':'
+_sanity_check:
+    mov  bl, BYTE[eax]
+	cmp  bl, '['
+	je   _sure_false
+	push eax
+    add  eax, ecx
+    sub  eax, 1
+    mov  bl, BYTE[eax]
+    pop  eax
+	cmp  bl, ']'
+	je   _sure_false
+	push eax
+    add  eax, ecx
+    sub  eax, 1
+    mov  bl, BYTE[eax]
+    pop  eax
+	cmp  bl, ':'
+    je   _sure_false
+    
+    ; the first character must be '$'
+    xor  ebx, ebx
+    mov  bl, BYTE[eax]
+	cmp  bl, '$'
+	jne  _sure_false
+	
+_sure_true:
+    mov  ebx, DWORD[ebp+0xc] ; ebx contains the address of the return
+	mov  DWORD[ebx], 1
+	jmp  _end
+_sure_false:
+    mov  ebx, DWORD[ebp+0xc] ; ebx contains the address of the return
+	mov  DWORD[ebx], 0
+_end:
+	mov  esp, ebp
+	pop  ebp
+	ret
+section .data
+	string:			                db '$numeric_token_0', 0
+	return:                         dd 0xFFFFFFFF
+	_TRUE:                          db '_true', 0
+	FALSE:                          db 'false', 0
+	
+	bytes ~>
+	{ 
+		0x55, 0x89, 0xE5, 0x8B, 0x45, 0x08, 0x50, 0x8A, 0x18, 0x80, 0xFB, 0x00, 0x74, 0x08, 0x83, 0xC1, 
+		0x01, 0x83, 0xC0, 0x01, 0xEB, 0xF1, 0x58, 0x31, 0xDB, 0x8A, 0x18, 0x80, 0xFB, 0x5B, 0x74, 0x30, 
+		0x50, 0x01, 0xC8, 0x83, 0xE8, 0x01, 0x8A, 0x18, 0x58, 0x80, 0xFB, 0x5D, 0x74, 0x22, 0x50, 0x01, 
+		0xC8, 0x83, 0xE8, 0x01, 0x8A, 0x18, 0x58, 0x80, 0xFB, 0x3A, 0x74, 0x14, 0x31, 0xDB, 0x8A, 0x18, 
+		0x80, 0xFB, 0x24, 0x75, 0x0B, 0x8B, 0x5D, 0x0C, 0xC7, 0x03, 0x01, 0x00, 0x00, 0x00, 0xEB, 0x09, 
+		0x8B, 0x5D, 0x0C, 0xC7, 0x03, 0x00, 0x00, 0x00, 0x00, 0x89, 0xEC, 0x5D, 0xC3 
+	}

@@ -1,0 +1,81 @@
+section .text
+global _start
+global hex2str_8bit
+
+_start:
+	mov  edi, num
+	xor  eax, eax
+	mov  al, BYTE[edi]
+	mov  ebx, string
+	push ebx
+	push eax
+	call hex2str_8bit
+	pop  eax
+	pop  ebx
+	
+; debugging ------------------------------------------------
+	mov  ecx, string
+	mov  edx, 2
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80 
+	
+	mov  eax, 1
+	int  0x80
+; ----------------------------------------------------------- 
+   
+   
+hex2str_8bit: ;void hex2str_8bit(UINT_8 num, char* string)
+	push ebp
+	mov  ebp, esp
+	xor  eax, eax
+	mov  al,  BYTE[ebp+0x08] ; eax contains the hex number
+	mov  ebx, DWORD[ebp+0x0c] ; ebx contains the address of the string
+	mov  ecx, 0
+	mov  esi, lookup_hex_table
+	push ebx
+_loop:
+	cmp  ecx, 2
+	je   _done
+	xor  edx, edx
+	mov  ebx, 0x10
+	div  ebx
+	add  ecx, 1
+	
+	; now edx contains a number between 0 and 15 
+	; that should be found in lookup_table
+	
+	add  edx, esi
+	
+	; now edx points to the rigt byte
+	
+	pop  ebx
+	push ebx
+	mov  edi, 2
+	sub  edi, ecx
+	add  ebx, edi
+	push ecx
+	xor  ecx, ecx
+	mov  cl, BYTE[edx]
+	mov  BYTE[ebx], cl
+	pop  ecx
+	jmp  _loop
+	
+_done:
+	pop  ebx
+	mov  esp, ebp
+	pop  ebp
+	ret
+section .data
+	string:			  db '0x00',0
+	lookup_hex_table: db '0123456789ABCDEF', 0
+	num:			  db 0x2E
+	
+	bytes ~> (lookup_hex_table at physical_address 0x0DCDB9F4)
+	{ 
+		0x55, 0x89, 0xE5, 0x31, 0xC0, 0x8A, 0x45, 0x08, 0x8B, 0x5D, 0x0C, 0xB9, 0x00, 0x00, 0x00, 0x00, 
+		0xBE, 0xF4, 0xB9, 0xCD, 0x0D, 0x53, 0x83, 0xF9, 0x02, 0x74, 0x23, 0x31, 0xD2, 0xBB, 0x10, 0x00, 
+		0x00, 0x00, 0xF7, 0xF3, 0x83, 0xC1, 0x01, 0x01, 0xF2, 0x5B, 0x53, 0xBF, 0x02, 0x00, 0x00, 0x00, 
+		0x29, 0xCF, 0x01, 0xFB, 0x51, 0x31, 0xC9, 0x8A, 0x0A, 0x88, 0x0B, 0x59, 0xEB, 0xD8, 0x5B, 0x89, 
+		0xEC, 0x5D, 0xC3 
+	}
