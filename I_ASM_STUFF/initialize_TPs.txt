@@ -1,0 +1,73 @@
+section .text
+
+global _start
+global initialize_TPs
+
+_start:
+	mov  eax, TP
+	mov  ebx, 10
+	push ebx
+	push eax
+	call _init
+	pop  eax
+	pop  ebx
+	mov  ecx, 10
+	push ecx
+	mov  ecx, TP
+_print_start:
+	mov  edx, 387
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	add  ecx, 387
+	mov  eax, ecx
+	pop  ecx
+	sub  ecx, 1
+	push ecx
+	cmp  ecx, 0
+	je   _print_done
+	mov  ecx, eax
+	jmp  _print_start
+_print_done:
+	pop  ecx
+	mov  eax, 1
+	int  0x80
+
+initialize_TPs: ;void initialize_TPs(TP* tps, unsigned int lines)
+	push ebp
+	mov  ebp, esp
+	mov  eax, DWORD[ebp+0x8]
+	mov  ecx, DWORD[ebp+0xc]
+	xor  edx, edx
+_X:
+	mov  BYTE[eax], 0
+	add  eax, 1
+	add  edx, 1
+	cmp  edx, 384
+	jne  _X
+	mov  BYTE[eax], 0x21
+	add  eax, 1
+	mov  BYTE[eax], 0x21
+	add  eax, 1
+	mov  BYTE[eax], 0x21
+	add  eax, 1
+	sub  ecx, 1
+	xor  edx, edx
+	cmp  ecx, 0
+	jne  _X
+_done:
+	mov  esp, ebp
+	pop  ebp
+	ret
+	
+	
+section .data
+	TP: times 40000 db '?'
+
+	bytes ~> (assume TP is at physical address ISBA_TPs = 0x0D819000)
+	{
+		0x55, 0x89, 0xE5, 0x8B, 0x45, 0x08, 0x8B, 0x4D, 0x0C, 0x31, 0xD2, 0xC6, 0x00, 0x00, 0x83, 0xC0, 
+		0x01, 0x83, 0xC2, 0x01, 0x81, 0xFA, 0x80, 0x01, 0x00, 0x00, 0x75, 0xEF, 0xC6, 0x00, 0x21, 0x83, 
+		0xC0, 0x01, 0xC6, 0x00, 0x21, 0x83, 0xC0, 0x01, 0xC6, 0x00, 0x21, 0x83, 0xC0, 0x01, 0x83, 0xE9, 
+		0x01, 0x31, 0xD2, 0x83, 0xF9, 0x00, 0x75, 0xD3, 0x89, 0xEC, 0x5D, 0xC3
+	}

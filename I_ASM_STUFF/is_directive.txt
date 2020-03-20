@@ -43,7 +43,7 @@ is_directive: ;void is_directive(char* string, uint32* return)
 	xor  ebx, ebx
 	xor  ecx, ecx
 	mov  eax, DWORD[ebp+0x8] ; eax contains the address of the string
-    push eax
+	push eax
 _is_directive_start_length:
 	mov  bl, BYTE[eax]
 	cmp  bl, 0x00
@@ -52,13 +52,13 @@ _is_directive_start_length:
 	add  eax, 1
 	jmp  _is_directive_start_length
 _is_directive_length_done:
-    pop  eax
-    xor  ebx, ebx
-    
-    ; the first and the last characters
-    ; must be '[' and ']', respectively
+	pop  eax
+	xor  ebx, ebx
+	
+	; the first and the last characters
+	; must be '[' and ']', respectively
 _is_directive_sanity_check:
-    mov  bl, BYTE[eax]
+	mov  bl, BYTE[eax]
 	cmp  bl, '['
 	jne  _is_directive_sure_false
 	push eax
@@ -70,21 +70,21 @@ _is_directive_sanity_check:
 	jne  _is_directive_sure_false
 	
 _is_directive_sure_true:
-    mov  ebx, DWORD[ebp+0xc] ; ebx contains the address of the return
+	mov  ebx, DWORD[ebp+0xc] ; ebx contains the address of the return
 	mov  DWORD[ebx], 1
 	jmp  _is_directive_end
 _is_directive_sure_false:
-    mov  ebx, DWORD[ebp+0xc] ; ebx contains the address of the return
+	mov  ebx, DWORD[ebp+0xc] ; ebx contains the address of the return
 	mov  DWORD[ebx], 0
 _is_directive_end:
 	mov  esp, ebp
 	pop  ebp
 	ret
 section .data
-	string:			                db '[LiBOSASM 32-bit]', 0
-	return:                         dd 0xFFFFFFFF
-	_TRUE:                          db '_true', 0
-	FALSE:                          db 'false', 0
+	string: db '[LiBOSASM 32-bit]', 0
+	return: dd 0xFFFFFFFF
+	_TRUE:  db '_true', 0
+	FALSE:  db 'false', 0
 	
 	bytes ~> ()
 	{ 

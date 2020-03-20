@@ -101,7 +101,7 @@ _is_mnemonic_end:
 section .data
 	string: db 'int', 0
 	global_mnemonics_table: db 'mov', 0, 'add', 0, 'sub', 0, 'push', 0 
-	; in LiBOS this address is ISBA_GLOB_MN_ADDR at (0x0DCD,BA14) with  maximum size 512 bytes
+	; in LiBOS this address is ISBA_GLOB_MN_ADDR at (0x0DCD,BA14) with  maximum size 1024 bytes
 	
 	global_mnemonics_table_counter: dd 4 
 	; in LiBOS this address is ISBA_GLOB_MN_CNT (0x0DC9,B004)
