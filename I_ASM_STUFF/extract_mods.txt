@@ -1,117 +1,144 @@
 extract_mods: ;void extract_mods(char* corresponding_string, char* mod)
-    push ebp
-    mov ebp, esp
-    mov eax, DWORD[ebp+0x8] ; pointer to the main str
-    mov ebx, return
-    push ebx
-    push eax
-    call is_mnemonic
-    pop eax
-    pop ebx 
-    ; now ebx has the mnemonic status
-    ; if true them put 'o' in mod otherwise test others
-    push eax
-    mov  eax, DWORD[ebx]
-    cmp  eax, 1
-    jne  _is_memory
-    mov  ebx, DWORD[ebp+0xc]
-    mov  BYTE[ebx], 'o'
-    jmp  extraction_end
+	push ebp
+	mov ebp, esp
+	mov eax, DWORD[ebp+0x8] ; pointer to the main str
+	mov ebx, return
+	push ebx
+	push eax
+	call is_mnemonic
+	pop eax
+	pop ebx 
+	; now ebx has the mnemonic status
+	; if true them put 'o' in mod otherwise test others
+	push eax
+	mov  eax, DWORD[ebx]
+	cmp  eax, 1
+	jne  _is_memory
+	mov  ebx, DWORD[ebp+0xc]
+	mov  BYTE[ebx], 'o'
+	jmp  extraction_end
 _is_memory:
-    pop  eax
-    mov DWORD[ebx], 0
-    push ebx
-    push eax
-    call is_memory
-    pop eax
-    pop ebx 
-    push eax
-    mov  eax, DWORD[ebx]
-    cmp  eax, 1
-    jne  _is_immediate
-    mov  ebx, DWORD[ebp+0xc]
-    mov  BYTE[ebx], 'm'
-    jmp  extraction_end
+	pop  eax
+	mov DWORD[ebx], 0
+	push ebx
+	push eax
+	call is_memory
+	pop eax
+	pop ebx 
+	push eax
+	mov  eax, DWORD[ebx]
+	cmp  eax, 1
+	jne  _is_immediate
+	mov  ebx, DWORD[ebp+0xc]
+	mov  BYTE[ebx], 'm'
+	jmp  extraction_end
 _is_immediate:
-    pop  eax
-    mov DWORD[ebx], 0
-    push ebx
-    push eax
-    call is_immediate
-    pop eax
-    pop ebx 
-    push eax
-    mov  eax, DWORD[ebx]
-    cmp  eax, 1
-    jne  _is_label
-    mov  ebx, DWORD[ebp+0xc]
-    mov  BYTE[ebx], 'i'
-    jmp  extraction_end
+	pop  eax
+	mov DWORD[ebx], 0
+	push ebx
+	push eax
+	call is_immediate
+	pop eax
+	pop ebx 
+	push eax
+	mov  eax, DWORD[ebx]
+	cmp  eax, 1
+	jne  _is_label
+	mov  ebx, DWORD[ebp+0xc]
+	mov  BYTE[ebx], 'i'
+	jmp  extraction_end
 _is_label:
-    pop  eax
-    mov DWORD[ebx], 0
-    push ebx
-    push eax
-    call is_label
-    pop eax
-    pop ebx 
-    push eax
-    mov  eax, DWORD[ebx]
-    cmp  eax, 1
-    jne  _is_comment
-    mov  ebx, DWORD[ebp+0xc]
-    mov  BYTE[ebx], 'l'
-    jmp  extraction_end
+	pop  eax
+	mov DWORD[ebx], 0
+	push ebx
+	push eax
+	call is_label
+	pop eax
+	pop ebx 
+	push eax
+	mov  eax, DWORD[ebx]
+	cmp  eax, 1
+	jne  _is_comment
+	mov  ebx, DWORD[ebp+0xc]
+	mov  BYTE[ebx], 'l'
+	jmp  extraction_end
 _is_comment:
-    pop  eax
-    mov DWORD[ebx], 0
-    push ebx
-    push eax
-    call is_comment
-    pop eax
-    pop ebx 
-    push eax
-    mov  eax, DWORD[ebx]
-    cmp  eax, 1
-    jne  _is_numeric_token
-    mov  ebx, DWORD[ebp+0xc]
-    mov  BYTE[ebx], 'c'
-    jmp  extraction_end
+	pop  eax
+	mov DWORD[ebx], 0
+	push ebx
+	push eax
+	call is_comment
+	pop eax
+	pop ebx 
+	push eax
+	mov  eax, DWORD[ebx]
+	cmp  eax, 1
+	jne  _is_numeric_token
+	mov  ebx, DWORD[ebp+0xc]
+	mov  BYTE[ebx], 'c'
+	jmp  extraction_end
 _is_numeric_token:
-    pop  eax
-    mov DWORD[ebx], 0
-    push ebx
-    push eax
-    call is_numeric_token
-    pop eax
-    pop ebx 
-    push eax
-    mov  eax, DWORD[ebx]
-    cmp  eax, 1
-    jne  _is_directive
-    mov  ebx, DWORD[ebp+0xc]
-    mov  BYTE[ebx], 'n'
-    jmp  extraction_end
+	pop  eax
+	mov DWORD[ebx], 0
+	push ebx
+	push eax
+	call is_numeric_token
+	pop eax
+	pop ebx 
+	push eax
+	mov  eax, DWORD[ebx]
+	cmp  eax, 1
+	jne  _is_directive
+	mov  ebx, DWORD[ebp+0xc]
+	mov  BYTE[ebx], 'n'
+	jmp  extraction_end
 _is_directive:
-    pop  eax
-    mov DWORD[ebx], 0
-    push ebx
-    push eax
-    call is_directive
-    pop eax
-    pop ebx 
-    push eax
-    mov  eax, DWORD[ebx]
-    cmp  eax, 1
-    jne  _unhandeled
-    mov  ebx, DWORD[ebp+0xc]
-    mov  BYTE[ebx], 'd'
-    jmp  extraction_end
+	pop  eax
+	mov DWORD[ebx], 0
+	push ebx
+	push eax
+	call is_directive
+	pop eax
+	pop ebx 
+	push eax
+	mov  eax, DWORD[ebx]
+	cmp  eax, 1
+	jne  _unhandeled
+	mov  ebx, DWORD[ebp+0xc]
+	mov  BYTE[ebx], 'd'
+	jmp  extraction_end
 _unhandeled:
-    mov  ebx, DWORD[ebp+0xc]
-    mov  BYTE[ebx], '!'
+	mov  ebx, DWORD[ebp+0xc]
+	mov  BYTE[ebx], '!'
 extraction_end: 
-    pop eax
-    mov esp,ebp
-    pop ebp
-    ret
+	pop eax
+	mov esp,ebp
+	pop ebp
+	ret
+	
+	bytes ~> (assume return           is at physical address ISBA_BOOLEN = 0x0DC9B008
+			  assume is_mnemonic      is at physical address               0x0DC84C00
+			  assume is_memory        is at physical address               0x0DC85400
+			  assume is_immediate     is at physical address               0x0DC86400
+			  assume is_comment       is at physical address               0x0DC85800
+			  assume is_directive     is at physical address               0x0DC85000
+			  assume is_label         is at physical address               0x0DC85C00
+			  assume is_numeric_token is at physical address               0x0DC86000)
+	{ 
+		0x55, 0x89, 0xE5, 0x8B, 0x45, 0x08, 0xBB, 0x08, 0xB0, 0xC9, 0x0D, 0x53, 0x50, 0xE8, 0xFC, 0x4B, 
+		0xC8, 0x0D, 0x58, 0x5B, 0x50, 0x8B, 0x03, 0x83, 0xF8, 0x01, 0x75, 0x0B, 0x8B, 0x5D, 0x0C, 0xC6, 
+		0x03, 0x6F, 0xE9, 0xCC, 0x00, 0x00, 0x00, 0x58, 0xC7, 0x03, 0x00, 0x00, 0x00, 0x00, 0x53, 0x50, 
+		0xE8, 0xFC, 0x53, 0xC8, 0x0D, 0x58, 0x5B, 0x50, 0x8B, 0x03, 0x83, 0xF8, 0x01, 0x75, 0x0B, 0x8B, 
+		0x5D, 0x0C, 0xC6, 0x03, 0x6D, 0xE9, 0xA9, 0x00, 0x00, 0x00, 0x58, 0xC7, 0x03, 0x00, 0x00, 0x00, 
+		0x00, 0x53, 0x50, 0xE8, 0xFC, 0x63, 0xC8, 0x0D, 0x58, 0x5B, 0x50, 0x8B, 0x03, 0x83, 0xF8, 0x01, 
+		0x75, 0x0B, 0x8B, 0x5D, 0x0C, 0xC6, 0x03, 0x69, 0xE9, 0x86, 0x00, 0x00, 0x00, 0x58, 0xC7, 0x03, 
+		0x00, 0x00, 0x00, 0x00, 0x53, 0x50, 0xE8, 0xFC, 0x5B, 0xC8, 0x0D, 0x58, 0x5B, 0x50, 0x8B, 0x03, 
+		0x83, 0xF8, 0x01, 0x75, 0x08, 0x8B, 0x5D, 0x0C, 0xC6, 0x03, 0x6C, 0xEB, 0x66, 0x58, 0xC7, 0x03, 
+		0x00, 0x00, 0x00, 0x00, 0x53, 0x50, 0xE8, 0xFC, 0x57, 0xC8, 0x0D, 0x58, 0x5B, 0x50, 0x8B, 0x03, 
+		0x83, 0xF8, 0x01, 0x75, 0x08, 0x8B, 0x5D, 0x0C, 0xC6, 0x03, 0x63, 0xEB, 0x46, 0x58, 0xC7, 0x03, 
+		0x00, 0x00, 0x00, 0x00, 0x53, 0x50, 0xE8, 0xFC, 0x5F, 0xC8, 0x0D, 0x58, 0x5B, 0x50, 0x8B, 0x03, 
+		0x83, 0xF8, 0x01, 0x75, 0x08, 0x8B, 0x5D, 0x0C, 0xC6, 0x03, 0x6E, 0xEB, 0x26, 0x58, 0xC7, 0x03, 
+		0x00, 0x00, 0x00, 0x00, 0x53, 0x50, 0xE8, 0xFC, 0x4F, 0xC8, 0x0D, 0x58, 0x5B, 0x50, 0x8B, 0x03, 
+		0x83, 0xF8, 0x01, 0x75, 0x08, 0x8B, 0x5D, 0x0C, 0xC6, 0x03, 0x64, 0xEB, 0x06, 0x8B, 0x5D, 0x0C, 
+		0xC6, 0x03, 0x21, 0x58, 0x89, 0xEC, 0x5D, 0xC3 
+	}

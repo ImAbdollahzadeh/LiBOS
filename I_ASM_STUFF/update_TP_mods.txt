@@ -1,0 +1,109 @@
+section .text
+global _start
+global update_TP_mods
+
+; --------------------------------------
+; --------------------------------------
+
+_start:
+	mov  eax, TP
+	mov  ebx, DWORD[lines]
+	push ebx
+	push eax
+	call update_TP_mods
+	pop  eax
+	pop  ebx
+
+; debugging ------------------------------------------------
+
+	mov  ecx, DWORD[lines]
+	mov  esi, TP
+	add  esi, 384
+_print_start:
+	cmp  ecx, 0
+	je   _print_done
+	push ecx
+	mov  ecx, esi
+	mov  edx, 3
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80 
+	add  esi, 387
+	pop  ecx
+	sub  ecx, 1
+	jmp _print_start
+_print_done:
+	mov  eax, 1
+	int  0x80
+; ----------------------------------------------------------- 
+   
+update_TP_mods: ;void update_TP_mods(TP* tps, unsigned int line)
+;
+; struct TP {
+;    unsigned char str1[128];
+;    unsigned char str2[128];
+;    unsigned char str3[128];
+;    unsigned char mod1;
+;    unsigned char mod2;
+;    unsigned char mod3; 
+; }
+;
+	push ebp
+	mov  ebp, esp
+	xor  ebx, ebx
+	xor  edx, edx
+	mov  eax, DWORD[ebp+0x8] ; pointer to the TP
+	mov  ecx, DWORD[ebp+0xc] ; ecx = number of lines    
+	mov  ebx, eax    
+_start_extraction:
+	add  ebx, 384 ; now ebx points to mod1
+	push ebx
+	push eax
+	call extract_mods
+	pop  ebx
+	pop  eax
+	add  eax, 128
+	add  ebx, 1
+	push ebx
+	push eax
+	call extract_mods
+	pop  ebx
+	pop  eax
+	add  eax, 128
+	add  ebx, 1
+	push ebx
+	push eax
+	call extract_mods
+	pop  ebx
+	pop  eax
+	add  eax, 131 ;(128 + 3)
+	xor  ebx, ebx
+	sub  ecx, 1
+	cmp  ecx, 0
+	jne  _start_extraction
+	mov  esp, ebp
+	pop  ebp
+	ret    
+    
+; ----------------------------------------------------------- 
+section .data
+	TP:   db 'mov',0,'...........................................................................................................................', 0
+	      db 'eax',0,'...........................................................................................................................', 0
+	      db '0xFFCCDDAA',0,'....................................................................................................................', 0
+	      db 'ooi'
+	      db 'add',0,'...........................................................................................................................', 0
+	      db 'ebp',0,'...........................................................................................................................', 0
+	      db '0x22335544',0,'....................................................................................................................', 0
+	      db 'xxx'
+	hint: db '+', 0
+    lines:dd 2
+
+	bytes ~> (assume extract_mods is at physical address 0x0DC86800)
+	{ 
+		0x55, 0x89, 0xE5, 0x31, 0xDB, 0x31, 0xD2, 0x8B, 0x45, 0x0C, 0x8B, 0x4D, 0x10, 0x89, 0xC3, 0x81, 
+		0xC3, 0x80, 0x01, 0x00, 0x00, 0x53, 0x50, 0xE8, 0xFC, 0x67, 0xC8, 0x0D, 0x5B, 0x58, 0x05, 0x80, 
+		0x00, 0x00, 0x00, 0x83, 0xC3, 0x01, 0x53, 0x50, 0xE8, 0xFC, 0x67, 0xC8, 0x0D, 0x5B, 0x58, 0x05, 
+		0x80, 0x00, 0x00, 0x00, 0x83, 0xC3, 0x01, 0x53, 0x50, 0xE8, 0xFC, 0x67, 0xC8, 0x0D, 0x5B, 0x58, 
+		0x05, 0x83, 0x00, 0x00, 0x00, 0x31, 0xDB, 0x83, 0xE9, 0x01, 0x83, 0xF9, 0x00, 0x75, 0xC0, 0x89, 
+		0xEC, 0x5D, 0xC3
+	}
