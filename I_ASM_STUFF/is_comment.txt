@@ -40,33 +40,35 @@ _print_done:
 is_comment: ;void is_comment(char* string, uint32* return)
 	push ebp
 	mov  ebp, esp
+	xor  ebx, ebx
+	xor  ecx, ecx
 	mov  eax, DWORD[ebp+0x8] ; eax contains the address of the string
     push eax
-_start_length:
+_is_comment_start_length:
 	mov  bl, BYTE[eax]
 	cmp  bl, 0x00
-	je   _length_done
+	je   _is_comment_length_done
 	add  ecx, 1
 	add  eax, 1
-	jmp  _start_length
-_length_done:
+	jmp  _is_comment_start_length
+_is_comment_length_done:
     pop  eax
     xor  ebx, ebx
     
     ; the first character should not be anything but ';'
-_sanity_check:
+_is_comment_sanity_check:
     mov  bl, BYTE[eax]
 	cmp  bl, ';'
-	jne  _sure_false
+	jne  _is_comment_sure_false
 	
-_sure_true:
+_is_comment_sure_true:
     mov  ebx, DWORD[ebp+0xc] ; ebx contains the address of the return
 	mov  DWORD[ebx], 1
-	jmp  _end
-_sure_false:
+	jmp  _is_comment_end
+_is_comment_sure_false:
     mov  ebx, DWORD[ebp+0xc] ; ebx contains the address of the return
 	mov  DWORD[ebx], 0
-_end:
+_is_comment_end:
 	mov  esp, ebp
 	pop  ebp
 	ret

@@ -40,182 +40,185 @@ _print_done:
 is_memory: ;void is_memory(char* string, uint32* return)
 	push ebp
 	mov  ebp, esp
+	xor  ecx, ecx
+	xor  edx, edx
+	xor  ebx, ebx
 	mov  eax, DWORD[ebp+0x8] ; eax contains the address of the string
     push eax
-_start_length:
+_is_memory_start_length:
 	mov  bl, BYTE[eax]
 	cmp  bl, 0x00
-	je   _length_done
+	je   _is_memory_length_done
 	add  ecx, 1
 	add  eax, 1
-	jmp  _start_length
-_length_done:
+	jmp  _is_memory_start_length
+_is_memory_length_done:
     pop  eax
     xor  ebx, ebx
     
     ; the last characters must be ']'
-_sanity_check:
+_is_memory_sanity_check:
     push eax
     add  eax, ecx
     sub  eax, 1
     mov  bl, BYTE[eax]
     pop  eax
 	cmp  bl, ']'
-	jne  _sure_false
+	jne  _is_memory_sure_false
 	
 	; they must begin with memory keywords
 	; a.k.a. BYTE, WORD, DWORD, QWORD, or XXMWORD
 	
 	push eax
 	; 1. check for BYTE
-_byte_keyword_check:	
+_is_memory_byte_keyword_check:	
     mov  bl, BYTE[eax]
 	cmp  bl, 'B'
-	jne  _word_keyword_check
+	jne  _is_memory_word_keyword_check
 	add  eax, 1
 	mov  bl, BYTE[eax]
 	cmp  bl, 'Y'
-	jne  _word_keyword_check
+	jne  _is_memory_word_keyword_check
 	add  eax, 1
 	mov  bl, BYTE[eax]
 	cmp  bl, 'T'
-	jne  _word_keyword_check
+	jne  _is_memory_word_keyword_check
 	add  eax, 1
 	mov  bl, BYTE[eax]
 	cmp  bl, 'E'
-	jne  _word_keyword_check
+	jne  _is_memory_word_keyword_check
 	add  eax, 1
 	mov  bl, BYTE[eax]
 	cmp  bl, '['
-	jne  _word_keyword_check
+	jne  _is_memory_word_keyword_check
 	pop  eax
-	jmp  _sure_true
+	jmp  _is_memory_sure_true
 	; 2. check for WORD
-_word_keyword_check:
+_is_memory_word_keyword_check:
     pop  eax
     push eax
     mov  bl, BYTE[eax]
 	cmp  bl, 'W'
-	jne  _dword_keyword_check
+	jne  _is_memory_dword_keyword_check
 	add  eax, 1
 	mov  bl, BYTE[eax]
 	cmp  bl, 'O'
-	jne  _dword_keyword_check
+	jne  _is_memory_dword_keyword_check
 	add  eax, 1
 	mov  bl, BYTE[eax]
 	cmp  bl, 'R'
-	jne  _dword_keyword_check
+	jne  _is_memory_dword_keyword_check
 	add  eax, 1
 	mov  bl, BYTE[eax]
 	cmp  bl, 'D'
-	jne  _dword_keyword_check
+	jne  _is_memory_dword_keyword_check
 	add  eax, 1
 	mov  bl, BYTE[eax]
 	cmp  bl, '['
-	jne  _dword_keyword_check
+	jne  _is_memory_dword_keyword_check
 	pop  eax
-	jmp  _sure_true
+	jmp  _is_memory_sure_true
 	; 3. check for DWORD
-_dword_keyword_check:
+_is_memory_dword_keyword_check:
     pop  eax
     push eax
     mov  bl, BYTE[eax]
     cmp  bl, 'D'
-	jne  _qword_keyword_check
+	jne  _is_memory_qword_keyword_check
     add  eax, 1
     mov  bl, BYTE[eax]
 	cmp  bl, 'W'
-	jne  _qword_keyword_check
+	jne  _is_memory_qword_keyword_check
 	add  eax, 1
 	mov  bl, BYTE[eax]
 	cmp  bl, 'O'
-	jne  _qword_keyword_check
+	jne  _is_memory_qword_keyword_check
 	add  eax, 1
 	mov  bl, BYTE[eax]
 	cmp  bl, 'R'
-	jne  _qword_keyword_check
+	jne  _is_memory_qword_keyword_check
 	add  eax, 1
 	mov  bl, BYTE[eax]
 	cmp  bl, 'D'
-	jne  _qword_keyword_check
+	jne  _is_memory_qword_keyword_check
 	add  eax, 1
 	mov  bl, BYTE[eax]
 	cmp  bl, '['
-	jne  _qword_keyword_check
+	jne  _is_memory_qword_keyword_check
 	pop  eax
-	jmp  _sure_true
+	jmp  _is_memory_sure_true
 	; 4. check for QWORD
-_qword_keyword_check:
+_is_memory_qword_keyword_check:
     pop  eax
     push eax
     mov  bl, BYTE[eax]
     cmp  bl, 'Q'
-	jne  _xmmword_keyword_check
+	jne  _is_memory_xmmword_keyword_check
     add  eax, 1
     mov  bl, BYTE[eax]
 	cmp  bl, 'W'
-	jne  _xmmword_keyword_check
+	jne  _is_memory_xmmword_keyword_check
 	add  eax, 1
 	mov  bl, BYTE[eax]
 	cmp  bl, 'O'
-	jne  _xmmword_keyword_check
+	jne  _is_memory_xmmword_keyword_check
 	add  eax, 1
 	mov  bl, BYTE[eax]
 	cmp  bl, 'R'
-	jne  _xmmword_keyword_check
+	jne  _is_memory_xmmword_keyword_check
 	add  eax, 1
 	mov  bl, BYTE[eax]
 	cmp  bl, 'D'
-	jne  _xmmword_keyword_check
+	jne  _is_memory_xmmword_keyword_check
 	add  eax, 1
 	mov  bl, BYTE[eax]
 	cmp  bl, '['
-	jne  _xmmword_keyword_check
+	jne  _is_memory_xmmword_keyword_check
 	pop  eax
-	jmp  _sure_true
+	jmp  _is_memory_sure_true
 	; 5. check for XMMWORD
-_xmmword_keyword_check:
+_is_memory_xmmword_keyword_check:
     pop  eax
     mov  bl, BYTE[eax]
     cmp  bl, 'X'
-	jne  _sure_false
+	jne  _is_memory_sure_false
 	add  eax, 1
     mov  bl, BYTE[eax]
 	cmp  bl, 'M'
-	jne  _sure_false
+	jne  _is_memory_sure_false
 	add  eax, 1
 	mov  bl, BYTE[eax]
 	cmp  bl, 'M'
-	jne  _sure_false
+	jne  _is_memory_sure_false
     add  eax, 1
     mov  bl, BYTE[eax]
 	cmp  bl, 'W'
-	jne  _sure_false
+	jne  _is_memory_sure_false
 	add  eax, 1
 	mov  bl, BYTE[eax]
 	cmp  bl, 'O'
-	jne  _sure_false
+	jne  _is_memory_sure_false
 	add  eax, 1
 	mov  bl, BYTE[eax]
 	cmp  bl, 'R'
-	jne  _sure_false
+	jne  _is_memory_sure_false
 	add  eax, 1
 	mov  bl, BYTE[eax]
 	cmp  bl, 'D'
-	jne  _sure_false
+	jne  _is_memory_sure_false
 	add  eax, 1
 	mov  bl, BYTE[eax]
 	cmp  bl, '['
-	jne  _sure_false
+	jne  _is_memory_sure_false
 
-_sure_true:
+_is_memory_sure_true:
     mov  ebx, DWORD[ebp+0xc] ; ebx contains the address of the return
 	mov  DWORD[ebx], 1
-	jmp  _end
-_sure_false:
+	jmp  _is_memory_end
+_is_memory_sure_false:
     mov  ebx, DWORD[ebp+0xc] ; ebx contains the address of the return
 	mov  DWORD[ebx], 0
-_end:
+_is_memory_end:
 	mov  esp, ebp
 	pop  ebp
 	ret

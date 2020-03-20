@@ -40,48 +40,50 @@ _print_done:
 is_label: ;void is_label(char* string, uint32* return)
 	push ebp
 	mov  ebp, esp
+	xor  ebx, ebx
+	xor  ecx, ecx
 	mov  eax, DWORD[ebp+0x8] ; eax contains the address of the string
     push eax
-_start_length:
+_is_label_start_length:
 	mov  bl, BYTE[eax]
 	cmp  bl, 0x00
-	je   _length_done
+	je   _is_label_length_done
 	add  ecx, 1
 	add  eax, 1
-	jmp  _start_length
-_length_done:
+	jmp  _is_label_start_length
+_is_label_length_done:
     pop  eax
     xor  ebx, ebx
     
     ; the first character should not be '['
     ; the last character should not be ']'
-_sanity_check:
+_is_label_sanity_check:
     mov  bl, BYTE[eax]
 	cmp  bl, '['
-	je   _sure_false
+	je   _is_label_sure_false
 	push eax
     add  eax, ecx
     sub  eax, 1
     mov  bl, BYTE[eax]
     pop  eax
 	cmp  bl, ']'
-	je   _sure_false
+	je   _is_label_sure_false
 
     ; the last character must be ':'
     add  eax, ecx
     sub  eax, 1
     mov  bl, BYTE[eax]
 	cmp  bl, ':'
-	jne  _sure_false
+	jne  _is_label_sure_false
 	
-_sure_true:
+_is_label_sure_true:
     mov  ebx, DWORD[ebp+0xc] ; ebx contains the address of the return
 	mov  DWORD[ebx], 1
-	jmp  _end
-_sure_false:
+	jmp  _is_label_end
+_is_label_sure_false:
     mov  ebx, DWORD[ebp+0xc] ; ebx contains the address of the return
 	mov  DWORD[ebx], 0
-_end:
+_is_label_end:
 	mov  esp, ebp
 	pop  ebp
 	ret

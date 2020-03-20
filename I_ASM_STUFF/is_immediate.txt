@@ -40,65 +40,68 @@ _print_done:
 is_immediate: ;void is_immediate(char* string, uint32* return)
 	push ebp
 	mov  ebp, esp
+	xor  ecx, ecx
+	xor  edx, edx
+	xor  ebx, ebx
 	mov  eax, DWORD[ebp+0x8] ; eax contains the address of the string
     push eax
-_start_length:
+_is_immediate_start_length:
 	mov  bl, BYTE[eax]
 	cmp  bl, 0x00
-	je   _length_done
+	je   _is_immediate_length_done
 	add  ecx, 1
 	add  eax, 1
-	jmp  _start_length
-_length_done:
+	jmp  _is_immediate_start_length
+_is_immediate_length_done:
     pop  eax
     xor  ebx, ebx
     
     ; the first character should not be '['
     ; the last character should not be ']' or ':' or '$'
-_sanity_check:
+_is_immediate_sanity_check:
     mov  bl, BYTE[eax]
 	cmp  bl, '['
-	je   _sure_false
+	je   _is_immediate_sure_false
 	push eax
     add  eax, ecx
     sub  eax, 1
     mov  bl, BYTE[eax]
     pop  eax
 	cmp  bl, ']'
-	je   _sure_false
+	je   _is_immediate_sure_false
 	push eax
     add  eax, ecx
     sub  eax, 1
     mov  bl, BYTE[eax]
     pop  eax
 	cmp  bl, ':'
-    je   _sure_false
+    je   _is_immediate_sure_false
     push eax
     add  eax, ecx
     sub  eax, 1
     mov  bl, BYTE[eax]
     pop  eax
 	cmp  bl, '$'
-    je   _sure_false
+    je   _is_immediate_sure_false
     
     ; the first character must be '0' and the second must be 'x'
     xor  ebx, ebx
     mov  bl, BYTE[eax]
 	cmp  bl, '0'
-	jne  _sure_false
+	jne  _is_immediate_sure_false
 	add  eax, 1
 	mov  bl, BYTE[eax]
 	cmp  bl, 'x'
-	jne  _sure_false
+	jne  _is_immediate_sure_false
 	
-_sure_true:
+_is_immediate_sure_true:
     mov  ebx, DWORD[ebp+0xc] ; ebx contains the address of the return
 	mov  DWORD[ebx], 1
-	jmp  _end
-_sure_false:
+	jmp  _is_immediate_end
+_is_immediate_sure_false:
     mov  ebx, DWORD[ebp+0xc] ; ebx contains the address of the return
 	mov  DWORD[ebx], 0
-_end:
+_is_immediate_end:
 	mov  esp, ebp
 	pop  ebp
 	ret

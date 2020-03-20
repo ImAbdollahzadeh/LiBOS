@@ -41,58 +41,60 @@ _print_done:
 is_mnemonic: ;void is_mnemonic(char* string, uint32* return)
 	push ebp
 	mov  ebp, esp
+	xor  ecx, ecx
+	xor  ebx, ebx
 	mov  eax, DWORD[ebp+0x8] ; eax contains the address of the string
 	mov  edx, global_mnemonics_table
 	mov  esi, DWORD[global_mnemonics_table_counter] ; esi keeps the counter
-_next_entry:
-        xor  ecx, ecx ; ecx is strlen(global_mnemonics_table[i])
+_is_mnemonic_next_entry:
+    xor  ecx, ecx ; ecx is strlen(global_mnemonics_table[i])
 	xor  ebx, ebx
 	push edx
-_start_length:
+_is_mnemonic_start_length:
 	mov  bl, BYTE[edx]
 	cmp  bl, 0x00
-	je   _length_done
+	je   _is_mnemonic_length_done
 	add  ecx, 1
 	add  edx, 1
-	jmp  _start_length
-_length_done:
-        pop  edx
+	jmp  _is_mnemonic_start_length
+_is_mnemonic_length_done:
+    pop  edx
 	xor  ebx, ebx
 	push edx
 	push ecx
 	push eax
-_compare:
-        cmp  ecx, 0
-        je   _found_entry
+_is_mnemonic_compare:
+    cmp  ecx, 0
+    je   _is_mnemonic_found_entry
 	mov  bl, BYTE[edx]
 	mov  bh, BYTE[eax]
 	sub  ecx, 1
 	cmp  bh, bl
-	jne  _not_equal
+	jne  _is_mnemonic_not_equal
 	add  edx, 1
 	add  eax, 1
-	jmp  _compare
-_not_equal:
-        pop  eax
-        pop  ecx
-        pop  edx
-        add  edx, ecx
-        add  edx, 1 ; very very important to jump over 0x00 character
-        sub  esi, 1
-        cmp  esi, 0
-        je   _sure_false
-        jmp  _next_entry
-_found_entry:	
+	jmp  _is_mnemonic_compare
+_is_mnemonic_not_equal:
+    pop  eax
+    pop  ecx
+    pop  edx
+    add  edx, ecx
+    add  edx, 1 ; very very important to jump over 0x00 character
+    sub  esi, 1
+    cmp  esi, 0
+    je   _is_mnemonic_sure_false
+    jmp  _is_mnemonic_next_entry
+_is_mnemonic_found_entry:	
 	pop  eax
-        pop  ecx
-        pop  edx
+    pop  ecx
+    pop  edx
 	mov  ebx, DWORD[ebp+0xc] ; ebx contains the address of the return
 	mov  DWORD[ebx], 1
-	jmp  _end
-_sure_false:
-        mov  ebx, DWORD[ebp+0xc] ; ebx contains the address of the return
+	jmp  _is_mnemonic_end
+_is_mnemonic_sure_false:
+    mov  ebx, DWORD[ebp+0xc] ; ebx contains the address of the return
 	mov  DWORD[ebx], 0
-_end:
+_is_mnemonic_end:
 	mov  esp, ebp
 	pop  ebp
 	ret

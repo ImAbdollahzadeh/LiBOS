@@ -1,0 +1,117 @@
+extract_mods: ;void extract_mods(char* corresponding_string, char* mod)
+    push ebp
+    mov ebp, esp
+    mov eax, DWORD[ebp+0x8] ; pointer to the main str
+    mov ebx, return
+    push ebx
+    push eax
+    call is_mnemonic
+    pop eax
+    pop ebx 
+    ; now ebx has the mnemonic status
+    ; if true them put 'o' in mod otherwise test others
+    push eax
+    mov  eax, DWORD[ebx]
+    cmp  eax, 1
+    jne  _is_memory
+    mov  ebx, DWORD[ebp+0xc]
+    mov  BYTE[ebx], 'o'
+    jmp  extraction_end
+_is_memory:
+    pop  eax
+    mov DWORD[ebx], 0
+    push ebx
+    push eax
+    call is_memory
+    pop eax
+    pop ebx 
+    push eax
+    mov  eax, DWORD[ebx]
+    cmp  eax, 1
+    jne  _is_immediate
+    mov  ebx, DWORD[ebp+0xc]
+    mov  BYTE[ebx], 'm'
+    jmp  extraction_end
+_is_immediate:
+    pop  eax
+    mov DWORD[ebx], 0
+    push ebx
+    push eax
+    call is_immediate
+    pop eax
+    pop ebx 
+    push eax
+    mov  eax, DWORD[ebx]
+    cmp  eax, 1
+    jne  _is_label
+    mov  ebx, DWORD[ebp+0xc]
+    mov  BYTE[ebx], 'i'
+    jmp  extraction_end
+_is_label:
+    pop  eax
+    mov DWORD[ebx], 0
+    push ebx
+    push eax
+    call is_label
+    pop eax
+    pop ebx 
+    push eax
+    mov  eax, DWORD[ebx]
+    cmp  eax, 1
+    jne  _is_comment
+    mov  ebx, DWORD[ebp+0xc]
+    mov  BYTE[ebx], 'l'
+    jmp  extraction_end
+_is_comment:
+    pop  eax
+    mov DWORD[ebx], 0
+    push ebx
+    push eax
+    call is_comment
+    pop eax
+    pop ebx 
+    push eax
+    mov  eax, DWORD[ebx]
+    cmp  eax, 1
+    jne  _is_numeric_token
+    mov  ebx, DWORD[ebp+0xc]
+    mov  BYTE[ebx], 'c'
+    jmp  extraction_end
+_is_numeric_token:
+    pop  eax
+    mov DWORD[ebx], 0
+    push ebx
+    push eax
+    call is_numeric_token
+    pop eax
+    pop ebx 
+    push eax
+    mov  eax, DWORD[ebx]
+    cmp  eax, 1
+    jne  _is_directive
+    mov  ebx, DWORD[ebp+0xc]
+    mov  BYTE[ebx], 'n'
+    jmp  extraction_end
+_is_directive:
+    pop  eax
+    mov DWORD[ebx], 0
+    push ebx
+    push eax
+    call is_directive
+    pop eax
+    pop ebx 
+    push eax
+    mov  eax, DWORD[ebx]
+    cmp  eax, 1
+    jne  _unhandeled
+    mov  ebx, DWORD[ebp+0xc]
+    mov  BYTE[ebx], 'd'
+    jmp  extraction_end
+_unhandeled:
+    mov  ebx, DWORD[ebp+0xc]
+    mov  BYTE[ebx], '!'
+extraction_end: 
+    pop eax
+    mov esp,ebp
+    pop ebp
+    ret
