@@ -1,0 +1,152 @@
+section .text
+global _start
+global parse_1
+global mov_handler
+global add_handler
+_start:
+	mov  eax, tp
+	push eax
+	call parse_1
+	pop  eax
+	
+	mov eax, 1
+	int 0x80
+; -----------------------------------------------------------    
+parse_1: ;void parse_1(TP* tp)
+	push ebp
+	mov  ebp, esp
+	mov  eax, DWORD[ebp+0x8]
+	
+	; ebx keeps the tp_mod1
+	xor  ebx, ebx 
+	mov  ebx, eax
+	add  ebx, 384
+	
+	xor  ecx, ecx
+	mov  cl, BYTE[ebx]
+	cmp  cl, 'o'
+	jne  _parse_1_other_operations
+	; it means that it is instruction, but numeric_token, or label, or directive, or comment mnemonic and must folow to 
+	mov  DWORD[ISBA_BOOLEAN], 0
+	push ecx
+	mov  ecx, ISBA_GLOB_MN_ADDR
+	mov  ebx, ISBA_BOOLEAN
+	push ebx
+	push eax
+	push ecx
+	call contain
+	pop  ecx
+	pop  eax
+	pop  ebx
+	pop  ecx
+	
+	; check ISBA_BOOLEAN ~> if set, it means we found mov mnemonic
+	mov  ebx, DWORD[ISBA_BOOLEAN]
+	cmp  ebx, 1
+	jne  _parse_1_mnemonic_next_1
+	
+	; now jump to mov_handler
+	push eax ; eax points to the TP
+	call mov_handler
+	pop  eax
+	jmp  parse_1_end
+_parse_1_mnemonic_next_1:
+	mov DWORD[ISBA_BOOLEAN], 0 
+	push ecx
+	mov  ecx, ISBA_GLOB_MN_ADDR
+	add  ecx, 4
+	mov  ebx, ISBA_BOOLEAN
+	push ebx
+	push eax
+	push ecx
+	call contain
+	pop  ecx
+	pop  eax
+	pop  ebx
+	pop  ecx
+	
+	; check ISBA_BOOLEAN ~> if set, it means we found mov mnemonic
+	mov  ebx, DWORD[ISBA_BOOLEAN]
+	cmp  ebx, 1
+	jne  _parse_1_mnemonic_next_2
+	
+	; now jump to add_handler
+	push eax ; eax points to the TP
+	call add_handler
+	pop  eax
+	jmp  parse_1_end
+	
+_parse_1_mnemonic_next_2:
+	; ... other ISBA_RMIK_AREA cases
+	jmp parse_1_end
+_parse_1_other_operations:   
+	; ...
+parse_1_end:
+	mov  esp, ebp
+	pop  ebp
+	ret
+	
+	
+mov_handler: ;void mov_handler(TP* tp)
+	push ebp
+	mov  ebp, esp
+	mov  eax, DWORD[ebp+0x8]
+	
+	mov  ecx, mov_handler_message
+	mov  edx, 17
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  esp, ebp
+	pop  ebp
+	ret
+
+add_handler: ;void add_handler(TP* tp)
+	push ebp
+	mov  ebp, esp
+	mov  eax, DWORD[ebp+0x8]
+	
+	mov  ecx, add_handler_message
+	mov  edx, 17
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  esp, ebp
+	pop  ebp
+	ret
+    
+section .data
+    ISBA_RMIK_AREA:      db 'eax',0
+                         db 'ecx',0
+                         db 'edx',0
+                         db 'ebx',0
+                         
+    ISBA_GLOB_MN_ADDR:   db 'mov',0
+                         db 'add',0
+                         db 'sub',0
+    ;instruction:        db 'mov eax, DWORD[ebp+0x08]',0
+    tp:                  db 'mov',0, '...........................................................................................................................', 0
+                         db 'eax',0, '...........................................................................................................................', 0
+                         db 'DWORD[ebp+0x08]',0, '...............................................................................................................', 0
+                         db 'oom',0
+                         
+    ISBA_BOOLEAN:        dd 0xFFFFFFFF    
+    mov_handler_message: db 'INSIDE MOV_HANLER',0
+    add_handler_message: db 'INSIDE ADD_HANLER',0
+	
+	bytes ~> (assume ISBA_RMIK_AREA is at physical address 0x0DCDBE1E
+	          assume ISBA_GLOB_MN_ADDR is at physical address 0x0DCDBA14
+			  assume ISBA_BOOLEAN is at physical address 0x0DC9B008
+			  assume contain is at physical address 0x0DC82C00
+			  assume mov_handler is at physical address 0x0D800000)
+	{
+		0x55, 0x89, 0xE5, 0x8B, 0x45, 0x0C, 0x31, 0xDB, 0x89, 0xC3, 0x81, 0xC3, 0x80, 0x01, 0x00, 0x00, 
+		0x31, 0xC9, 0x8A, 0x4B, 0x01, 0x80, 0xF9, 0x6F, 0x75, 0x6F, 0xC7, 0x05, 0x08, 0xB0, 0xC9, 0x0D, 
+		0x00, 0x00, 0x00, 0x00, 0x51, 0xB9, 0x14, 0xBA, 0xCD, 0x0D, 0xBB, 0x08, 0xB0, 0xC9, 0x0D, 0x53, 
+		0x50, 0x51, 0xE8, 0xFC, 0x2B, 0xC8, 0x0D, 0x59, 0x58, 0x5B, 0x59, 0x8B, 0x1D, 0x0C, 0xB0, 0xC9, 
+		0x0D, 0x83, 0xFB, 0x01, 0x75, 0x09, 0x50, 0xE8, 0xFC, 0xFF, 0x7F, 0x0D, 0x58, 0xEB, 0x3A, 0xC7, 
+		0x05, 0x08, 0xB0, 0xC9, 0x0D, 0x00, 0x00, 0x00, 0x00, 0x51, 0xB9, 0x14, 0xBA, 0xCD, 0x0D, 0x83, 
+		0xC1, 0x04, 0xBB, 0x08, 0xB0, 0xC9, 0x0D, 0x53, 0x50, 0x51, 0xE8, 0xFC, 0x2B, 0xC8, 0x0D, 0x59, 
+		0x58, 0x5B, 0x59, 0x8B, 0x1D, 0x0C, 0xB0, 0xC9, 0x0D, 0x83, 0xFB, 0x01, 0x75, 0x09, 0x50, 0xE8, 
+		0xFC, 0x03, 0x80, 0x0D, 0x58, 0xEB, 0x02, 0xEB, 0x00, 0x89, 0xEC, 0x5D, 0xC3
+	}
