@@ -1,0 +1,507 @@
+
+mov_handler_OOO_: ;void mov_handler(TP* tp)
+	push ebp
+	mov  ebp, esp
+	mov  eax, DWORD[ebp+0x8]
+	
+	; case ooo (a.k.a. mov reg, reg)
+
+	add  eax, 128 ; now eax points to tp_str2
+	mov  ebx, ISBA_RMIK_AREA ; now ebx points to EAX
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_EAX_as_second
+	add  ebx, 4 ; now ebx points to ECX
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_ECX_as_second
+	add  ebx, 4 ; now ebx points to EDX
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_EDX_as_second
+	add  ebx, 4 ; now ebx points to EBX
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_EBX_as_second
+	add  ebx, 4 ; now ebx points to ESI
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_ESI_as_second
+	add  ebx, 4 ; now ebx points to EDI
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_EDI_as_second
+	add  ebx, 4 ; now ebx points to EBP
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_EBP_as_second
+	add  ebx, 4 ; now ebx points to ESP
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_ESP_as_second
+	
+	jmp  _parse_1_end
+	
+_found_EAX_as_second:
+	push eax
+	mov  ecx, second_message
+	mov  edx, 24
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	mov  edx, 4
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _further_to_third_string
+	
+_found_EBX_as_second:
+	push eax
+	mov  ecx, second_message
+	mov  edx, 24
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	add  ecx, 12
+	mov  edx, 4
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _further_to_third_string
+	
+_found_ECX_as_second:
+	push eax
+	mov  ecx, second_message
+	mov  edx, 24
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	add  ecx, 4
+	mov  edx, 4
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _further_to_third_string
+	
+_found_EDX_as_second:
+	push eax
+	mov  ecx, second_message
+	mov  edx, 24
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	add  ecx, 8
+	mov  edx, 4
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _further_to_third_string
+	
+_found_ESI_as_second:
+	push eax
+	mov  ecx, second_message
+	mov  edx, 24
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	add  ecx, 16
+	mov  edx, 4
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _further_to_third_string
+	
+_found_EDI_as_second:
+	push eax
+	mov  ecx, second_message
+	mov  edx, 24
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	add  ecx, 20
+	mov  edx, 4
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _further_to_third_string
+	
+_found_EBP_as_second:
+	push eax
+	mov  ecx, second_message
+	mov  edx, 24
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	add  ecx, 24
+	mov  edx, 4
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _further_to_third_string
+	
+_found_ESP_as_second:
+	push eax
+	mov  ecx, second_message
+	mov  edx, 24
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	add  ecx, 28
+	mov  edx, 4
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _further_to_third_string
+	
+_further_to_third_string:
+	mov  ecx, enter_character
+	mov  edx, 1
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	
+	pop  eax
+	add  eax, 128 ; now eax points to tp_str3
+	mov  ebx, ISBA_RMIK_AREA ; now ebx points to EAX
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_EAX_as_third
+	add  ebx, 4 ; now ebx points to ECX
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_ECX_as_third
+	add  ebx, 4 ; now ebx points to EDX
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_EDX_as_third
+	add  ebx, 4 ; now ebx points to EBX
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_EBX_as_third
+	add  ebx, 4 ; now ebx points to ESI
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_ESI_as_third
+	add  ebx, 4 ; now ebx points to EDI
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_EDI_as_third
+	add  ebx, 4 ; now ebx points to EBP
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_EBP_as_third
+	add  ebx, 4 ; now ebx points to ESP
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_ESP_as_third
+	
+	; if not, then ~>
+	jmp  _parse_1_end
+	
+_found_EAX_as_third:
+	mov  ecx, third_message
+	mov  edx, 23
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	mov  edx, 4
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _parse_1_end
+	
+_found_EBX_as_third:
+	mov  ecx, third_message
+	mov  edx, 23
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	add  ecx, 12
+	mov  edx, 4
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _parse_1_end
+	
+_found_ECX_as_third:
+	mov  ecx, third_message
+	mov  edx, 23
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	add  ecx, 4
+	mov  edx, 4
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _parse_1_end
+	
+_found_EDX_as_third:
+	mov  ecx, third_message
+	mov  edx, 23
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	add  ecx, 8
+	mov  edx, 4
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _parse_1_end
+
+_found_ESI_as_third:
+	mov  ecx, third_message
+	mov  edx, 23
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	add  ecx, 16
+	mov  edx, 4
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _parse_1_end
+	
+_found_EDI_as_third:
+	mov  ecx, third_message
+	mov  edx, 23
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	add  ecx, 20
+	mov  edx, 4
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _parse_1_end
+	
+_found_EBP_as_third:
+	mov  ecx, third_message
+	mov  edx, 23
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	add  ecx, 24
+	mov  edx, 4
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _parse_1_end
+	
+_found_ESP_as_third:
+	mov  ecx, third_message
+	mov  edx, 23
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	add  ecx, 28
+	mov  edx, 4
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _parse_1_end
+	
+_parse_1_end:
+	mov  esp, ebp
+	pop  ebp
+	ret
+
+add_handler: ;void add_handler(TP* tp)
+	push ebp
+	mov  ebp, esp
+	mov  eax, DWORD[ebp+0x8]
+	
+	mov  ecx, add_handler_message
+	mov  edx, 17
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  esp, ebp
+	pop  ebp
+	ret
+	
+section .data
+	ISBA_RMIK_AREA:	  db 'eax',0
+						 db 'ecx',0
+						 db 'edx',0
+						 db 'ebx',0
+						 db 'esi',0
+						 db 'edi',0
+						 db 'ebp',0
+						 db 'esp',0
+						 
+	ISBA_GLOB_MN_ADDR:   db 'mov',0
+						 db 'add',0
+						 db 'sub',0
+	;instruction:		db 'mov eax, DWORD[ebp+0x08]',0
+	tp:				  db 'mov',0, '...........................................................................................................................', 0
+						 db 'edi',0, '...........................................................................................................................', 0
+						 db 'ebp',0, '...........................................................................................................................', 0
+						 db 'ooo',0
+						 
+	ISBA_BOOLEAN:		dd 0xFFFFFFFF	
+	mov_handler_message: db 'INSIDE MOV_HANLER',0
+	add_handler_message: db 'INSIDE ADD_HANLER',0
+	second_message:	  db 'the second register is: ',0
+	third_message:	   db 'the third register is: ',0
+	enter_character:	 db 0xa
