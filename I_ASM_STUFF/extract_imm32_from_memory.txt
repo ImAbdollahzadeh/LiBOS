@@ -1,0 +1,72 @@
+section .text
+global _start
+global extract_imm32_from_memory
+
+_start:
+	mov  eax, tp_str
+	mov  ebx, imm32
+	push ebx
+	push eax
+	call extract_imm32_from_memory
+	pop  eax
+	pop  ebx
+	
+; debugging ------------------------------------------------
+	mov  ecx, imm32
+	mov  edx, 11
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80 
+	
+	mov  eax, 1
+	int  0x80
+; ----------------------------------------------------------- 
+   
+   
+extract_imm32_from_memory: ;void extract_imm32_from_memory(char* tp_str, char* imm32_11_characters)
+	push ebp
+	mov  ebp, esp
+	mov  eax, DWORD[ebp+0x08] ; eax contains the tp_str
+	mov  ebx, DWORD[ebp+0x0c] ; ebx contains the imm32_buffer
+_X:
+	xor  ecx, ecx
+    mov  cl, BYTE[eax]
+    add  eax, 1
+    cmp  cl, 0x00
+    je   extract_imm32_from_memory_done
+    cmp  cl, '0'
+    jne  _X
+	mov  cl, BYTE[eax]
+	add  eax, 1
+    cmp  cl, 'x'
+    jne  _X
+    mov  edx, 10
+    sub  eax, 2 ; now eax points to the start of the '0x'
+_Y:
+    mov  cl, BYTE[eax]
+    mov  BYTE[ebx], cl
+    add  eax, 1
+    add  ebx, 1
+    sub  edx, 1
+    cmp  edx, 0
+    je   extract_imm32_from_memory_last_character
+    jmp  _Y
+extract_imm32_from_memory_last_character:
+    mov  BYTE[ebx], 0x00
+extract_imm32_from_memory_done:
+	pop  ebx
+	mov  esp, ebp
+	pop  ebp
+	ret
+section .data
+	tp_str:         db 'DWORD[esp+0x15FD608A]',0
+	imm32: times 11 db 0
+	
+	bytes ~> 
+	{
+		0x55, 0x89, 0xE5, 0x8B, 0x45, 0x0C, 0x8B, 0x5D, 0x10, 0x31, 0xC9, 0x8A, 0x48, 0x01, 0x83, 0xC0, 
+		0x01, 0x80, 0xF9, 0x00, 0x74, 0x30, 0x80, 0xF9, 0x30, 0x75, 0xEE, 0x8A, 0x48, 0x01, 0x83, 0xC0, 
+		0x01, 0x80, 0xF9, 0x78, 0x75, 0xE3, 0xBA, 0x0A, 0x00, 0x00, 0x00, 0x83, 0xE8, 0x02, 0x8A, 0x48, 
+		0x01, 0x88, 0x0B, 0x83, 0xC0, 0x01, 0x83, 0xC3, 0x01, 0x83, 0xEA, 0x01, 0x83, 0xFA, 0x00, 0x74, 
+		0x02, 0xEB, 0xEB, 0xC6, 0x03, 0x00, 0x5B, 0x89, 0xEC, 0x5D, 0xC3
+	}
