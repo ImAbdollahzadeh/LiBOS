@@ -13,17 +13,83 @@ _start:
     mov  ebx, 1
     mov  eax, 4
     int  0x80
+
+    mov  eax, DWORD[output_buffer_cnt]
+    xor  ecx, ecx
+_print_loop:   
+    push eax
+    mov  ebx, output_buffer
+    add  ebx, ecx
+    xor  edx, edx
+    mov  dl, BYTE[ebx]
+    mov  eax, string
     
-    mov  ecx, modrm
-    mov  edx, 1
+    push ecx
+    
+    push eax
+    push edx
+    call hex2str_8bit
+    pop  edx
+    pop  eax
+    
+    mov  ecx, string
+    mov  edx, 2
     mov  ebx, 1
     mov  eax, 4
     int  0x80
     
+    pop  ecx
+    
+    pop  eax
+    add  ecx, 1
+    cmp  ecx, eax
+    jne  _print_loop
+    
     mov  eax, 1
     int  0x80
 
-
+hex2str_8bit: ;void hex2str_8bit(UINT_8 num, char* string)
+	push ebp
+	mov  ebp, esp
+	xor  eax, eax
+	mov  al,  BYTE[ebp+0x08] ; eax contains the hex number
+	mov  ebx, DWORD[ebp+0x0c] ; ebx contains the address of the string
+	mov  ecx, 0
+	mov  esi, lookup_hex_table
+	push ebx
+_hex2str_8_bit_loop:
+	cmp  ecx, 2
+	je   _hex2str_8_bit_done
+	xor  edx, edx
+	mov  ebx, 0x10
+	div  ebx
+	add  ecx, 1
+	
+	; now edx contains a number between 0 and 15 
+	; that should be found in lookup_table
+	
+	add  edx, esi
+	
+	; now edx points to the rigt byte
+	
+	pop  ebx
+	push ebx
+	mov  edi, 2
+	sub  edi, ecx
+	add  ebx, edi
+	push ecx
+	xor  ecx, ecx
+	mov  cl, BYTE[edx]
+	mov  BYTE[ebx], cl
+	pop  ecx
+	jmp  _hex2str_8_bit_loop
+	
+_hex2str_8_bit_done:
+	pop  ebx
+	mov  esp, ebp
+	pop  ebp
+	ret
+	
 contain: ;void _contain(char* string, char* substring, UINT_32* status) ~>status = 1 (if yes), ~>status = 0 (if not)
     push ebp
     mov  ebp, esp
@@ -118,6 +184,10 @@ mov_handler_OOO_: ;void mov_handler(TP* tp)
 	mov  BYTE[opcode], 0
 	mov  BYTE[modrm] , 0
 	mov  BYTE[prefix], 0
+	
+	; then MOV REG, REG
+	mov  BYTE[opcode], 0x8A
+	mov  BYTE[modrm],  0xC0 ; 11,000,000
 	
 	mov  eax, DWORD[ebp+0x8]
 	
@@ -445,7 +515,8 @@ mov_handler_OOO_: ;void mov_handler(TP* tp)
 	
 _found_EAX_as_second:
 	push eax
-	mov  BYTE[modrm], 'A' 
+	add  BYTE[opcode], 0x01
+	add  BYTE[modrm], 0x00 ; ( (0 << 3) )
 	mov  ecx, second_message
 	mov  edx, 24
 	mov  ebx, 1
@@ -460,6 +531,8 @@ _found_EAX_as_second:
 	
 _found_EBX_as_second:
 	push eax
+	add  BYTE[opcode], 0x01
+	add  BYTE[modrm], 0x18 ; ( (3 << 3) )
 	mov  ecx, second_message
 	mov  edx, 24
 	mov  ebx, 1
@@ -475,6 +548,8 @@ _found_EBX_as_second:
 	
 _found_ECX_as_second:
 	push eax
+	add  BYTE[opcode], 0x01
+	add  BYTE[modrm], 0x08 ; ( (1 << 3) )
 	mov  ecx, second_message
 	mov  edx, 24
 	mov  ebx, 1
@@ -490,6 +565,8 @@ _found_ECX_as_second:
 	
 _found_EDX_as_second:
 	push eax
+	add  BYTE[opcode], 0x01
+	add  BYTE[modrm], 0x10 ; ( (2 << 3) )
 	mov  ecx, second_message
 	mov  edx, 24
 	mov  ebx, 1
@@ -505,6 +582,8 @@ _found_EDX_as_second:
 	
 _found_ESI_as_second:
 	push eax
+	add  BYTE[opcode], 0x01
+	add  BYTE[modrm],  0x30 ; ( (6 << 3) )
 	mov  ecx, second_message
 	mov  edx, 24
 	mov  ebx, 1
@@ -520,6 +599,8 @@ _found_ESI_as_second:
 	
 _found_EDI_as_second:
 	push eax
+	add  BYTE[opcode], 0x01
+	add  BYTE[modrm],  0x38 ; ( (7 << 3) )
 	mov  ecx, second_message
 	mov  edx, 24
 	mov  ebx, 1
@@ -535,6 +616,8 @@ _found_EDI_as_second:
 	
 _found_EBP_as_second:
 	push eax
+	add  BYTE[opcode], 0x01
+	add  BYTE[modrm],  0x28 ; ( (5 << 3) )
 	mov  ecx, second_message
 	mov  edx, 24
 	mov  ebx, 1
@@ -550,6 +633,8 @@ _found_EBP_as_second:
 	
 _found_ESP_as_second:
 	push eax
+	add  BYTE[opcode], 0x01
+	add  BYTE[modrm],  0x20 ; ( (4 << 3) )
 	mov  ecx, second_message
 	mov  edx, 24
 	mov  ebx, 1
@@ -565,6 +650,9 @@ _found_ESP_as_second:
 	
 _found_AX_as_second:
 	push eax
+	add  BYTE[opcode], 0x01
+	add  BYTE[prefix], 0x66
+	add  BYTE[modrm],  0x00 ; ( (0 << 3) )
 	mov  ecx, second_message
 	mov  edx, 24
 	mov  ebx, 1
@@ -580,6 +668,9 @@ _found_AX_as_second:
 	
 _found_BX_as_second:
 	push eax
+	add  BYTE[opcode], 0x01
+	add  BYTE[prefix], 0x66
+	add  BYTE[modrm],  0x18
 	mov  ecx, second_message
 	mov  edx, 24
 	mov  ebx, 1
@@ -595,6 +686,9 @@ _found_BX_as_second:
 	
 _found_CX_as_second:
 	push eax
+	add  BYTE[opcode], 0x01
+	add  BYTE[prefix], 0x66
+	add  BYTE[modrm],  0x08
 	mov  ecx, second_message
 	mov  edx, 24
 	mov  ebx, 1
@@ -610,6 +704,9 @@ _found_CX_as_second:
 	
 _found_DX_as_second:
 	push eax
+	add  BYTE[opcode], 0x01
+	add  BYTE[prefix], 0x66
+	add  BYTE[modrm],  0x10
 	mov  ecx, second_message
 	mov  edx, 24
 	mov  ebx, 1
@@ -625,6 +722,9 @@ _found_DX_as_second:
 	
 _found_SI_as_second:
 	push eax
+	add  BYTE[opcode], 0x01
+	add  BYTE[prefix], 0x66
+	add  BYTE[modrm],  0x30
 	mov  ecx, second_message
 	mov  edx, 24
 	mov  ebx, 1
@@ -640,6 +740,9 @@ _found_SI_as_second:
 	
 _found_DI_as_second:
 	push eax
+	add  BYTE[opcode], 0x01
+	add  BYTE[prefix], 0x66
+	add  BYTE[modrm],  0x38
 	mov  ecx, second_message
 	mov  edx, 24
 	mov  ebx, 1
@@ -655,6 +758,9 @@ _found_DI_as_second:
 	
 _found_BP_as_second:
 	push eax
+	add  BYTE[opcode], 0x01
+	add  BYTE[prefix], 0x66
+	add  BYTE[modrm],  0x28
 	mov  ecx, second_message
 	mov  edx, 24
 	mov  ebx, 1
@@ -670,6 +776,9 @@ _found_BP_as_second:
 	
 _found_SP_as_second:
 	push eax
+	add  BYTE[opcode], 0x01
+	add  BYTE[prefix], 0x66
+	add  BYTE[modrm],  0x20
 	mov  ecx, second_message
 	mov  edx, 24
 	mov  ebx, 1
@@ -685,6 +794,7 @@ _found_SP_as_second:
 	
 _found_AH_as_second:
 	push eax
+	add  BYTE[modrm],  0x00
 	mov  ecx, second_message
 	mov  edx, 24
 	mov  ebx, 1
@@ -700,6 +810,7 @@ _found_AH_as_second:
 	
 _found_AL_as_second:
 	push eax
+	add  BYTE[modrm],  0x08
 	mov  ecx, second_message
 	mov  edx, 24
 	mov  ebx, 1
@@ -715,6 +826,7 @@ _found_AL_as_second:
 	
 _found_CH_as_second:
 	push eax
+	add  BYTE[modrm],  0x28
 	mov  ecx, second_message
 	mov  edx, 24
 	mov  ebx, 1
@@ -730,6 +842,7 @@ _found_CH_as_second:
 	
 _found_CL_as_second:
 	push eax
+	add  BYTE[modrm],  0x08
 	mov  ecx, second_message
 	mov  edx, 24
 	mov  ebx, 1
@@ -745,6 +858,7 @@ _found_CL_as_second:
 	
 _found_DH_as_second:
 	push eax
+	add  BYTE[modrm],  0x30
 	mov  ecx, second_message
 	mov  edx, 24
 	mov  ebx, 1
@@ -760,6 +874,7 @@ _found_DH_as_second:
 	
 _found_DL_as_second:
 	push eax
+	add  BYTE[modrm],  0x10
 	mov  ecx, second_message
 	mov  edx, 24
 	mov  ebx, 1
@@ -775,6 +890,7 @@ _found_DL_as_second:
 	
 _found_BH_as_second:
 	push eax
+	add  BYTE[modrm],  0x38
 	mov  ecx, second_message
 	mov  edx, 24
 	mov  ebx, 1
@@ -790,6 +906,7 @@ _found_BH_as_second:
 	
 _found_BL_as_second:
 	push eax
+	add  BYTE[modrm],  0x18
 	mov  ecx, second_message
 	mov  edx, 24
 	mov  ebx, 1
@@ -1133,6 +1250,7 @@ _further_to_third_string:
 	jmp  _parse_1_end
 	
 _found_EAX_as_third:
+    add  BYTE[modrm],  0x00
 	mov  ecx, third_message
 	mov  edx, 23
 	mov  ebx, 1
@@ -1146,6 +1264,7 @@ _found_EAX_as_third:
 	jmp  _parse_1_end
 	
 _found_EBX_as_third:
+    add  BYTE[modrm],  0x03
 	mov  ecx, third_message
 	mov  edx, 23
 	mov  ebx, 1
@@ -1160,6 +1279,7 @@ _found_EBX_as_third:
 	jmp  _parse_1_end
 	
 _found_ECX_as_third:
+    add  BYTE[modrm],  0x01
 	mov  ecx, third_message
 	mov  edx, 23
 	mov  ebx, 1
@@ -1174,6 +1294,7 @@ _found_ECX_as_third:
 	jmp  _parse_1_end
 	
 _found_EDX_as_third:
+    add  BYTE[modrm],  0x02
 	mov  ecx, third_message
 	mov  edx, 23
 	mov  ebx, 1
@@ -1188,6 +1309,7 @@ _found_EDX_as_third:
 	jmp  _parse_1_end
 
 _found_ESI_as_third:
+    add  BYTE[modrm],  0x06
 	mov  ecx, third_message
 	mov  edx, 23
 	mov  ebx, 1
@@ -1202,6 +1324,7 @@ _found_ESI_as_third:
 	jmp  _parse_1_end
 	
 _found_EDI_as_third:
+    add  BYTE[modrm],  0x07
 	mov  ecx, third_message
 	mov  edx, 23
 	mov  ebx, 1
@@ -1216,6 +1339,7 @@ _found_EDI_as_third:
 	jmp  _parse_1_end
 	
 _found_EBP_as_third:
+    add  BYTE[modrm],  0x05
 	mov  ecx, third_message
 	mov  edx, 23
 	mov  ebx, 1
@@ -1230,6 +1354,7 @@ _found_EBP_as_third:
 	jmp  _parse_1_end
 	
 _found_ESP_as_third:
+    add  BYTE[modrm],  0x04
 	mov  ecx, third_message
 	mov  edx, 23
 	mov  ebx, 1
@@ -1244,6 +1369,7 @@ _found_ESP_as_third:
 	jmp  _parse_1_end
 	
 _found_AX_as_third:
+    add  BYTE[modrm],  0x00
 	mov  ecx, third_message
 	mov  edx, 23
 	mov  ebx, 1
@@ -1258,6 +1384,7 @@ _found_AX_as_third:
 	jmp  _parse_1_end
 	
 _found_BX_as_third:
+    add  BYTE[modrm],  0x03
 	mov  ecx, third_message
 	mov  edx, 23
 	mov  ebx, 1
@@ -1272,6 +1399,7 @@ _found_BX_as_third:
 	jmp  _parse_1_end
 	
 _found_CX_as_third:
+    add  BYTE[modrm],  0x01
 	mov  ecx, third_message
 	mov  edx, 23
 	mov  ebx, 1
@@ -1286,6 +1414,7 @@ _found_CX_as_third:
 	jmp  _parse_1_end
 	
 _found_DX_as_third:
+    add  BYTE[modrm],  0x02
 	mov  ecx, third_message
 	mov  edx, 23
 	mov  ebx, 1
@@ -1300,6 +1429,7 @@ _found_DX_as_third:
 	jmp  _parse_1_end
 
 _found_SI_as_third:
+    add  BYTE[modrm],  0x06
 	mov  ecx, third_message
 	mov  edx, 23
 	mov  ebx, 1
@@ -1314,6 +1444,7 @@ _found_SI_as_third:
 	jmp  _parse_1_end
 	
 _found_DI_as_third:
+    add  BYTE[modrm],  0x07
 	mov  ecx, third_message
 	mov  edx, 23
 	mov  ebx, 1
@@ -1328,6 +1459,7 @@ _found_DI_as_third:
 	jmp  _parse_1_end
 	
 _found_BP_as_third:
+    add  BYTE[modrm],  0x05
 	mov  ecx, third_message
 	mov  edx, 23
 	mov  ebx, 1
@@ -1342,6 +1474,7 @@ _found_BP_as_third:
 	jmp  _parse_1_end
 	
 _found_SP_as_third:
+    add  BYTE[modrm],  0x04
 	mov  ecx, third_message
 	mov  edx, 23
 	mov  ebx, 1
@@ -1356,6 +1489,7 @@ _found_SP_as_third:
 	jmp  _parse_1_end
 	
 _found_AH_as_third:
+    add  BYTE[modrm],  0x04
 	push eax
 	mov  ecx, third_message
 	mov  edx, 23
@@ -1371,7 +1505,7 @@ _found_AH_as_third:
 	jmp  _parse_1_end
 	
 _found_AL_as_third:
-	push eax
+	add  BYTE[modrm],  0x00
 	mov  ecx, third_message
 	mov  edx, 23
 	mov  ebx, 1
@@ -1386,7 +1520,7 @@ _found_AL_as_third:
 	jmp  _parse_1_end
 	
 _found_CH_as_third:
-	push eax
+	add  BYTE[modrm],  0x05
 	mov  ecx, third_message
 	mov  edx, 23
 	mov  ebx, 1
@@ -1402,6 +1536,7 @@ _found_CH_as_third:
 	
 _found_CL_as_third:
 	push eax
+	add  BYTE[modrm],  0x01
 	mov  ecx, third_message
 	mov  edx, 23
 	mov  ebx, 1
@@ -1416,7 +1551,7 @@ _found_CL_as_third:
 	jmp  _parse_1_end
 	
 _found_DH_as_third:
-	push eax
+	add  BYTE[modrm],  0x06
 	mov  ecx, third_message
 	mov  edx, 23
 	mov  ebx, 1
@@ -1431,7 +1566,7 @@ _found_DH_as_third:
 	jmp  _parse_1_end
 	
 _found_DL_as_third:
-	push eax
+	add  BYTE[modrm],  0x02
 	mov  ecx, third_message
 	mov  edx, 23
 	mov  ebx, 1
@@ -1446,7 +1581,7 @@ _found_DL_as_third:
 	jmp  _parse_1_end
 	
 _found_BH_as_third:
-	push eax
+	add  BYTE[modrm],  0x07
 	mov  ecx, third_message
 	mov  edx, 23
 	mov  ebx, 1
@@ -1461,7 +1596,7 @@ _found_BH_as_third:
 	jmp  _parse_1_end
 	
 _found_BL_as_third:
-	push eax
+	add  BYTE[modrm],  0x03
 	mov  ecx, third_message
 	mov  edx, 23
 	mov  ebx, 1
@@ -1475,6 +1610,44 @@ _found_BL_as_third:
 	int  0x80
 	jmp  _parse_1_end
 _parse_1_end:
+    
+    ; update output_buffer and output_buffer_cnt
+    mov  eax, output_buffer
+    mov  ebx, DWORD[output_buffer_cnt]
+    
+    xor  ecx, ecx
+    mov  cl, BYTE[prefix]
+    cmp  cl, 0x00
+    jne  _update_prefix
+_above:
+    mov  cl, BYTE[opcode]
+    jmp  _update_opcode
+_above_2:
+    mov  cl, BYTE[modrm]
+    jmp  _update_modrm
+_update_prefix:
+    add  eax, ebx
+    mov  BYTE[eax], cl
+    xor  ecx, ecx
+    add  DWORD[output_buffer_cnt], 1
+    mov  ebx, DWORD[output_buffer_cnt]
+    jmp  _above
+_update_opcode:
+    mov  eax, output_buffer
+    add  eax, ebx
+    mov  BYTE[eax], cl
+    xor  ecx, ecx
+    add  DWORD[output_buffer_cnt], 1
+    mov  ebx, DWORD[output_buffer_cnt]
+    jmp  _above_2
+_update_modrm:
+    mov  eax, output_buffer
+    add  eax, ebx
+    mov  BYTE[eax], cl
+    xor  ecx, ecx
+    add  DWORD[output_buffer_cnt], 1
+    mov  ebx, DWORD[output_buffer_cnt]
+    
 	mov  esp, ebp
 	pop  ebp
 	ret
@@ -1526,8 +1699,8 @@ section .data
 	;instruction:		db 'mov eax, DWORD[ebp+0x08]',0
 	tp:				  
 	                     db 'mov',0, '...........................................................................................................................', 0
-						 db 'eax',0, '...........................................................................................................................', 0
-						 db 'dh',0, '............................................................................................................................', 0
+						 db 'bx',0, '............................................................................................................................', 0
+						 db 'sp',0, '............................................................................................................................', 0
 						 db 'ooo',0
 						 
 	output_buffer:       db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
@@ -1542,4 +1715,8 @@ section .data
 	add_handler_message: db 'INSIDE ADD_HANLER',0
 	second_message:	     db 'the second register is: ',0
 	third_message:	     db 'the third register is: ',0
+	
+	string:			     db '0x00',0
+	lookup_hex_table:    db '0123456789ABCDEF', 0
+	
 	enter_character:	 db 0xa
