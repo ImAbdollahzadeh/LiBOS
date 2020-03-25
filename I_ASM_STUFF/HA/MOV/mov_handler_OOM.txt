@@ -47,7 +47,109 @@ _print_loop:
     
     mov  eax, 1
     int  0x80
+    
+extract_imm32_from_memory: ;void extract_imm32_from_memory(char* tp_str, char* imm32_11_characters)
+	push ebp
+	mov  ebp, esp
+	mov  eax, DWORD[ebp+0x08] ; eax contains the tp_str
+	mov  ebx, DWORD[ebp+0x0c] ; ebx contains the imm32_buffer
+_extract_imm32_from_memory_X:
+	xor  ecx, ecx
+    mov  cl, BYTE[eax]
+    add  eax, 1
+    cmp  cl, 0x00
+    je   extract_imm32_from_memory_done
+    cmp  cl, '0'
+    jne  _extract_imm32_from_memory_X
+	mov  cl, BYTE[eax]
+	add  eax, 1
+    cmp  cl, 'x'
+    jne  _extract_imm32_from_memory_X
+    mov  edx, 10
+    sub  eax, 2 ; now eax points to the start of the '0x'
+_extract_imm32_from_memory_Y:
+    mov  cl, BYTE[eax]
+    mov  BYTE[ebx], cl
+    add  eax, 1
+    add  ebx, 1
+    sub  edx, 1
+    cmp  edx, 0
+    je   extract_imm32_from_memory_last_character
+    jmp  _extract_imm32_from_memory_Y
+extract_imm32_from_memory_last_character:
+    mov  BYTE[ebx], 0x00
+extract_imm32_from_memory_done:
+	pop  ebx
+	mov  esp, ebp
+	pop  ebp
+	ret
 
+str2hex: ;void str2hex(char* string, UINT_32* num)
+	push ebp
+	mov  ebp, esp
+	mov  eax, DWORD[ebp+0x08]
+	mov  ebx, DWORD[ebp+0x0c]
+	mov  DWORD[ebx], 0x00000000
+	
+; first of all check if it is a real hex-containing string
+	xor  ecx, ecx
+	mov  cl, BYTE[eax]
+	cmp  cl, '0'
+	jne  _str2hex_error
+	add  eax, 1
+	mov  cl, BYTE[eax]
+	cmp  cl, 'x'
+	jne  _str2hex_error
+	
+; now we know that eax starts with a in (0xaAbBcCdD) string
+	xor  edx, edx
+	mov  ebx, 8
+_str2hex_start_iteration:
+	mov  cl, BYTE[eax]
+	mov  esi, lookup_hex_table
+_str2hex_X:
+	mov  ch,  BYTE[esi]
+	cmp  ch, cl
+	je   _str2hex_found_entry_in_lookup_table
+	add  esi, 1
+	jmp  _str2hex_X
+_str2hex_found_entry_in_lookup_table:
+	; now esi contains the right address of the byte from the lookup_hex_table
+	; and ch containg the right byte pointerd by esi, but we need a number between 0 and 15
+	sub esi, lookup_hex_table
+	; now esi contains one of the digts of the right number that should be assigned to the num
+	
+	; it would be ~> esi * (16 ^ ebx)
+	push ebx
+	push eax
+	mov  eax, 1
+_str2hex_Y:
+	cmp  ebx, 0
+	je   _str2hex_continue
+	imul eax, 16
+	sub  ebx, 1
+	jmp  _str2hex_Y
+_str2hex_continue:
+	; now eax = (16 ^ ebx)
+	imul esi, eax
+	pop  eax
+	pop  ebx
+	mov  edx, DWORD[ebp+0xc]
+	add  DWORD[edx], esi
+	xor  esi, esi
+	cmp  ebx, 0
+	je   _str2hex_end
+	sub  ebx, 1
+	add  eax, 1
+	jmp  _str2hex_start_iteration
+_str2hex_error:
+	mov  ebx, DWORD[ebp+0xc]
+	mov  DWORD[ebx], 0
+_str2hex_end:
+	mov  esp, ebp
+	pop  ebp
+	ret
+	
 hex2str_8bit: ;void hex2str_8bit(UINT_8 num, char* string)
 	push ebp
 	mov  ebp, esp
@@ -1135,7 +1237,7 @@ _found_EDI_as_third:
 	jmp  _parse_1_end
 	
 _found_EBP_as_third:
-	add  BYTE[modrm],  0x80
+	or   BYTE[modrm],  0x80
     add  BYTE[modrm],  0x05
     mov  DWORD[displ32_boolean], 1
 	mov  ecx, third_message
@@ -1169,7 +1271,59 @@ _found_ESP_as_third:
 	jmp  _parse_1_end
 	
 _parse_1_end:
+
+    ; is there an immediate in memory ?
+    mov  eax, DWORD[ebp+0x8]
+	add  eax, 256 ; now eax points to tp_str3
+    mov  ebx, ISBA_RMIK_AREA
+    add  ebx, 83 ; now ebx points to +
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	jne  _no_imm
+_there_is_hexadecimal:
+    or   BYTE[modrm],  0x80
+    mov  ebx, DWORD[ebp+0x8]
+    add  ebx, 256
+    mov  ecx, imm32
+    push ecx
+    push ebx
+    call extract_imm32_from_memory
+    pop  ebx
+    pop  ecx
+    mov  DWORD[displ32_boolean], 1
+    mov  ebx, RESERVED_DWORD
+    push ebx
+    push ecx
+    call str2hex
+    pop  ecx
+    pop  ebx
+    mov  eax, displ32
+    xor  ecx, ecx
+    mov  cl, BYTE[ebx]
+	mov  BYTE[eax], cl
+	add  eax, 1
+	add  ebx, 1
+	mov  cl, BYTE[ebx]
+	mov  BYTE[eax], cl
+	add  eax, 1
+	add  ebx, 1
+	mov  cl, BYTE[ebx]
+	mov  BYTE[eax], cl
+	add  eax, 1
+	add  ebx, 1
+	mov  cl, BYTE[ebx]
+	mov  BYTE[eax], cl
     
+_no_imm:
     ; update output_buffer and output_buffer_cnt
     mov  eax, output_buffer
     mov  ebx, DWORD[output_buffer_cnt]
@@ -1229,30 +1383,22 @@ _update_displ32:
     mov  eax, DWORD[displ32_boolean]  
     cmp  eax, 0
     je   _encoding_done
-    mov  eax, output_buffer
-    add  eax, ebx
-    mov  BYTE[eax], cl
-    push eax
+    mov  esi, output_buffer
+    add  esi, ebx
+    mov  BYTE[esi], cl
+    add  esi, 1
     mov  eax, displ32
     add  eax, 1
     mov  cl, BYTE[eax]
-    pop  eax
-    add  eax, 1
-    mov  BYTE[eax], cl
-    push eax
-    mov  eax, displ32
+    mov  BYTE[esi], cl
+    add  esi, 1
     add  eax, 1
     mov  cl, BYTE[eax]
-    pop  eax
-    add  eax, 1
-    mov  BYTE[eax], cl
-    push eax
-    mov  eax, displ32
+    mov  BYTE[esi], cl
+    add  esi, 1
     add  eax, 1
     mov  cl, BYTE[eax]
-    pop  eax
-    add  eax, 1
-    mov  BYTE[eax], cl
+    mov  BYTE[esi], cl
     add  DWORD[output_buffer_cnt], 4
     mov  ebx, DWORD[output_buffer_cnt]
     mov  DWORD[displ32_boolean], 0
@@ -1301,6 +1447,8 @@ section .data
 						 db 'dl', 0
 						 db 'bh', 0
 						 db 'bl', 0
+						 db '0x', 0
+						 db '+',  0
 						 
 	ISBA_GLOB_MN_ADDR:   db 'mov',0
 						 db 'add',0
@@ -1309,8 +1457,8 @@ section .data
 	tp:				  
 	                     db 'mov',0, '...........................................................................................................................', 0
 						 db 'esi',0, '...........................................................................................................................', 0
-						 db 'DWORD[esp]',0, '.....................................................................................................................', 0
-						 db 'ooo',0
+						 db 'DWORD[esp+0x12345678]',0, '..........................................................................................................', 0
+						 db 'oom',0
 						 
 	output_buffer:       db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 	output_buffer_cnt:   dd 0x00000000
@@ -1320,6 +1468,7 @@ section .data
 	prefix:              db 0
 	sib:                 db 0
 	displ32:             db 0,0,0,0
+	imm32:               db 0,0,0,0,0,0,0,0,0,0,0
 	
 	sib_boolean:         dd 0
 	displ32_boolean:     dd 0
@@ -1334,3 +1483,4 @@ section .data
 	lookup_hex_table:    db '0123456789ABCDEF', 0
 	
 	enter_character:	 db 0xa
+	RESERVED_DWORD:      dd 0x00000000
