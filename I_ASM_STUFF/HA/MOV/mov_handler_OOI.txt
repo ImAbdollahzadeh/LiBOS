@@ -1,0 +1,1340 @@
+global contain
+global mov_handler_OOI_
+global _start
+
+_start:
+    mov  eax, tp
+    push eax
+    call mov_handler_OOI_
+    pop  eax
+    
+    mov  ecx, enter_character
+    mov  edx, 1
+    mov  ebx, 1
+    mov  eax, 4
+    int  0x80
+
+    mov  eax, DWORD[output_buffer_cnt]
+    xor  ecx, ecx
+_print_loop:   
+    push eax
+    mov  ebx, output_buffer
+    add  ebx, ecx
+    xor  edx, edx
+    mov  dl, BYTE[ebx]
+    mov  eax, string
+    
+    push ecx
+    
+    push eax
+    push edx
+    call hex2str_8bit
+    pop  edx
+    pop  eax
+    
+    mov  ecx, string
+    mov  edx, 2
+    mov  ebx, 1
+    mov  eax, 4
+    int  0x80
+    
+    pop  ecx
+    
+    pop  eax
+    add  ecx, 1
+    cmp  ecx, eax
+    jne  _print_loop
+    
+    mov  eax, 1
+    int  0x80
+    
+hex2str_8bit: ;void hex2str_8bit(UINT_8 num, char* string)
+	push ebp
+	mov  ebp, esp
+	xor  eax, eax
+	mov  al,  BYTE[ebp+0x08] ; eax contains the hex number
+	mov  ebx, DWORD[ebp+0x0c] ; ebx contains the address of the string
+	mov  ecx, 0
+	mov  esi, lookup_hex_table
+	push ebx
+_hex2str_8bit_loop:
+	cmp  ecx, 2
+	je   _hex2str_8bit_done
+	xor  edx, edx
+	mov  ebx, 0x10
+	div  ebx
+	add  ecx, 1
+	
+	; now edx contains a number between 0 and 15 
+	; that should be found in lookup_table
+	
+	add  edx, esi
+	
+	; now edx points to the rigt byte
+	
+	pop  ebx
+	push ebx
+	mov  edi, 2
+	sub  edi, ecx
+	add  ebx, edi
+	push ecx
+	xor  ecx, ecx
+	mov  cl, BYTE[edx]
+	mov  BYTE[ebx], cl
+	pop  ecx
+	jmp  _hex2str_8bit_loop
+	
+_hex2str_8bit_done:
+	pop  ebx
+	mov  esp, ebp
+	pop  ebp
+	ret
+	
+str2hex: ;void str2hex(char* string, UINT_32* num)
+	push ebp
+	mov  ebp, esp
+	mov  eax, DWORD[ebp+0x08]
+	mov  ebx, DWORD[ebp+0x0c]
+	mov  DWORD[ebx], 0x00000000
+	
+; first of all check if it is a real hex-containing string
+	xor  ecx, ecx
+	mov  cl, BYTE[eax]
+	cmp  cl, '0'
+	jne  _str2hex_error
+	add  eax, 1
+	mov  cl, BYTE[eax]
+	cmp  cl, 'x'
+	jne  _str2hex_error
+	
+; now we know that eax starts with a in (0xaAbBcCdD) string
+	xor  edx, edx
+	mov  ebx, 8
+_str2hex_start_iteration:
+	mov  cl, BYTE[eax]
+	mov  esi, lookup_hex_table
+_str2hex_X:
+	mov  ch,  BYTE[esi]
+	cmp  ch, cl
+	je   _str2hex_found_entry_in_lookup_table
+	add  esi, 1
+	jmp  _str2hex_X
+_str2hex_found_entry_in_lookup_table:
+	; now esi contains the right address of the byte from the lookup_hex_table
+	; and ch containg the right byte pointerd by esi, but we need a number between 0 and 15
+	sub esi, lookup_hex_table
+	; now esi contains one of the digts of the right number that should be assigned to the num
+	
+	; it would be ~> esi * (16 ^ ebx)
+	push ebx
+	push eax
+	mov  eax, 1
+_str2hex_Y:
+	cmp  ebx, 0
+	je   _str2hex_continue
+	imul eax, 16
+	sub  ebx, 1
+	jmp  _str2hex_Y
+_str2hex_continue:
+	; now eax = (16 ^ ebx)
+	imul esi, eax
+	pop  eax
+	pop  ebx
+	mov  edx, DWORD[ebp+0xc]
+	add  DWORD[edx], esi
+	xor  esi, esi
+	cmp  ebx, 0
+	je   _str2hex_end
+	sub  ebx, 1
+	add  eax, 1
+	jmp  _str2hex_start_iteration
+_str2hex_error:
+	mov  ebx, DWORD[ebp+0xc]
+	mov  DWORD[ebx], 0
+_str2hex_end:
+	mov  esp, ebp
+	pop  ebp
+	ret
+
+str2hex_16bit: ;void str2hex_16bit(char* string, UINT_16* num)
+	push ebp
+	mov  ebp, esp
+	mov  eax, DWORD[ebp+0x08]
+	mov  ebx, DWORD[ebp+0x0c]
+	mov  WORD[ebx], 0x000000
+	
+; first of all check if it is a real hex-containing string
+	xor  ecx, ecx
+	mov  cl, BYTE[eax]
+	cmp  cl, '0'
+	jne  _str2hex_16bit_error
+	add  eax, 1
+	mov  cl, BYTE[eax]
+	cmp  cl, 'x'
+	jne  _str2hex_16bit_error
+	
+; now we know that eax starts with a in (0xaA) string
+	xor  edx, edx
+	mov  ebx, 4
+_str2hex_16bit_start_iteration:
+	mov  cl, BYTE[eax]
+	mov  esi, lookup_hex_table
+_str2hex_16bit_X:
+	mov  ch,  BYTE[esi]
+	cmp  ch, cl
+	je   _str2hex_16bit_found_entry_in_lookup_table
+	add  esi, 1
+	jmp  _str2hex_16bit_X
+_str2hex_16bit_found_entry_in_lookup_table:
+	; now esi contains the right address of the byte from the lookup_hex_table
+	; and ch containg the right byte pointerd by esi, but we need a number between 0 and 15
+	sub esi, lookup_hex_table
+	; now esi contains one of the digits of the right number that should be assigned to the num
+	
+	; it would be ~> esi * (16 ^ ebx)
+	push ebx
+	push eax
+	mov  eax, 1
+_str2hex_16bit_Y:
+	cmp  ebx, 0
+	je   _str2hex_16bit_continue
+	imul eax, 16
+	sub  ebx, 1
+	jmp  _str2hex_16bit_Y
+_str2hex_16bit_continue:
+	; now eax = (16 ^ ebx)
+	imul esi, eax
+	pop  eax
+	pop  ebx
+	mov  edx, DWORD[ebp+0xc]
+	xor  ecx, ecx
+	mov  ecx, esi
+	add  WORD[edx], cx
+	xor  esi, esi
+	cmp  ebx, 0
+	je   _str2hex_16bit_end
+	sub  ebx, 1
+	add  eax, 1
+	xor  ecx, ecx
+	jmp  _str2hex_16bit_start_iteration
+_str2hex_16bit_error:
+	mov  ebx, DWORD[ebp+0xc]
+	mov  WORD[ebx], 0
+_str2hex_16bit_end:
+	mov  esp, ebp
+	pop  ebp
+	ret
+	
+str2hex_8bit: ;void str2hex(char* string, UINT_8* num)
+	push ebp
+	mov  ebp, esp
+	mov  eax, DWORD[ebp+0x08]
+	mov  ebx, DWORD[ebp+0x0c]
+	mov  BYTE[ebx], 0x00
+	
+; first of all check if it is a real hex-containing string
+	xor  ecx, ecx
+	mov  cl, BYTE[eax]
+	cmp  cl, '0'
+	jne  _str2hex_8bit_error
+	add  eax, 1
+	mov  cl, BYTE[eax]
+	cmp  cl, 'x'
+	jne  _str2hex_8bit_error
+	
+; now we know that eax starts with a in (0xaA) string
+	xor  edx, edx
+	mov  ebx, 2
+_str2hex_8bit_start_iteration:
+	mov  cl, BYTE[eax]
+	mov  esi, lookup_hex_table
+_str2hex_8bit_X:
+	mov  ch,  BYTE[esi]
+	cmp  ch, cl
+	je   _str2hex_8bit_found_entry_in_lookup_table
+	add  esi, 1
+	jmp  _str2hex_8bit_X
+_str2hex_8bit_found_entry_in_lookup_table:
+	; now esi contains the right address of the byte from the lookup_hex_table
+	; and ch containg the right byte pointerd by esi, but we need a number between 0 and 15
+	sub esi, lookup_hex_table
+	; now esi contains one of the digits of the right number that should be assigned to the num
+	
+	; it would be ~> esi * (16 ^ ebx)
+	push ebx
+	push eax
+	mov  eax, 1
+_str2hex_8bit_Y:
+	cmp  ebx, 0
+	je   _str2hex_8bit_continue
+	imul eax, 16
+	sub  ebx, 1
+	jmp  _str2hex_8bit_Y
+_str2hex_8bit_continue:
+	; now eax = (16 ^ ebx)
+	imul esi, eax
+	pop  eax
+	pop  ebx
+	mov  edx, DWORD[ebp+0xc]
+	xor  ecx, ecx
+	mov  ecx, esi
+	add  BYTE[edx], cl
+	xor  esi, esi
+	cmp  ebx, 0
+	je   _str2hex_8bit_end
+	sub  ebx, 1
+	add  eax, 1
+	xor  ecx, ecx
+	jmp  _str2hex_8bit_start_iteration
+_str2hex_8bit_error:
+	mov  ebx, DWORD[ebp+0xc]
+	mov  BYTE[ebx], 0
+_str2hex_8bit_end:
+	mov  esp, ebp
+	pop  ebp
+	ret
+	
+contain: ;void _contain(char* string, char* substring, UINT_32* status) ~>status = 1 (if yes), ~>status = 0 (if not)
+    push ebp
+    mov  ebp, esp
+    mov  eax, DWORD[ebp+0x08]
+    mov  ebx, DWORD[ebp+0x0c]
+    xor  esi, esi ;strlen(string)
+    xor  edi, edi ;strlen(substring)
+    xor  ecx, ecx
+    push eax
+_len_determination_mother:
+    mov cl, BYTE[eax]
+    cmp cl, 0
+    je  _X
+    add eax, 1
+    add esi, 1
+    jmp _len_determination_mother
+_X:
+    pop  eax
+    push ebx
+    xor  ecx, ecx
+_len_determination_baby:
+    mov cl, BYTE[ebx]
+    cmp cl, 0
+    je  _Y
+    add ebx, 1
+    add edi, 1
+    jmp _len_determination_baby
+_Y:
+    pop  ebx
+    xor  ecx, ecx
+
+; if substring > string ~> result is for sure 0
+    mov  ecx, esi
+    sub  ecx, edi
+    cmp  ecx, 0
+    jl  _sure_false_when_string_lengths_violate
+    
+; if we made it until here, this is the time for real comparing bytes
+    xor  ecx, ecx
+    xor  edx, edx ;a counter
+    push eax
+    push ebx
+_perform_bytewise:
+    mov  cl, BYTE[eax]
+    mov  ch, BYTE[ebx]
+    cmp  ch, 0
+    je   _sure_true
+    cmp  ch, cl
+    jne  _reset_substring
+    add  ebx, 1
+    add  eax, 1
+    jmp  _perform_bytewise
+_reset_substring:
+    pop  ebx
+    pop  eax
+    add  eax, 1
+    push eax
+    push ebx
+    ; check for the very last possible comparison
+    mov  ecx, DWORD[ebp+8]
+    add  ecx, esi
+    add  ecx, 1
+    sub  ecx, eax
+    cmp  ecx, edi
+    je   _sure_false
+    xor  ecx, ecx
+    jmp  _perform_bytewise
+_sure_false:
+    pop  ebx
+    pop  eax
+_sure_false_when_string_lengths_violate:
+    mov ecx, DWORD[ebp+16]
+    mov  DWORD[ecx], 0x00000000
+    jmp __end
+_sure_true:
+    pop  ebx
+    pop  eax
+    mov ecx, DWORD[ebp+16]
+    mov  DWORD[ecx], 0x00000001
+__end:
+    mov  esp, ebp
+    pop  ebp
+    ret
+    
+    
+    
+mov_handler_OOI_: ;void mov_handler(TP* tp)
+	push ebp
+	mov  ebp, esp
+	
+	; first off, clear all reporting bytes
+	mov  BYTE[opcode], 0
+	mov  BYTE[prefix], 0
+	
+	; then MOV REG, IMM
+	mov  BYTE[opcode], 0xB0
+	; for 16 and 32 bit opcodes must comes 0xB8
+	
+	mov  eax, DWORD[ebp+0x8]
+	
+	; case ooo (a.k.a. mov reg, imm)
+
+	add  eax, 128 ; now eax points to tp_str2
+	mov  ebx, ISBA_RMIK_AREA ; now ebx points to EAX
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_EAX_as_second
+	add  ebx, 4 ; now ebx points to ECX
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_ECX_as_second
+	add  ebx, 4 ; now ebx points to EDX
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_EDX_as_second
+	add  ebx, 4 ; now ebx points to EBX
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_EBX_as_second
+	add  ebx, 4 ; now ebx points to ESI
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_ESI_as_second
+	add  ebx, 4 ; now ebx points to EDI
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_EDI_as_second
+	add  ebx, 4 ; now ebx points to EBP
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_EBP_as_second
+	add  ebx, 4 ; now ebx points to ESP
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_ESP_as_second
+	
+	; 16 bits
+	add  ebx, 4 ; now ebx points to AX
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_AX_as_second
+	add  ebx, 3; now ebx points to CX
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_CX_as_second
+	add  ebx, 3 ; now ebx points to DX
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_DX_as_second
+	add  ebx, 3 ; now ebx points to BX
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_BX_as_second
+	add  ebx, 3 ; now ebx points to SI
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_SI_as_second
+	add  ebx, 3 ; now ebx points to DI
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_DI_as_second
+	add  ebx, 3; now ebx points to BP
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_BP_as_second
+	add  ebx, 3 ; now ebx points to SP
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_SP_as_second
+	
+	; 8 bits
+	add  ebx, 3 ; now ebx points to AH
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_AH_as_second
+	add  ebx, 3; now ebx points to AL
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_AL_as_second
+	add  ebx, 3 ; now ebx points to CH
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_CH_as_second
+	add  ebx, 3 ; now ebx points to CL
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_CL_as_second
+	add  ebx, 3 ; now ebx points to DH
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_DH_as_second
+	add  ebx, 3 ; now ebx points to DL
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_DL_as_second
+	add  ebx, 3; now ebx points to BH
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_BH_as_second
+	add  ebx, 3 ; now ebx points to BL
+	mov  DWORD[ISBA_BOOLEAN], 0x00000000
+	mov  edx, ISBA_BOOLEAN
+	push edx
+	push ebx
+	push eax
+	call contain
+	pop  eax
+	pop  ebx
+	pop  edx
+	mov  edx, DWORD[ISBA_BOOLEAN]
+	cmp  edx, 1
+	je   _found_BL_as_second
+	
+	jmp  _parse_1_end
+	
+_found_EAX_as_second:
+	push eax
+	add  BYTE[opcode], 0x08
+	add  BYTE[opcode], 0x00
+	mov  ecx, second_message
+	mov  edx, 24
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	mov  edx, 4
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _further_to_third_string
+	
+_found_EBX_as_second:
+	push eax
+	add  BYTE[opcode], 0x08
+	add  BYTE[opcode], 0x03
+	mov  ecx, second_message
+	mov  edx, 24
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	add  ecx, 12
+	mov  edx, 4
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _further_to_third_string
+	
+_found_ECX_as_second:
+	push eax
+	add  BYTE[opcode], 0x08
+	add  BYTE[opcode], 0x01
+	mov  ecx, second_message
+	mov  edx, 24
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	add  ecx, 4
+	mov  edx, 4
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _further_to_third_string
+	
+_found_EDX_as_second:
+	push eax
+	add  BYTE[opcode], 0x08
+	add  BYTE[opcode], 0x02
+	mov  ecx, second_message
+	mov  edx, 24
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	add  ecx, 8
+	mov  edx, 4
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _further_to_third_string
+	
+_found_ESI_as_second:
+	push eax
+	add  BYTE[opcode], 0x08
+	add  BYTE[opcode], 0x06
+	mov  ecx, second_message
+	mov  edx, 24
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	add  ecx, 16
+	mov  edx, 4
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _further_to_third_string
+	
+_found_EDI_as_second:
+	push eax
+	add  BYTE[opcode], 0x08
+	add  BYTE[opcode], 0x07
+	mov  ecx, second_message
+	mov  edx, 24
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	add  ecx, 20
+	mov  edx, 4
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _further_to_third_string
+	
+_found_EBP_as_second:
+	push eax
+	add  BYTE[opcode], 0x08
+	add  BYTE[opcode], 0x05
+	mov  ecx, second_message
+	mov  edx, 24
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	add  ecx, 24
+	mov  edx, 4
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _further_to_third_string
+	
+_found_ESP_as_second:
+	push eax
+	add  BYTE[opcode], 0x08
+	add  BYTE[opcode], 0x04
+	mov  ecx, second_message
+	mov  edx, 24
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	add  ecx, 28
+	mov  edx, 4
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _further_to_third_string
+	
+_found_AX_as_second:
+	push eax
+	add  BYTE[opcode], 0x08
+	add  BYTE[opcode], 0x00
+	add  BYTE[prefix], 0x66
+	mov  ecx, second_message
+	mov  edx, 24
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	add  ecx, 32
+	mov  edx, 3
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _further_to_third_string
+	
+_found_BX_as_second:
+	push eax
+	add  BYTE[opcode], 0x08
+	add  BYTE[opcode], 0x03
+	add  BYTE[prefix], 0x66
+	mov  ecx, second_message
+	mov  edx, 24
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	add  ecx, 41
+	mov  edx, 3
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _further_to_third_string
+	
+_found_CX_as_second:
+	push eax
+	add  BYTE[opcode], 0x08
+	add  BYTE[opcode], 0x01
+	add  BYTE[prefix], 0x66
+	mov  ecx, second_message
+	mov  edx, 24
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	add  ecx, 35
+	mov  edx, 3
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _further_to_third_string
+	
+_found_DX_as_second:
+	push eax
+	add  BYTE[opcode], 0x08
+	add  BYTE[opcode], 0x02
+	add  BYTE[prefix], 0x66
+	mov  ecx, second_message
+	mov  edx, 24
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	add  ecx, 38
+	mov  edx, 3
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _further_to_third_string
+	
+_found_SI_as_second:
+	push eax
+	add  BYTE[opcode], 0x08
+	add  BYTE[opcode], 0x06
+	add  BYTE[prefix], 0x66
+	mov  ecx, second_message
+	mov  edx, 24
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	add  ecx, 44
+	mov  edx, 3
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _further_to_third_string
+	
+_found_DI_as_second:
+	push eax
+	add  BYTE[opcode], 0x08
+	add  BYTE[opcode], 0x07
+	add  BYTE[prefix], 0x66
+	mov  ecx, second_message
+	mov  edx, 24
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	add  ecx, 47
+	mov  edx, 3
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _further_to_third_string
+	
+_found_BP_as_second:
+	push eax
+	add  BYTE[opcode], 0x08
+	add  BYTE[opcode], 0x05
+	add  BYTE[prefix], 0x66
+	mov  ecx, second_message
+	mov  edx, 24
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	add  ecx, 50
+	mov  edx, 3
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _further_to_third_string
+	
+_found_SP_as_second:
+	push eax
+	add  BYTE[opcode], 0x08
+	add  BYTE[opcode], 0x04
+	add  BYTE[prefix], 0x66
+	mov  ecx, second_message
+	mov  edx, 24
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	add  ecx, 53
+	mov  edx, 3
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _further_to_third_string
+	
+_found_AH_as_second:
+	push eax
+	add  BYTE[opcode], 0x04
+	mov  ecx, second_message
+	mov  edx, 24
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	add  ecx, 56
+	mov  edx, 3
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _further_to_third_string
+	
+_found_AL_as_second:
+	push eax
+	add  BYTE[opcode], 0x00
+	mov  ecx, second_message
+	mov  edx, 24
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	add  ecx, 59
+	mov  edx, 3
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _further_to_third_string
+	
+_found_CH_as_second:
+	push eax
+	add  BYTE[opcode], 0x05
+	mov  ecx, second_message
+	mov  edx, 24
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	add  ecx, 62
+	mov  edx, 3
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _further_to_third_string
+	
+_found_CL_as_second:
+	push eax
+	add  BYTE[opcode], 0x01
+	mov  ecx, second_message
+	mov  edx, 24
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	add  ecx, 65
+	mov  edx, 3
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _further_to_third_string
+	
+_found_DH_as_second:
+	push eax
+	add  BYTE[opcode], 0x06
+	mov  ecx, second_message
+	mov  edx, 24
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	add  ecx, 68
+	mov  edx, 3
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _further_to_third_string
+	
+_found_DL_as_second:
+	push eax
+	add  BYTE[opcode], 0x02
+	mov  ecx, second_message
+	mov  edx, 24
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	add  ecx, 71
+	mov  edx, 3
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _further_to_third_string
+	
+_found_BH_as_second:
+	push eax
+	add  BYTE[opcode], 0x07
+	mov  ecx, second_message
+	mov  edx, 24
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	add  ecx, 74
+	mov  edx, 3
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _further_to_third_string
+	
+_found_BL_as_second:
+	push eax
+	add  BYTE[opcode], 0x03
+	mov  ecx, second_message
+	mov  edx, 24
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	mov  ecx, ISBA_RMIK_AREA
+	add  ecx, 77
+	mov  edx, 3
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	jmp  _further_to_third_string
+	
+_further_to_third_string:
+	mov  ecx, enter_character
+	mov  edx, 1
+	mov  ebx, 1
+	mov  eax, 4
+	int  0x80
+	
+	pop  eax
+	add  eax, 128 ; now eax points to tp_str3
+	
+	; determine which immediate should be used
+	push eax
+	xor  edi, edi
+	xor  ecx, ecx
+_which_immediate_loop:
+	mov  cl, BYTE[eax]
+	add  edi, 1
+	add  eax, 1
+	cmp  cl, 0x00
+	jne  _which_immediate_loop
+	pop  eax
+	cmp  edi, 5
+	je   _imm8_found
+	cmp  edi, 7
+	je   _imm16_found
+	cmp  edi, 11
+	je   _imm32_found
+	jmp  _error_immediate
+_imm8_found:
+    mov  DWORD[which_immediate], 1
+    mov  ecx, imm8
+    push ecx
+    push eax
+    call str2hex_8bit
+    pop  eax
+    pop  ecx
+    jmp  _parse_1_end
+_imm16_found:
+    mov  DWORD[which_immediate], 2
+    mov  ecx, imm16
+    push ecx
+    push eax
+    call str2hex_16bit
+    pop  eax
+    pop  ecx
+    jmp  _parse_1_end
+_imm32_found:
+    mov  DWORD[which_immediate], 3
+    mov  ecx, imm32
+    push ecx
+    push eax
+    call str2hex
+    pop  eax
+    pop  ecx
+    jmp  _parse_1_end
+_error_immediate:
+	mov  DWORD[which_immediate], 0
+	jmp  _completely_done
+	
+_parse_1_end:
+    
+    ; update output_buffer and output_buffer_cnt
+    mov  eax, output_buffer
+    mov  ebx, DWORD[output_buffer_cnt]
+    
+    xor  ecx, ecx
+    mov  cl, BYTE[prefix]
+    cmp  cl, 0x00
+    jne  _update_prefix
+_above:
+    mov  cl, BYTE[opcode]
+    jmp  _update_opcode
+_above_2:
+    cmp  DWORD[which_immediate], 1
+    je   _encode_imm8
+    cmp  DWORD[which_immediate], 2
+    je   _encode_imm16
+    cmp  DWORD[which_immediate], 3
+    je   _encode_imm32
+    jmp  _completely_done
+_encode_imm8:
+    mov  eax, output_buffer
+    mov  ebx, DWORD[output_buffer_cnt]
+    add  eax, ebx
+    xor  ecx, ecx
+    mov  edx, imm8
+    mov  cl, BYTE[edx]
+    mov  BYTE[eax], cl
+    add  eax, 1
+    add  edx, 1
+    mov  cl, BYTE[edx]
+    mov  BYTE[eax], cl
+    add  DWORD[output_buffer_cnt], 1
+    jmp  _completely_done
+_encode_imm16:
+    mov  eax, output_buffer
+    mov  ebx, DWORD[output_buffer_cnt]
+    add  eax, ebx
+    xor  ecx, ecx
+    mov  edx, imm16
+    mov  cl, BYTE[edx]
+    mov  BYTE[eax], cl
+    add  eax, 1
+    add  edx, 1
+    mov  cl, BYTE[edx]
+    mov  BYTE[eax], cl
+    add  eax, 1
+    add  edx, 1
+    mov  cl, BYTE[edx]
+    mov  BYTE[eax], cl
+    add  DWORD[output_buffer_cnt], 2
+    jmp  _completely_done
+_encode_imm32:
+    mov  eax, output_buffer
+    mov  ebx, DWORD[output_buffer_cnt]
+    add  eax, ebx
+    xor  ecx, ecx
+    mov  edx, imm32
+    mov  cl, BYTE[edx]
+    mov  BYTE[eax], cl
+    add  eax, 1
+    add  edx, 1
+    mov  cl, BYTE[edx]
+    mov  BYTE[eax], cl
+    add  eax, 1
+    add  edx, 1
+    mov  cl, BYTE[edx]
+    mov  BYTE[eax], cl
+    add  eax, 1
+    add  edx, 1
+    mov  cl, BYTE[edx]
+    mov  BYTE[eax], cl
+    add  eax, 1
+    add  edx, 1
+    mov  cl, BYTE[edx]
+    mov  BYTE[eax], cl
+    add  DWORD[output_buffer_cnt], 4
+    jmp  _completely_done
+_update_prefix:
+    add  eax, ebx
+    mov  BYTE[eax], cl
+    xor  ecx, ecx
+    add  DWORD[output_buffer_cnt], 1
+    mov  ebx, DWORD[output_buffer_cnt]
+    jmp  _above
+_update_opcode:
+    mov  eax, output_buffer
+    add  eax, ebx
+    mov  BYTE[eax], cl
+    xor  ecx, ecx
+    add  DWORD[output_buffer_cnt], 1
+    mov  ebx, DWORD[output_buffer_cnt]
+    jmp  _above_2
+    
+_completely_done:    
+	mov  esp, ebp
+	pop  ebp
+	ret
+	
+section .data
+	ISBA_RMIK_AREA:	 
+	                     db 'eax',0
+						 db 'ecx',0
+						 db 'edx',0
+						 db 'ebx',0
+						 db 'esi',0
+						 db 'edi',0
+						 db 'ebp',0
+						 db 'esp',0
+						 db 'ax', 0
+						 db 'cx', 0
+						 db 'dx', 0
+						 db 'bx', 0
+						 db 'si', 0
+						 db 'di', 0
+						 db 'bp', 0
+						 db 'sp', 0
+						 db 'ah', 0
+						 db 'al', 0
+						 db 'ch', 0
+						 db 'cl', 0
+						 db 'dh', 0
+						 db 'dl', 0
+						 db 'bh', 0
+						 db 'bl', 0
+						 
+	ISBA_GLOB_MN_ADDR:   db 'mov',0
+						 db 'add',0
+						 db 'sub',0
+	tp:				  
+	                     db 'mov',0, '...........................................................................................................................', 0
+						 db 'cx',0, '............................................................................................................................', 0
+						 db '0xFC12',0, '........................................................................................................................', 0
+						 db 'ooi',0
+						 
+	output_buffer:       db 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+	output_buffer_cnt:   dd 0x00000000
+	
+	opcode:              db 0
+	prefix:              db 0
+	
+	imm32:               dd 0x00000000
+	imm16:               dw 0x0000
+	imm8:                db 0x00
+	
+	; which-immediate (0 | >3 = error, 1 = imm32, 2 = imm16, 3 = imm8)
+	which_immediate:     dd 0
+	
+	ISBA_BOOLEAN:		 dd 0xFFFFFFFF
+	second_message:	     db 'the second register is: ',0
+	
+	string:			     db '0x00',0
+	lookup_hex_table:    db '0123456789ABCDEF', 0
+	
+	enter_character:	 db 0xa
