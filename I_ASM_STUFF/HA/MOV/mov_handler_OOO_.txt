@@ -1490,7 +1490,6 @@ _found_SP_as_third:
 	
 _found_AH_as_third:
     add  BYTE[modrm],  0x04
-	push eax
 	mov  ecx, third_message
 	mov  edx, 23
 	mov  ebx, 1
@@ -1535,7 +1534,6 @@ _found_CH_as_third:
 	jmp  _parse_1_end
 	
 _found_CL_as_third:
-	push eax
 	add  BYTE[modrm],  0x01
 	mov  ecx, third_message
 	mov  edx, 23
