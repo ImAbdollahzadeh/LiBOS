@@ -17,6 +17,7 @@ extern void    printk       ( INT_8* fmt, ... );
        void    panic        ( INT_8* id );
        UINT_8* Disps        (void);
        void __LiBOS_HexDump (void* pointer_to_buffer, UINT_32 bytes, INT_8* begin_message);
+	   void __LiBOS_ChrDump (void* pointer_to_buffer, UINT_32 bytes);
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 

@@ -1,4 +1,4 @@
-#include "../include/LiBOS_CORE.h"
+//....#include "../include/LiBOS_CORE.h"
 #include "../include/LiBOS_LOGO.h"
 #include "../include/GDT.h"
 #include "../include/PORT.h"
@@ -20,6 +20,11 @@
 #include "../include/WINDOW.h"
 #include "../include/FONT.h"
 #include "../include/IMAGE_LOADER.h"
+#include "../include/I_ASM.h"
+#include "../include/ACPI.h"
+#include "../include/MP.h"
+
+extern void debugger_test(void);
 
 extern void _LiBOS_text_section_size;
 extern void _LiBOS_data_section_size;
@@ -109,24 +114,47 @@ void KERNEL_MAIN_ENTRY(void)
 		return;
 	}
 	
-	PCI  pci;
-	SATA sata;
-	EHCI ehci;
-	XHCI x;
-	status = RegisterPCI(&pci, &sata, &ehci, &x);
-	if(!status)
-	{
-		panic( "PCI registration failed\n" );
-		return;
-	}
 	
-	FILESYSTEM filesystem;
-	RegisterFilesystem(&filesystem, &sata);
-	if(!status)
+	//.RSDP_Descriptor_2_0 rsdp;
+	//.if( query_rsdp(&rsdp) )
+	//.{
+	//.	UINT_32 rsdt = (rsdp.rsdp_1_0.revision != 0) ? PHYSICAL_ADDRESS((UINT_32)rsdp.xsdt_address) : PHYSICAL_ADDRESS(rsdp.rsdp_1_0.rsdt_address);
+	//.	void* fadt   = find_FACP(rsdt);
+	//.	if(fadt)
+	//.		printk("FADT:^\n", fadt);
+	//.}
+	
+	MP_FLOATING_POINTER mpfp;
+	if( query_multiprocessing(&mpfp) )
 	{
-		panic( "FILESYSTEM registration failed\n" );
-		return;
+		__LiBOS_ChrDump (mpfp.signature, 4);
+		printk("MP_features_1=^\n", mpfp.mp_features_1);
+		printk("MP_features_2:^\n", mpfp.mp_features_2);
+		printk("MP_config_pointer=^\n", mpfp.mp_config_pointer);
+		MP_configuration_table(&mpfp);
+		query_libos_cpus();
+		query_libos_ioapics();
+		start_multiprocessing();
 	}
+
+	//---PCI  pci;
+	//---SATA sata;
+	//---EHCI ehci;
+	//---XHCI x;
+	//---status = RegisterPCI(&pci, &sata, &ehci, &x);
+	//---if(!status)
+	//---{
+	//---	panic( "PCI registration failed\n" );
+	//---	return;
+	//---}
+	//---
+	//---FILESYSTEM filesystem;
+	//---RegisterFilesystem(&filesystem, &sata);
+	//---if(!status)
+	//---{
+	//---	panic( "FILESYSTEM registration failed\n" );
+	//---	return;
+	//---}
 	
 	//----ect_execution("ECT/__IMG.ect");
 	
@@ -202,12 +230,20 @@ void KERNEL_MAIN_ENTRY(void)
 	//.__LiBOS_report_binary_image_sections();
 	
 	
-	/* only EXT stuff */
-	load_ext_loader("_EXTS/EXTLDR.EXT");
-	load_ext_image ("_EXTS/_TST.EXT");
-	load_ext_image ("_EXTS/FKE.EXT");
+	//----/* only EXT stuff */
+	//----load_ext_loader("_EXTS/EXTLDR.EXT");
+	//----load_ext_image ("_EXTS/_TST.EXT");
+	//----load_ext_image ("_EXTS/FKE.EXT");
+	//----
+	//----dump_global_ext_table();
 	
-	dump_global_ext_table();
+	//....const char* i_asm_file = "[I_ASM 32-bit]\n[ORIGIN 0xFFFFFFFF]\n";
+	//....printk(i_asm_file);
+	//....printk("\n");
+	//....enter_I_ASM(i_asm_file);
+	//....
+	//....
+	//....debugger_test();
 	
 	while(1);
 }

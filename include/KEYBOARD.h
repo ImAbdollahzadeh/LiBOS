@@ -26,6 +26,7 @@ typedef struct _KEYBOARD {
 unsigned int RegisterKeyboard(KEYBOARD* keyboard);
 void         keyboard_handler(REGS* r);
 void         getch           (UINT_8 keycode_to_break);
+void         PM_set_keyboard (void);
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 

@@ -1,4 +1,4 @@
-/* in ascii form */
+-- in ascii form --
 
 ISBA_RMIK_AREA = {
 	'e',0x75,'x',0,
@@ -9,7 +9,7 @@ ISBA_RMIK_AREA = {
 	'e','d','i',0,
 	'e','b','p',0,
 	'e','s','p',0,
-	/* offset 32 */
+	-- offset 32 --
 	'a','x',0,
 	'c','x',0,
 	'd','x',0,
@@ -26,7 +26,7 @@ ISBA_RMIK_AREA = {
 	'd','i',0,
 	'b','p',0,
 	's','p',0,
-	/* offset 80 */
+	-- offset 80 --
 	'+',0,
 	'0','x',0,
 	'B','Y','T','E','[',0,
@@ -34,7 +34,7 @@ ISBA_RMIK_AREA = {
 	'D','W','O','R','D','[',0,
 	'Q','W','O','R','D','[',0,
 	'X','M','M','W','O','R','D','[',0,
-	/* offset 120 */
+	-- offset 120 --
 	0,
 	0,
 	0,
@@ -57,7 +57,7 @@ ISBA_RMIK_AREA = {
 	0,0,0,0,
 };
 
-/* in hexadecimal form */
+-- in hexadecimal form --
 ISBA_RMIK_AREA = {
 	0x65,0x61,0x78,0x00,
 	0x65,0x63,0x78,0x00,
@@ -67,7 +67,7 @@ ISBA_RMIK_AREA = {
 	0x65,0x64,0x69,0x00,
 	0x65,0x62,0x70,0x00,
 	0x65,0x73,0x70,0x00,
-	/* offset 32 */
+	-- offset 32 --
 	0x61,0x78,0x00,
 	0x63,0x78,0x00,
 	0x64,0x78,0x00,
@@ -84,7 +84,7 @@ ISBA_RMIK_AREA = {
 	0x64,0x69,0x00,
 	0x62,0x70,0x00,
 	0x73,0x70,0x00,
-	/* offset 80 */
+	-- offset 80 --
 	0x2B,0x00,
 	0x30,0x78,0x00,
 	0x42,0x59,0x54,0x45,0x5B,0x00,
@@ -92,7 +92,7 @@ ISBA_RMIK_AREA = {
 	0x44,0x57,0x4F,0x52,0x44,0x5B,0x00,
 	0x51,0x57,0x4F,0x52,0x44,0x5B,0x00,
 	0x58,0x4D,0x4D,0x57,0x4F,0x52,0x44,0x5B,0x00,
-	/* offset 120 */
+	-- offset 120 --
 	0x00,
 	0x00,
 	0x00,
@@ -113,7 +113,7 @@ ISBA_RMIK_AREA = {
 	0x00,0x00,0x00,0x00,
 	0x00,0x00,0x00,0x00,
 	0x00,0x00,0x00,0x00,
-	/* offset 206 */
+	-- offset 206 --
 };
 
 ISBA_GLOB_MN_ADDR = {
@@ -131,15 +131,15 @@ ISBA_GLOB_MN_ADDR = {
 	'm','o','v',0,
 	'm','u','l',0,
 	'd','i','v',0,
-	/* offset 56 */
+	-- offset 56 --
 	'c','a','l','l',0,
 	'p','u','s','h',0,
 	'i','m','u','l',0,
 	'i','d','i','v',0,
-	/* offset 76 */
+	-- offset 76 --
 	'j','e',0
 	'j','z',0
-	/* offset 82 */
+	-- offset 82 --
 };
 
 {

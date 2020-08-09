@@ -17,6 +17,8 @@ section .text
 	extern printk_impl
 	global _execute_ect
 	global _LiBOSASM_load_ext_image
+	global execute_IRA
+	global debugger_test
 	global printk
 	global IDTLoad
 	global GDTLoad
@@ -623,3 +625,38 @@ _LiBOSASM_load_ext_image:
 	pop  ebp
 	ret
 
+
+;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ void execute_IRA(void);
+
+execute_IRA:
+	push ebp 
+	mov  ebp, esp
+	mov  eax, 0x01000000
+	mov  ebx, 0x0DC9B000
+	push ebx
+	push eax
+	call 0x0DC82000 ;call how_many_lines
+	pop  eax
+	pop  ebx
+
+	mov  eax, 0x0D819000 ;address of ISBA_TPs
+	mov  ebx, DWORD[0x0DC9B000] ;number of lines
+	push ebx
+	push eax
+	call 0x0DC82400 ;call initialize_TPs
+	pop  eax
+	pop  ebx
+	mov  esp, ebp
+	pop  ebp
+	ret
+
+;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ void debugger_test(void);
+
+debugger_test:
+	push ebp 
+	mov  ebp, esp
+int  0x03
+	mov  esp, ebp
+	pop  ebp
+int  0x03
+	ret

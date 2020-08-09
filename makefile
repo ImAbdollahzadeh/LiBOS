@@ -6,12 +6,18 @@ objects =                       \
 		obj/LOADER.o            \
 		obj/PRINT.o             \
 		obj/GDT.o               \
+		obj/ACPI.o              \
+		obj/MP.o                \
 		obj/PORT.o              \
 		obj/IDT.o               \
 		obj/EXTENDEDENTRIES.o   \
+		obj/MULTIPROCESSING.o   \
+		obj/IMAGE_LOADER.o      \
+	    obj/I_ASM.o             \
 		obj/BIOS_CALL.o         \
 		obj/_ASM_VIDEO_PLAYER.o \
 		obj/_ASM_WINDOW.o       \
+		obj/_ASM_FONT.o         \
 		obj/FONT.o              \
 		obj/VIDEO_PLAYER.o      \
 		obj/WINDOW.o            \
@@ -49,9 +55,13 @@ run:
 	@make GDT.o
 	@make PORT.o
 	@make EXTENDEDENTRIES.o
+	@make MULTIPROCESSING.o
 	@make BIOS_CALL.o
+	@make ACPI.o
+	@make MP.o
 	@make _ASM_VIDEO_PLAYER.o
 	@make _ASM_WINDOW.o
+	@make _ASM_FONT.o
 	@make VIDEO_PLAYER.o
 	@make WINDOW.o
 	@make FONT.o
@@ -61,6 +71,8 @@ run:
 	@make PCI.o
 	@make FILE.o
 	@make FILESYSTEM.o
+	@make IMAGE_LOADER.o
+	@make I_ASM.o
 	@make DOSSPEC.o
 	@make AHCI.o
 	@make XHCI.o

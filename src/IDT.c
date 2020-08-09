@@ -3,6 +3,7 @@
 #include "../include/PORT.h"
 #include "../include/TIMER.h"
 #include "../include/XHCI.h"
+#include "../include/KEYBOARD.h"
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ GLOBAL AND STATIC VARIABLES
 
@@ -37,37 +38,37 @@ UINT_32 RegisterIDT(void)
 
 
 	SetIDTEntry(0,  (UINT_32)(void*)ISR0,  0x08, 0x8E);
-    SetIDTEntry(1,  (UINT_32)(void*)ISR1,  0x08, 0x8E);
-    SetIDTEntry(2,  (UINT_32)(void*)ISR2,  0x08, 0x8E);
-    SetIDTEntry(3,  (UINT_32)(void*)ISR3,  0x08, 0x8E);
+	SetIDTEntry(1,  (UINT_32)(void*)ISR1,  0x08, 0x8E);
+	SetIDTEntry(2,  (UINT_32)(void*)ISR2,  0x08, 0x8E);
+	SetIDTEntry(3,  (UINT_32)(void*)ISR3,  0x08, 0x8E);
 	SetIDTEntry(4,  (UINT_32)(void*)ISR4,  0x08, 0x8E);
-    SetIDTEntry(5,  (UINT_32)(void*)ISR5,  0x08, 0x8E);
-    SetIDTEntry(6,  (UINT_32)(void*)ISR6,  0x08, 0x8E);
-    SetIDTEntry(7,  (UINT_32)(void*)ISR7,  0x08, 0x8E);
+	SetIDTEntry(5,  (UINT_32)(void*)ISR5,  0x08, 0x8E);
+	SetIDTEntry(6,  (UINT_32)(void*)ISR6,  0x08, 0x8E);
+	SetIDTEntry(7,  (UINT_32)(void*)ISR7,  0x08, 0x8E);
 	SetIDTEntry(8,  (UINT_32)(void*)ISR8,  0x08, 0x8E);
-    SetIDTEntry(9,  (UINT_32)(void*)ISR9,  0x08, 0x8E);
+	SetIDTEntry(9,  (UINT_32)(void*)ISR9,  0x08, 0x8E);
 	SetIDTEntry(10, (UINT_32)(void*)ISR10, 0x08, 0x8E);
-    SetIDTEntry(11, (UINT_32)(void*)ISR11, 0x08, 0x8E);
-    SetIDTEntry(12, (UINT_32)(void*)ISR12, 0x08, 0x8E);
-    SetIDTEntry(13, (UINT_32)(void*)ISR13, 0x08, 0x8E);
+	SetIDTEntry(11, (UINT_32)(void*)ISR11, 0x08, 0x8E);
+	SetIDTEntry(12, (UINT_32)(void*)ISR12, 0x08, 0x8E);
+	SetIDTEntry(13, (UINT_32)(void*)ISR13, 0x08, 0x8E);
 	SetIDTEntry(14, (UINT_32)(void*)ISR14, 0x08, 0x8E);
-    SetIDTEntry(15, (UINT_32)(void*)ISR15, 0x08, 0x8E);
-    SetIDTEntry(16, (UINT_32)(void*)ISR16, 0x08, 0x8E);
-    SetIDTEntry(17, (UINT_32)(void*)ISR17, 0x08, 0x8E);
+	SetIDTEntry(15, (UINT_32)(void*)ISR15, 0x08, 0x8E);
+	SetIDTEntry(16, (UINT_32)(void*)ISR16, 0x08, 0x8E);
+	SetIDTEntry(17, (UINT_32)(void*)ISR17, 0x08, 0x8E);
 	SetIDTEntry(18, (UINT_32)(void*)ISR18, 0x08, 0x8E);
-    SetIDTEntry(19, (UINT_32)(void*)ISR19, 0x08, 0x8E);
+	SetIDTEntry(19, (UINT_32)(void*)ISR19, 0x08, 0x8E);
 	SetIDTEntry(20, (UINT_32)(void*)ISR20, 0x08, 0x8E);
-    SetIDTEntry(21, (UINT_32)(void*)ISR21, 0x08, 0x8E);
-    SetIDTEntry(22, (UINT_32)(void*)ISR22, 0x08, 0x8E);
-    SetIDTEntry(23, (UINT_32)(void*)ISR23, 0x08, 0x8E);
+	SetIDTEntry(21, (UINT_32)(void*)ISR21, 0x08, 0x8E);
+	SetIDTEntry(22, (UINT_32)(void*)ISR22, 0x08, 0x8E);
+	SetIDTEntry(23, (UINT_32)(void*)ISR23, 0x08, 0x8E);
 	SetIDTEntry(24, (UINT_32)(void*)ISR24, 0x08, 0x8E);
-    SetIDTEntry(25, (UINT_32)(void*)ISR25, 0x08, 0x8E);
-    SetIDTEntry(26, (UINT_32)(void*)ISR26, 0x08, 0x8E);
-    SetIDTEntry(27, (UINT_32)(void*)ISR27, 0x08, 0x8E);
+	SetIDTEntry(25, (UINT_32)(void*)ISR25, 0x08, 0x8E);
+	SetIDTEntry(26, (UINT_32)(void*)ISR26, 0x08, 0x8E);
+	SetIDTEntry(27, (UINT_32)(void*)ISR27, 0x08, 0x8E);
 	SetIDTEntry(28, (UINT_32)(void*)ISR28, 0x08, 0x8E);
-    SetIDTEntry(29, (UINT_32)(void*)ISR29, 0x08, 0x8E);
+	SetIDTEntry(29, (UINT_32)(void*)ISR29, 0x08, 0x8E);
 	SetIDTEntry(30, (UINT_32)(void*)ISR30, 0x08, 0x8E);
-    SetIDTEntry(31, (UINT_32)(void*)ISR31, 0x08, 0x8E);
+	SetIDTEntry(31, (UINT_32)(void*)ISR31, 0x08, 0x8E);
 	
 	//.printk("    In IDT: 32 ISRs registered\n");
 
@@ -193,10 +194,19 @@ void FAULT_HANDLER(REGS* r)
     {
         panic(__exception_messages[r->int_no]);
         panic(" Exception. System Halted!\n");
-		panic("eax:^, ebx:^, ecx:^, edx:^\n",  r->eax, r->ebx, r->ecx, r->edx);
-		panic("esi:^, edi:^, esp:^, ebp:^\n",  r->esi, r->edi, r->esp, r->ebp);
-		panic("eip:^, cs:^, ss:^, eflags:^\n", r->eip, r->cs, r->ss, r->eflags);
-		panic("err_code:^\n", r->err_code);
+		printk("eax:^, ebx:^, ecx:^, edx:^\n",  r->eax, r->ebx, r->ecx, r->edx);
+		printk("esi:^, edi:^, esp:^, ebp:^\n",  r->esi, r->edi, r->esp, r->ebp);
+		printk("eip:^, cs:^, ss:^, eflags:^\n", r->eip, r->cs, r->ss, r->eflags);
+		printk("err_code:^\n", r->err_code);
+		
+		/* for INT 0x03 (a.k.a. DEBUG_HANDLER) we need a keyboard code to continue */
+		if (r->int_no == 0x03)
+		{
+			// we need space-bar to continue
+			getch(' ');
+			return;
+		}
+		
         while(1);
     }
 }
@@ -208,15 +218,15 @@ void IRQ_HANDLER(REGS* r)
 	PORT_8 p;
 	Port_8_Register(&p);
 	
-    handler = __irq_routines[r->int_no - 32];
-    if (handler)
-    	handler(r);
+	handler = __irq_routines[r->int_no - 32];
+	if (handler)
+		handler(r);
 
 	/* If the IDT entry that was invoked was greater than 40 (meaning IRQ8 - 15), then we need to send an EOI to the slave controller */
-    if (r->int_no >= 40)
-    	p.Write(0xA0, 0x20);
-    /* In either case, we need to send an EOI to the master interrupt controller too */
-    p.Write(0x20, 0x20);
+	if (r->int_no >= 40)
+		p.Write(0xA0, 0x20);
+	/* In either case, we need to send an EOI to the master interrupt controller too */
+	p.Write(0x20, 0x20);
 	
 	if(r->int_no == 43) // XHCI must be followed continously
 	{
@@ -238,42 +248,42 @@ void IRQ_HANDLER(REGS* r)
 
 void IRQ_set_mask(UINT_8 IRQline) 
 {
-    UINT_16 port;
-    UINT_8  value;
- 
+	UINT_16 port;
+	UINT_8  value;
+	
 	PORT_8 p;
 	Port_8_Register(&p);
 	
-    if(IRQline < 8) 
-        port = PIC1_DATA;
+	if(IRQline < 8) 
+		port = PIC1_DATA;
 	else 
 	{
-        port     = PIC2_DATA;
-        IRQline -= 8;
-    }
-    value = p.Read(port) | (1 << IRQline);
-    p.Write(port, value);        
+		port     = PIC2_DATA;
+		IRQline -= 8;
+	}
+	value = p.Read(port) | (1 << IRQline);
+	p.Write(port, value);        
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 void IRQ_clear_mask(UINT_8 IRQline) 
 {
-    UINT_16 port;
-    UINT_8  value;
- 
+	UINT_16 port;
+	UINT_8  value;
+	
 	PORT_8 p;
 	Port_8_Register(&p);
- 
-    if(IRQline < 8) 
-        port = PIC1_DATA;
+	
+	if(IRQline < 8) 
+		port = PIC1_DATA;
 	else 
 	{
-        port     = PIC2_DATA;
-        IRQline -= 8;
-    }
-    value = p.Read(port) & ~(1 << IRQline);
-    p.Write(port, value);        
+		port     = PIC2_DATA;
+		IRQline -= 8;
+	}
+	value = p.Read(port) & ~(1 << IRQline);
+	p.Write(port, value);        
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -325,19 +335,19 @@ void __irq_uninstall_handler(INT_32 irq)
 
 void __irq_remap(void)
 {
-    PORT_8 p;
+	PORT_8 p;
 	Port_8_Register(&p);
 	
 	p.Write(0x20, 0x11);
-    p.Write(0xA0, 0x11);
-    p.Write(0x21, 0x20);
-    p.Write(0xA1, 0x28);
-    p.Write(0x21, 0x04);
-    p.Write(0xA1, 0x02);
-    p.Write(0x21, 0x01);
-    p.Write(0xA1, 0x01);
-    p.Write(0x21, 0x00);
-    p.Write(0xA1, 0x00);
+	p.Write(0xA0, 0x11);
+	p.Write(0x21, 0x20);
+	p.Write(0xA1, 0x28);
+	p.Write(0x21, 0x04);
+	p.Write(0xA1, 0x02);
+	p.Write(0x21, 0x01);
+	p.Write(0xA1, 0x01);
+	p.Write(0x21, 0x00);
+	p.Write(0xA1, 0x00);
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -363,8 +373,8 @@ void __go_to_reset(void)
 	WaitSecond(1);
 	_CLI();
 	idt_pointer.size = 0;
-    idt_pointer.base = 0;	
-    IDTLoad();
+	idt_pointer.base = 0;
+	IDTLoad();
 	_STI();
 }
 

@@ -29,21 +29,25 @@ typedef struct _IDTPOINTER {
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-void __go_to_reset(void);
-void SetIDTEntry(UINT_8 Interrupt, UINT_32 HandlerAddress, UINT_16 CodeSegmentSelectorOffset, UINT_8 flags);
-UINT_32 RegisterIDT(void);
-void FAULT_HANDLER(REGS* r);
-void IRQ_HANDLER(REGS* r);
-void __irq_install_handler(INT_32 irq, void (*handler)(REGS* r));
-void __irq_uninstall_handler(INT_32 irq);
-void __irq_remap(void);
-extern UINT_32 IDTLoad ();
+void             IRQ_set_mask  (UINT_8 IRQline);
+void             IRQ_clear_mask(UINT_8 IRQline);
+void             __go_to_reset(void);
+void             SetIDTEntry(UINT_8 Interrupt, UINT_32 HandlerAddress, UINT_16 CodeSegmentSelectorOffset, UINT_8 flags);
+UINT_32          RegisterIDT(void);
+void             FAULT_HANDLER(REGS* r);
+void             IRQ_HANDLER(REGS* r);
+void             __irq_install_handler(INT_32 irq, void (*handler)(REGS* r));
+void             __irq_uninstall_handler(INT_32 irq);
+void             __irq_remap(void);
+extern void      disable_PIC(void);
+extern void      set_MSR(UINT_32 base_addr, UINT_32 phys_addr_lo, UINT_32 phys_addr_hi);
+extern UINT_32   IDTLoad ();
 extern void ISR_DEFAULT();
-extern void ISR0();
 extern void ISR1();
 extern void ISR2();
 extern void ISR3();
 extern void ISR4();
+extern void ISR0();
 extern void ISR5();
 extern void ISR6();
 extern void ISR7();
