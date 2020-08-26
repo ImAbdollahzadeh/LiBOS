@@ -10,8 +10,6 @@
 static UINT_32 IMAGE_WIDTH  = 800;
 static UINT_32 IMAGE_HEIGHT = 600;
 
-extern void _activate_sse(void);
-extern void _check_avx(UINT_32* avx_buffer);
 extern void _uv_transform(float* result, float* Fuv, float back_dc);
 extern void _ycc_to_rgb(float* y, float* cb, float* cr, float* r, float* g, float* b);
 extern void _final_rgb_sorting(float* packed);

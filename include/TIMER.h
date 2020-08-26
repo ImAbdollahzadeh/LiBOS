@@ -21,8 +21,6 @@
 
 typedef struct _TIMER {
 	UINT_32 clock_Hz;
-	void (*CurrentTime)(void);
-	void (*CurrentDate)(void);
 } __attribute__ ((packed)) TIMER;
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

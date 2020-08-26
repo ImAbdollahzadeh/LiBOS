@@ -35,6 +35,9 @@ typedef unsigned int       BOOL;
 #   	define PHYSICAL_ADDRESS(ANY_POINTER) (0x00)
 #   endif
 
+// LiBOS CORE SUBSTITUTION KEWORDS
+#   define __LiBOS_PACKED__ __attribute__((packed))
+ 
 // LiBOS_CORE_COLORS
 
 enum {

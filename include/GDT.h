@@ -18,6 +18,8 @@ typedef struct _GDT {
 	SEGMENTDESCRIPTOR NullSegmentSelector;
 	SEGMENTDESCRIPTOR CodeSegmentSelector;
 	SEGMENTDESCRIPTOR DataSegmentSelector;
+	SEGMENTDESCRIPTOR CodeSegmentSelector16;
+	SEGMENTDESCRIPTOR DataSegmentSelector16;
 } __attribute__ ((packed)) GDT;
 
 typedef struct _GDTPOINTER {
@@ -33,7 +35,7 @@ extern UINT_32 GDTLoad               (void);
        UINT_32 RegisterGDT           (GDT* gdt);
        UINT_16 GDTCodeSegmentSelector(GDT* gdt);
        UINT_16 GDTDataSegmentSelector(GDT* gdt);
-    
+
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-	
+
 #endif //! _GDT__H__
