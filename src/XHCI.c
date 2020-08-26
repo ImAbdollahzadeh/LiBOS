@@ -775,7 +775,7 @@ BOOL xhci_start_controller(XHCI* x)
 	mwrite(PHYSICAL_ADDRESS(x->oper), 4, st); 
 	
 	// start the interrupter
-	__irq_install_handler(x->irq_number, &xhci_interrupt_handler);
+	irq_install_handler(x->irq_number, &xhci_interrupt_handler);
 	
 	// start the controller
 	cmd = 0;

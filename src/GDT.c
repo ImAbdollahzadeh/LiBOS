@@ -24,19 +24,17 @@ SEGMENTDESCRIPTOR __RegisterSegmentDescriptor(UINT_32 base, UINT_32 limit, UINT_
 
 UINT_32 RegisterGDT(GDT* gdt)
 {
-	UINT_32 status = 0;	
+	UINT_32 status = 0;
 	
 	if(!gdt)
 		return 0;
-	gdt->NullSegmentSelector = __RegisterSegmentDescriptor(0, 0, 0, 0);
-	gdt->CodeSegmentSelector = __RegisterSegmentDescriptor(0, 0xFFFFFFFF, 0x9A, 0xCF);
-	gdt->DataSegmentSelector = __RegisterSegmentDescriptor(0, 0xFFFFFFFF, 0x92, 0xCF);
+	gdt->NullSegmentSelector   = __RegisterSegmentDescriptor(0, 0, 0, 0);
+	gdt->CodeSegmentSelector   = __RegisterSegmentDescriptor(0, 0xFFFFFFFF, 0x9A, 0xCF);
+	gdt->DataSegmentSelector   = __RegisterSegmentDescriptor(0, 0xFFFFFFFF, 0x92, 0xCF);
+	gdt->CodeSegmentSelector16 = __RegisterSegmentDescriptor(0, 0xFFFFFFFF, 0x9A, 0x0F);
+	gdt->DataSegmentSelector16 = __RegisterSegmentDescriptor(0, 0xFFFFFFFF, 0x92, 0x0F);
 	
-	//.printk( "    In GDT: NullSegmentSelector created\n");
-	//.printk( "    In GDT: CodeSegmentSelector created\n");
-	//.printk( "    In GDT: DataSegmentSelector created\n");
-	
-	gdt_pointer.size = (sizeof(SEGMENTDESCRIPTOR)*3) - 1;
+	gdt_pointer.size = (sizeof(SEGMENTDESCRIPTOR)*5) - 1;
 	gdt_pointer.base = (UINT_32)((void*)gdt);
 	
 	if(!gdt_pointer.size || !gdt_pointer.base)

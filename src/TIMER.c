@@ -2,17 +2,13 @@
 #include "../include/IDT.h"
 #include "../include/TIMER.h"
 #include "../include/PRINT.h"
+#include "../include/MP.h"
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ GLOBAL AND STATIC VARIABLES
 
        TIMER   global_OS_timer;             /* This is the main OS's timer */
        UINT_32 __ProgramTimer(UINT_32 Hz);  /* Forward declaration of internal function */
-static UINT_32 timer_ticks    = 0;          /* This is the main OS timer tick counter */
-static UINT_32 timer_tick_low_user = 0;
-static UINT_32 timer_tick_high_user = 0;
-
-void __CurrentTimeReporter(void);
-void __CurrentDateReporter(void);
+static UINT_32 timer_ticks          = 0;    /* This is the main OS timer tick counter */
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
@@ -22,12 +18,6 @@ void timer_handler(REGS* r)
 	   requirement for the OS. All other stuff related to the timer would be 
 	   implemented separately. Here only the timer tick update is enough */
 	timer_ticks++ == 0xFFFFFFFF ? timer_ticks = 0 : 0;
-	
-	if(timer_tick_low_user++ == 0xFFFFFFFF)
-	{
-		timer_tick_low_user = 0;
-		timer_tick_high_user++;
-	}
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -47,12 +37,10 @@ UINT_32 RegisterTimer(TIMER* timer, UINT_32 Hz)
 		return 0;
 	}
 	
-	timer->clock_Hz    = Hz;
-	timer->CurrentTime = &__CurrentTimeReporter;
-	timer->CurrentDate = &__CurrentDateReporter;
-	global_OS_timer    = *timer;
+	timer->clock_Hz = Hz;
+	global_OS_timer = *timer;
 	
-	__irq_install_handler(0, &timer_handler);
+	irq_install_handler(0, &timer_handler);
 	//.printk( "        >>> Timer registered successfully <<<\n");
 	
 	return 1;
@@ -92,6 +80,11 @@ void WaitMiliSecond(UINT_32 msec)
 	
 	_CLI();
 	timer_ticks = 0;
+	
+	/* sanity */
+	if( apic_mode() )
+		apic_eoi();
+	
 	_STI();
 	
 	while(timer_ticks < elapsed);
@@ -108,10 +101,13 @@ void WaitSecond(UINT_32 sec)
 	
 	_CLI();
 	timer_ticks = 0;
-	_STI();
 	
+	/* sanity */
+	if( apic_mode() )
+		apic_eoi();
+	
+	_STI();
 	while(timer_ticks < elapsed);
-	_CLI();
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -137,6 +133,11 @@ void WaitMicroSecond(UINT_32 usec)
 	
 	_CLI();
 	timer_ticks = 0;
+	
+	/* sanity */
+	if( apic_mode() )
+		apic_eoi();
+	
 	_STI();
 	
 	while(timer_ticks < elapsed);
@@ -152,43 +153,6 @@ void WaitMicroSecond(UINT_32 usec)
 	global_OS_timer.clock_Hz = OS_DEFAULT_TIMER_TICK;
 	
 	return;
-}
-
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-void __CurrentTimeReporter(void)
-{
-	return;
-}
-
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-void __CurrentDateReporter(void)
-{
-	return;
-}
-
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-void start_user_timer(void)
-{
-	timer_tick_low_user  = 0;
-	timer_tick_high_user = 0;
-}
-
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-void end_user_timer(UINT_32* high_packet, UINT_32* low_packet)
-{
-	*high_packet = timer_tick_high_user;
-	*low_packet  = timer_tick_low_user;
-}
-
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-void PM_set_timer(void)
-{
-	__irq_install_handler(0, &timer_handler);
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

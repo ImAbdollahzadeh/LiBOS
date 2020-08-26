@@ -46,7 +46,7 @@ UINT_32 RegisterPCI(PCI* pci, SATA* sata, EHCI* ehci, XHCI* x)
 					if(bar.address && (bar.type == INPUTOUTPUT))
 						dev.portBase = (UINT_32)bar.address;
 				}            
-
+				
 				if(dev.class_id == 0x01 && dev.subclass_id == 0x06)
 				{
 					UINT_32 BAR5 = Read(pci, bus, device, function, FNC_BAR_5);

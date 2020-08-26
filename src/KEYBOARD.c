@@ -88,8 +88,7 @@ UINT_32 RegisterKeyboard(KEYBOARD* keyboard)
 	
 	global_OS_keyboard = *keyboard;
 	
-	__irq_install_handler(1, &keyboard_handler);
-	
+	irq_install_handler(1, &keyboard_handler);
 	//.printk( "        >>> Keyboard registered successfully <<<\n");
 	
 	return 1;
@@ -99,8 +98,8 @@ UINT_32 RegisterKeyboard(KEYBOARD* keyboard)
 
 void keyboard_handler(REGS* r)
 {
-    UINT_8 scancode, status;
-
+	UINT_8 scancode, status;
+	
 	/* write EOI */
 	global_OS_keyboard.KBD_STATUS_PORT.Write(0x20, 0x20);
 	global_OS_keyboard.arrow_keys = 0;
@@ -114,7 +113,7 @@ void keyboard_handler(REGS* r)
 		if(global_OS_keyboard.last_registered_key == 27) // ESC pressed for restart
 		{
 			clear_screen();
-			__go_to_reset();
+			go_to_reset();
 		}
         
 		if (scancode & 0x80)
@@ -179,7 +178,7 @@ void getch(UINT_8 keycode_to_break)
 
 void PM_set_keyboard(void)
 {
-	__irq_install_handler(1, &keyboard_handler);
+	irq_install_handler(1, &keyboard_handler);
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

@@ -552,7 +552,7 @@ static void draw_button(WINDOW* wnd, WINDOW_OBJECT* obj)
 
 void window_force_LiBOS_to_reboot(void* arg)
 {
-	__go_to_reset();
+	go_to_reset();
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

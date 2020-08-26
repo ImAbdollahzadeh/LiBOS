@@ -1,4 +1,4 @@
-//....#include "../include/LiBOS_CORE.h"
+#include "../include/LiBOS_CORE.h"
 #include "../include/LiBOS_LOGO.h"
 #include "../include/GDT.h"
 #include "../include/PORT.h"
@@ -88,7 +88,7 @@ void KERNEL_MAIN_ENTRY(void)
 		return;
 	}
 	//printk("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
-	
+
 	status = RegisterIDT();
 	if(!status)
 	{
@@ -114,6 +114,18 @@ void KERNEL_MAIN_ENTRY(void)
 		return;
 	}
 	
+	MP_FLOATING_POINTER mpfp;
+	if( query_multiprocessing(&mpfp) )
+	{
+		__LiBOS_ChrDump (mpfp.signature, 4);
+		printk("MP_features_1=^\n", mpfp.mp_features_1);
+		printk("MP_config_pointer=^\n", mpfp.mp_config_pointer);
+		MP_configuration_table(&mpfp);
+		query_libos_cpus();
+		query_libos_ioapics();
+		start_multiprocessing();
+	}
+
 	
 	//.RSDP_Descriptor_2_0 rsdp;
 	//.if( query_rsdp(&rsdp) )
@@ -123,20 +135,9 @@ void KERNEL_MAIN_ENTRY(void)
 	//.	if(fadt)
 	//.		printk("FADT:^\n", fadt);
 	//.}
-	
-	MP_FLOATING_POINTER mpfp;
-	if( query_multiprocessing(&mpfp) )
-	{
-		__LiBOS_ChrDump (mpfp.signature, 4);
-		printk("MP_features_1=^\n", mpfp.mp_features_1);
-		printk("MP_features_2:^\n", mpfp.mp_features_2);
-		printk("MP_config_pointer=^\n", mpfp.mp_config_pointer);
-		MP_configuration_table(&mpfp);
-		query_libos_cpus();
-		query_libos_ioapics();
-		start_multiprocessing();
-	}
 
+	
+	
 	//---PCI  pci;
 	//---SATA sata;
 	//---EHCI ehci;
@@ -243,7 +244,7 @@ void KERNEL_MAIN_ENTRY(void)
 	//....enter_I_ASM(i_asm_file);
 	//....
 	//....
-	//....debugger_test();
-	
+	//....debug();
+
 	while(1);
 }
