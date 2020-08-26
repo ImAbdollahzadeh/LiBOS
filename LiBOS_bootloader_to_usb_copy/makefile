@@ -1,4 +1,4 @@
-# you have to plug your USB stick and with GParted, format it to 'cleared', then from Device->CreatePartitionTable, set tomsdos and done.
+# you have to plug your USB stick and with GParted, format it to 'cleared', then from Device->CreatePartitionTable, set to 'msdos' and done.
 # this would be the command to be given in terminal
 # make install. usb_device=/dev/sdb(c or any other letters) bootsector=BTLDR1.SYS second_stage_bootloader=BTLDR2.SYS kernel=LIBKRN.SYS
 
