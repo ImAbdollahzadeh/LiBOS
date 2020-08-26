@@ -3,21 +3,24 @@ LDPARAMS   = -melf_i386
 NASMPARAMS = -f elf
 
 objects =                       \
-		obj/LOADER.o            \
+		obj/LiBOS_LOADER.o      \
 		obj/PRINT.o             \
 		obj/GDT.o               \
 		obj/ACPI.o              \
+		obj/CPU.o               \
+		obj/DEBUGGER.o          \
 		obj/MP.o                \
 		obj/PORT.o              \
 		obj/IDT.o               \
-		obj/EXTENDEDENTRIES.o   \
-		obj/MULTIPROCESSING.o   \
+		obj/ISRs_IRQs.o         \
+		obj/MULTI_PROCESSOR.o   \
 		obj/IMAGE_LOADER.o      \
 	    obj/I_ASM.o             \
-		obj/BIOS_CALL.o         \
+		obj/PMODE_BIOS_CALL.o   \
 		obj/_ASM_VIDEO_PLAYER.o \
 		obj/_ASM_WINDOW.o       \
 		obj/_ASM_FONT.o         \
+		obj/_ASM_SSE.o          \
 		obj/FONT.o              \
 		obj/VIDEO_PLAYER.o      \
 		obj/WINDOW.o            \
@@ -37,7 +40,7 @@ objects =                       \
 %.o: ./src/%.c
 	gcc $(GCCPARAMS) -c -o ./obj/$@ $<
 
-%.o: ./src/%.asm
+%.o: ./src/x86/%.asm
 	@nasm $(NASMPARAMS) -o ./obj/$@ $<
 
 LiBOS.bin: linker.ld $(objects)
@@ -50,18 +53,22 @@ run_qemu:
 	qemu-system-i386 -device nec-usb-xhci,p2=8,p3=8,id=xhci -device usb-tablet,bus=xhci.0 -kernel ./bin/LiBOS.bin 
 
 run: 
-	@make LOADER.o
+	@make LiBOS_LOADER.o
+	@make MULTI_PROCESSOR.o
+	@make CPU.o
+	@make DEBUGGER.o
+	@make ISRs_IRQs.o
 	@make PRINT.o
 	@make GDT.o
 	@make PORT.o
-	@make EXTENDEDENTRIES.o
-	@make MULTIPROCESSING.o
-	@make BIOS_CALL.o
+	@make MULTI_PROCESSOR.o
+	@make PMODE_BIOS_CALL.o
 	@make ACPI.o
 	@make MP.o
 	@make _ASM_VIDEO_PLAYER.o
 	@make _ASM_WINDOW.o
 	@make _ASM_FONT.o
+	@make _ASM_SSE.o
 	@make VIDEO_PLAYER.o
 	@make WINDOW.o
 	@make FONT.o
