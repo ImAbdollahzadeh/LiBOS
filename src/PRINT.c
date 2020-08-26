@@ -33,12 +33,14 @@ void print_number    ( UINT_32 n );
 void print_hex_number( UINT_32 n );
 UINT_8 displays[160*25*4];
 
-void __IMSO_Blit(UINT_8* src) 
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+void consule_blit(UINT_8* src) 
 {
-	int i;
-	UINT_8* vid = (UINT_8*)0xb8000;
-	for(i=0;i<160*25;i++)
-		vid[i]=src[i];
+	UINT_32 i;
+	UINT_8* vid = ( UINT_8* )0xb8000;
+	for(i=0; i<160*25; i++)
+		vid[i] = src[i];
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -59,7 +61,7 @@ void clear_screen( void )
 
 void printk_impl(INT_8* fmt, UINT_32 color)
 {
-	int ccounter = 1;
+	INT_32 ccounter = 1;
 	while (*fmt)
 	{
 		if (*fmt == '%')
@@ -104,7 +106,7 @@ void print_char( INT_8 id, UINT_8 print_color )
 		counter         += 2;
 		id++;
 	}
-	__IMSO_Blit(vid);
+	consule_blit(vid);
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
