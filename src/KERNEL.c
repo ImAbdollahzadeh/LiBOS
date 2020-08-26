@@ -23,6 +23,7 @@
 #include "../include/I_ASM.h"
 #include "../include/ACPI.h"
 #include "../include/MP.h"
+#include "../include/SSE.h"
 
 extern void debugger_test(void);
 
