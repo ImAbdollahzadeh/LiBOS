@@ -2,7 +2,7 @@ GCCPARAMS  = -m32 -Iinclude -nostdlib -fno-builtin -fno-exceptions -fno-leading-
 LDPARAMS   = -melf_i386
 NASMPARAMS = -f elf
 
-objects =	                              \
+objects =		                          \
 		obj/LiBOS_LOADER.o                \
 		obj/PRINT.o                       \
 		obj/GDT.o                         \
