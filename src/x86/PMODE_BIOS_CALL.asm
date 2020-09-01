@@ -1,193 +1,321 @@
-[bits 32]
- 
-global __LiBOS_BiosCall, _int32
- 
-struc regs16_t
-    .di resw 1
-    .si resw 1
-    .bp resw 1
-    .sp resw 1
-    .bx resw 1
-    .dx resw 1
-    .cx resw 1
-    .ax resw 1
-    .gs resw 1
-    .fs resw 1
-    .es resw 1
-    .ds resw 1
-    .ef resw 1
-endstruc
- 
-%define INT32_BASE  0x7C00
-%define REBASE(x)   (((x) - reloc) + INT32_BASE)
-%define GDTENTRY(x) ((x) << 3)
-%define CODE32      GDTENTRY(1)  ; 0x08
-%define DATA32      GDTENTRY(2)  ; 0x10
-%define CODE16      GDTENTRY(3)  ; 0x18
-%define DATA16      GDTENTRY(4)  ; 0x20
-%define STACK16     (INT32_BASE - regs16_t_size)
- 
- 
+;--------------------------------------------------------------------------------
+;             |   SPACE FOR PUSHA INSTRUCTION   |   RET    |  INT_No  |   REG*   |
+;--------------------------------------------------------------------------------
+;                32 bytes                         4 bytes    4 bytes    4 bytes
+
+
+[BITS 32]
+
+%define REBASE(ADDR)             (((ADDR) - @actual_code_at_0x9000) + 0x9000)
+%define STACK16                  (0x9000  - 26) ; 26 is sizeof(REGS_16)
+%define REBASE_with_paging(ADDR) (((ADDR) - @actual_code_at_0x9000_with_paging) + 0x9000)
+%define STACK16_with_paging      (0x9000  - 26)
+
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+--+-+-+-+-+-+-+-+
+
+global __LiBOS_BiosCall
+global __LiBOS_BiosCall_without_paging
+global __LiBOS_BiosCall_with_paging
+extern bios_call_tag
+
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+--+-+-+-+-+-+-+-+ void __LiBOS_BiosCall(UINT_32 int_no, REGS* r);
+
 section .text
-    __LiBOS_BiosCall: use32
-    _int32:
-        cli                                    ; disable interrupts
-        pusha                                  ; save register state to 32bit stack
-        mov  esi, reloc                        ; set source to code below
-        mov  edi, INT32_BASE                   ; set destination to new base address
-        mov  ecx, (int32_end - reloc)          ; set copy size to our codes size
-        cld                                    ; clear direction flag (so we copy forward)
-        rep  movsb                             ; do the actual copy (relocate code to low 16bit space)
-        jmp INT32_BASE                         ; jump to new code location
-    reloc: use32                               ; by Napalm
-        mov  [REBASE(stack32_ptr)], esp        ; save 32bit stack pointer
-        sidt [REBASE(idt32_ptr)]               ; save 32bit idt pointer
-        sgdt [REBASE(gdt32_ptr)]               ; save 32bit gdt pointer
-        lgdt [REBASE(gdt16_ptr)]               ; load 16bit gdt pointer
-        lea  esi, [esp+0x24]                   ; set position of intnum on 32bit stack
-        lodsd                                  ; read intnum into eax
-        mov  [REBASE(ib)], al                  ; set intrrupt immediate byte from our arguments 
-        mov  esi, [esi]                        ; read regs pointer in esi as source
-        mov  edi, STACK16                      ; set destination to 16bit stack
-        mov  ecx, regs16_t_size                ; set copy size to our struct size
-        mov  esp, edi                          ; save destination to as 16bit stack offset
-        rep  movsb                             ; do the actual copy (32bit stack to 16bit stack)
-        jmp  word CODE16:REBASE(p_mode16)      ; switch to 16bit selector (16bit protected mode)
-    p_mode16: use16
-        mov  ax, DATA16                        ; get our 16bit data selector
-        mov  ds, ax                            ; set ds to 16bit selector
-        mov  es, ax                            ; set es to 16bit selector
-        mov  fs, ax                            ; set fs to 16bit selector
-        mov  gs, ax                            ; set gs to 16bit selector
-        mov  ss, ax                            ; set ss to 16bit selector
-        mov  eax, cr0                          ; get cr0 so we can modify it
-        and  al,  ~0x01                        ; mask off PE bit to turn off protected mode
-        mov  cr0, eax                          ; set cr0 to result
-        jmp  word 0x0000:REBASE(r_mode16)      ; finally set cs:ip to enter real-mode
-    r_mode16: use16
-        xor  ax, ax                            ; set ax to zero
-        mov  ds, ax                            ; set ds so we can access idt16
-        mov  ss, ax                            ; set ss so they the stack is valid
-        lidt [REBASE(idt16_ptr)]               ; load 16bit idt
-        mov  bx, 0x0870                        ; master 8 and slave 112
-        call resetpic                          ; set pic's the to real-mode settings
-        popa                                   ; load general purpose registers from 16bit stack
-        pop  gs                                ; load gs from 16bit stack
-        pop  fs                                ; load fs from 16bit stack
-        pop  es                                ; load es from 16bit stack
-        pop  ds                                ; load ds from 16bit stack
-        sti                                    ; enable interrupts
-        db 0xCD                                ; opcode of INT instruction with immediate byte
-    ib: db 0x00
-        cli                                    ; disable interrupts
-        xor  sp, sp                            ; zero sp so we can reuse it
-        mov  ss, sp                            ; set ss so the stack is valid
-        mov  sp, INT32_BASE                    ; set correct stack position so we can copy back
-        pushf                                  ; save eflags to 16bit stack
-        push ds                                ; save ds to 16bit stack
-        push es                                ; save es to 16bit stack
-        push fs                                ; save fs to 16bit stack
-        push gs                                ; save gs to 16bit stack
-        pusha                                  ; save general purpose registers to 16bit stack
-        mov  bx, 0x2028                        ; master 32 and slave 40
-        call resetpic                          ; restore the pic's to protected mode settings
-        mov  eax, cr0                          ; get cr0 so we can modify it
-        inc  eax                               ; set PE bit to turn on protected mode
-        mov  cr0, eax                          ; set cr0 to result
-        jmp  dword CODE32:REBASE(p_mode32)     ; switch to 32bit selector (32bit protected mode)
-    p_mode32: use32
-        mov  ax, DATA32                        ; get our 32bit data selector
-        mov  ds, ax                            ; reset ds selector
-        mov  es, ax                            ; reset es selector
-        mov  fs, ax                            ; reset fs selector
-        mov  gs, ax                            ; reset gs selector
-        mov  ss, ax                            ; reset ss selector
-        lgdt [REBASE(gdt32_ptr)]               ; restore 32bit gdt pointer
-        lidt [REBASE(idt32_ptr)]               ; restore 32bit idt pointer
-        mov  esp, [REBASE(stack32_ptr)]        ; restore 32bit stack pointer
-        mov  esi, STACK16                      ; set copy source to 16bit stack
-        lea  edi, [esp+0x28]                   ; set position of regs pointer on 32bit stack
-        mov  edi, [edi]                        ; use regs pointer in edi as copy destination
-        mov  ecx, regs16_t_size                ; set copy size to our struct size
-        cld                                    ; clear direction flag (so we copy forward)
-        rep  movsb                             ; do the actual copy (16bit stack to 32bit stack)
-        popa                                   ; restore registers
-        ;sti                                    ; enable interrupts
-        ret                                    ; return to caller
-         
-    resetpic:                                  ; reset's 8259 master and slave pic vectors
-        push ax                                ; expects bh = master vector, bl = slave vector
-        mov  al, 0x11                          ; 0x11 = ICW1_INIT | ICW1_ICW4
-        out  0x20, al                          ; send ICW1 to master pic
-        out  0xA0, al                          ; send ICW1 to slave pic
-        mov  al, bh                            ; get master pic vector param
-        out  0x21, al                          ; send ICW2 aka vector to master pic
-        mov  al, bl                            ; get slave pic vector param
-        out  0xA1, al                          ; send ICW2 aka vector to slave pic
-        mov  al, 0x04                          ; 0x04 = set slave to IRQ2
-        out  0x21, al                          ; send ICW3 to master pic
-        shr  al, 1                             ; 0x02 = tell slave its on IRQ2 of master
-        out  0xA1, al                          ; send ICW3 to slave pic
-        shr  al, 1                             ; 0x01 = ICW4_8086
-        out  0x21, al                          ; send ICW4 to master pic
-        out  0xA1, al                          ; send ICW4 to slave pic
-        pop  ax                                ; restore ax from stack
-        ret                                    ; return to caller
-         
-    stack32_ptr:                               ; address in 32bit stack after we
-        dd 0x00000000                          ;   save all general purpose registers
-         
-    idt32_ptr:                                 ; IDT table pointer for 32bit access
-        dw 0x0000                              ; table limit (size)
-        dd 0x00000000                          ; table base address
-         
-    gdt32_ptr:                                 ; GDT table pointer for 32bit access
-        dw 0x0000                              ; table limit (size)
-        dd 0x00000000                          ; table base address
-         
-    idt16_ptr:                                 ; IDT table pointer for 16bit access
-        dw 0x03FF                              ; table limit (size)
-        dd 0x00000000                          ; table base address
-         
-    gdt16_base:                                ; GDT descriptor table
-        .null:                                 ; 0x00 - null segment descriptor
-            dd 0x00000000                      ; must be left zero'd
-            dd 0x00000000                      ; must be left zero'd
-             
-        .code32:                               ; 0x01 - 32bit code segment descriptor 0xFFFFFFFF
-            dw 0xFFFF                          ; limit  0:15
-            dw 0x0000                          ; base   0:15
-            db 0x00                            ; base  16:23
-            db 0x9A                            ; present, iopl/0, code, execute/read
-            db 0xCF                            ; 4Kbyte granularity, 32bit selector; limit 16:19
-            db 0x00                            ; base  24:31
-             
-        .data32:                               ; 0x02 - 32bit data segment descriptor 0xFFFFFFFF
-            dw 0xFFFF                          ; limit  0:15
-            dw 0x0000                          ; base   0:15
-            db 0x00                            ; base  16:23
-            db 0x92                            ; present, iopl/0, data, read/write
-            db 0xCF                            ; 4Kbyte granularity, 32bit selector; limit 16:19
-            db 0x00                            ; base  24:31
-             
-        .code16:                               ; 0x03 - 16bit code segment descriptor 0x000FFFFF
-            dw 0xFFFF                          ; limit  0:15
-            dw 0x0000                          ; base   0:15
-            db 0x00                            ; base  16:23
-            db 0x9A                            ; present, iopl/0, code, execute/read
-            db 0x0F                            ; 1Byte granularity, 16bit selector; limit 16:19
-            db 0x00                            ; base  24:31
-             
-        .data16:                               ; 0x04 - 16bit data segment descriptor 0x000FFFFF
-            dw 0xFFFF                          ; limit  0:15
-            dw 0x0000                          ; base   0:15
-            db 0x00                            ; base  16:23
-            db 0x92                            ; present, iopl/0, data, read/write
-            db 0x0F                            ; 1Byte granularity, 16bit selector; limit 16:19
-            db 0x00                            ; base  24:31
-             
-    gdt16_ptr:                                 ; GDT table pointer for 16bit access
-        dw gdt16_ptr - gdt16_base - 1          ; table limit (size)
-        dd gdt16_base                          ; table base address
-         
-    int32_end:                                 ; end marker (so we can copy the code)
+[BITS 32]
+__LiBOS_BiosCall:
+	mov  eax, DWORD[bios_call_tag]
+	cmp  eax, 0
+	je   invalid_tag
+	cmp  eax, 1
+	je   __LiBOS_BiosCall_without_paging
+	jmp  __LiBOS_BiosCall_with_paging
+invalid_tag:
+	ret
+
+__LiBOS_BiosCall_without_paging:
+    cli
+    pusha ; once in [BITS 32], it pushes 32 bytes
+    
+; copy the actual code at physical address 0x9000 -+-+-+-+-++-+
+    mov      esi, @actual_code_at_0x9000 
+    mov      edi, 0x9000
+    mov      ecx, (@actual_code_end - @actual_code_at_0x9000)
+    cld      
+    rep      movsb
+    jmp      0x9000
+; now bios call code resides at physical address 0x9000 -+-++-+
+        
+@actual_code_at_0x9000:
+    mov     DWORD [REBASE(stack32_ptr)], esp 
+    a32     sidt [REBASE(idt32_ptr)]
+    a32     sgdt [REBASE(gdt32_ptr)]       
+    a32     lgdt [REBASE(gdt16_ptr)]
+    a32     lidt [REBASE(idt16_ptr)]
+    mov     eax, DWORD[esp + 0x24] 
+    mov     BYTE [REBASE(int_no)], al
+    mov     esi, DWORD[esp + 0x28]
+    mov     edi, STACK16
+    mov     ecx, 0x1A
+    mov     esp, edi               ; from now on esp is STACK16 
+    rep     movsb
+    jmp     word 0x18:REBASE(p_mode16)
+    
+p_mode16:
+[BITS 16]
+    mov     ax, 0x20
+    mov     ds, ax
+    mov     es, ax
+    mov     fs, ax                        
+    mov     gs, ax                        
+    mov     ss, ax                        
+    mov     eax, cr0                      
+    and     al,  ~0x01                    
+    mov     cr0, eax                      
+    jmp     word 0x0000:REBASE(r_mode16)  
+    
+r_mode16:  
+[BITS 16]     
+    xor     ax, ax                        
+    mov     ds, ax    
+    mov     gs, ax  
+    mov     fs, ax  
+    mov     es, ax  
+    mov     ss, ax;  
+    lidt    [REBASE(idt16_ptr)]
+    popa                                   ; load general purpose registers from 16bit stack
+    pop     gs                             ; load gs from 16bit stack
+    pop     fs                             ; load fs from 16bit stack
+    pop     es                             ; load es from 16bit stack
+    pop     ds
+    sti
+    db 0xCD
+int_no:                         
+    db 0x00
+
+; after interrupt we need to, without destroying, save cpu state again on STACK16 for restoring 
+    cli
+    xor     sp, sp
+    mov     ss, sp
+    mov     sp, 0x9000
+    pushf ; once in [BITS 16], it pushes 2 bytes                              
+    push    ds                            
+    push    es                            
+    push    fs                            
+    push    gs                            
+    pusha ; once in [BITS 16], it pushes 16 bytes
+; now we have all cpu state at hand on STACK16 space 
+    
+    mov     eax, cr0                      
+    or      eax, 0x01                           
+    mov     cr0, eax 
+    jmp     0x08:REBASE(.LiBOS_GDT_IDT)
+
+.LiBOS_GDT_IDT:
+[BITS 32]
+    mov     ax, 0x10
+    mov     ds, ax
+    mov     es, ax
+    mov     fs, ax
+    mov     gs, ax
+    mov     ss, ax
+    lgdt    [REBASE(gdt32_ptr)]
+    lidt    [REBASE(idt32_ptr)]
+    mov     esp, DWORD[REBASE(stack32_ptr)]
+; time to restore STACK16 to our actual stack 
+    mov     esi, STACK16                
+    mov     edi, DWORD[esp + 0x28] 
+    mov     ecx, 0x1A            
+    cld                                
+    rep     movsb  
+
+; now stack cleaning 
+    popa
+    ret
+;-------------------------------------------------------
+    stack32_ptr:                 
+        dd 0x00000000                
+    idt32_ptr:                       
+        dw 0x0000                    
+        dd 0x00000000                
+    gdt32_ptr:                       
+        dw 0x0000                    
+        dd 0x00000000                
+    idt16_ptr:                       
+        dw 0x03FF                    
+        dd 0x00000000                
+    gdt16_base:                      
+        .null:                       
+            dd 0x00000000            
+            dd 0x00000000            
+        .code32:                     
+            dw 0xFFFF                
+            dw 0x0000                
+            db 0x00                  
+            db 0x9A                  
+            db 0xCF                  
+            db 0x00                  
+        .data32:                     
+            dw 0xFFFF                
+            dw 0x0000                
+            db 0x00                  
+            db 0x92                  
+            db 0xCF                  
+            db 0x00                  
+        .code16:                     
+            dw 0xFFFF                
+            dw 0x0000                
+            db 0x00                  
+            db 0x9A                  
+            db 0x0F                  
+            db 0x00                  
+        .data16:                     
+            dw 0xFFFF                
+            dw 0x0000                
+            db 0x00                  
+            db 0x92                  
+            db 0x0F                  
+            db 0x00                  
+    gdt16_ptr:                       
+        dw gdt16_ptr - gdt16_base - 1
+        dd gdt16_base           
+
+@actual_code_end:
+
+;; -+-+-+-+-+-+-+-+-+-+-+-+-+-+--+-+-+-+-+-+-+-+ void __LiBOS_BiosCall_with_paging(UINT_32 int_no, REGS* r);
+
+__LiBOS_BiosCall_with_paging:
+    cli
+    pusha
+    mov      esi, @actual_code_at_0x9000_with_paging 
+    mov      edi, 0x9000
+    mov      ecx, (@actual_code_end_with_paging - @actual_code_at_0x9000_with_paging)
+    cld      
+    rep      movsb
+    jmp      0x9000        
+@actual_code_at_0x9000_with_paging:
+    mov     DWORD [REBASE_with_paging(stack32_ptr_with_paging)], esp 
+    a32     sidt  [REBASE_with_paging(idt32_ptr_with_paging)]
+    a32     sgdt  [REBASE_with_paging(gdt32_ptr_with_paging)]       
+    a32     lgdt  [REBASE_with_paging(gdt16_ptr_with_paging)]
+    a32     lidt  [REBASE_with_paging(idt16_ptr_with_paging)]
+    mov     eax,  DWORD[esp + 0x24] 
+    mov     BYTE  [REBASE_with_paging(int_no_with_paging)], al
+    mov     esi,  DWORD[esp + 0x28]
+    mov     edi,  STACK16_with_paging
+    mov     ecx,  0x1A
+    mov     esp,  edi
+    rep     movsb
+    jmp     word  0x18:REBASE_with_paging(p_mode16_with_paging)
+p_mode16_with_paging:
+[BITS 16]
+    mov     ax, 0x20
+    mov     ds, ax
+    mov     es, ax
+    mov     fs, ax                        
+    mov     gs, ax                        
+    mov     ss, ax                        
+    mov     eax, cr0                      
+    and     eax, ~0x80000001
+    mov     cr0, eax                      
+    jmp     word 0x0000:REBASE_with_paging(r_mode16_with_paging)  
+r_mode16_with_paging:  
+[BITS 16]     
+    xor     ax, ax                        
+    mov     ds, ax    
+    mov     gs, ax  
+    mov     fs, ax  
+    mov     es, ax  
+    mov     ss, ax;  
+    lidt    [REBASE_with_paging(idt16_ptr_with_paging)]
+    popa
+    pop     gs
+    pop     fs
+    pop     es
+    pop     ds
+    sti
+    db 0xCD
+int_no_with_paging:                         
+    db 0x00
+    cli
+    xor     sp, sp
+    mov     ss, sp
+    mov     sp, 0x9000
+    pushf                        
+    push    ds                            
+    push    es                            
+    push    fs                            
+    push    gs                            
+    pusha    
+    mov     eax, cr0                      
+    or      eax, 0x80000001
+    mov     cr0, eax 
+    jmp     0x08:REBASE_with_paging(.LiBOS_GDT_IDT_with_paging)
+
+.LiBOS_GDT_IDT_with_paging:
+[BITS 32]
+    mov     ax, 0x10
+    mov     ds, ax
+    mov     es, ax
+    mov     fs, ax
+    mov     gs, ax
+    mov     ss, ax
+    lgdt    [REBASE_with_paging(gdt32_ptr_with_paging)]
+    lidt    [REBASE_with_paging(idt32_ptr_with_paging)]
+    mov     esp, DWORD[REBASE_with_paging(stack32_ptr_with_paging)] 
+    mov     esi, STACK16_with_paging                
+    mov     edi, DWORD[esp + 0x28] 
+    mov     ecx, 0x1A            
+    cld                                
+    rep     movsb
+    popa
+    ret
+;------------------------------------------------------------
+    stack32_ptr_with_paging:                 
+        dd 0x00000000                
+    idt32_ptr_with_paging:                       
+        dw 0x0000                    
+        dd 0x00000000                
+    gdt32_ptr_with_paging:                       
+        dw 0x0000                    
+        dd 0x00000000                
+    idt16_ptr_with_paging:                       
+        dw 0x03FF                    
+        dd 0x00000000                
+    gdt16_base_with_paging:                      
+        .null_with_paging:                       
+            dd 0x00000000            
+            dd 0x00000000            
+        .code32_with_paging:                     
+            dw 0xFFFF                
+            dw 0x0000                
+            db 0x00                  
+            db 0x9A                  
+            db 0xCF                  
+            db 0x00                  
+        .data32_with_paging:                     
+            dw 0xFFFF                
+            dw 0x0000                
+            db 0x00                  
+            db 0x92                  
+            db 0xCF                  
+            db 0x00                  
+        .code16_with_paging:                     
+            dw 0xFFFF                
+            dw 0x0000                
+            db 0x00                  
+            db 0x9A                  
+            db 0x0F                  
+            db 0x00                  
+        .data16_with_paging:                     
+            dw 0xFFFF                
+            dw 0x0000                
+            db 0x00                  
+            db 0x92                  
+            db 0x0F                  
+            db 0x00                  
+    gdt16_ptr_with_paging:                       
+        dw gdt16_ptr_with_paging - gdt16_base_with_paging - 1
+        dd gdt16_base_with_paging           
+
+@actual_code_end_with_paging:
+
