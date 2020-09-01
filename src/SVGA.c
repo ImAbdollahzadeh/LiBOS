@@ -1,15 +1,22 @@
 #include "../include/SVGA.h"
 #include "../include/PRINT.h"
+#include "../include/PAGING.h"
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ GLOBAL AND STATIC VARIABLES
 
-static SVGA* global_svga = 0;
-
+static SVGA*    global_svga   = 0;
+static BOOL     paging        = FALSE;
+       UINT_32  bios_call_tag = LIBOS_BIOS_CALL_INVALID;
+ 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 //
 static BOOL BiosCall(UINT_8 call_number, UINT_32 query_mode, SVGA* svga)
 {
+	/* check if we had paging or not */
+	paging = paging_is_activate();
+	bios_call_tag = paging ? LIBOS_BIOS_CALL_PAGING_ACTIVE : LIBOS_BIOS_CALL_PAGING_INACTIVE;
+	
 	SVGA_REGS_16_BIT r;
 	
 	UINT_16 mode = 0x0118; // 0x0118: 24 bit <8:8:8>   - (1024 x 768)
@@ -34,12 +41,15 @@ static BOOL BiosCall(UINT_8 call_number, UINT_32 query_mode, SVGA* svga)
 			r.ax = 0x4F00;
 			r.es = SEG(vbe_info_ptr);
 			r.di = OFF(vbe_info_ptr);
+			
 			__LiBOS_BiosCall(call_number, &r);
+			
 			if (r.ax != 0x004F)
 			{
 				printk("getting svga vbe info failed from bios call\n");
 				return FALSE;
 			}
+			
 			svga->vbe_info                       = *vbe_info;
 			svga->capabilities                   = vbe_info->capabilities;
 			svga->pointer_to_list_of_video_modes = vbe_info->video_modes;
@@ -54,24 +64,27 @@ static BOOL BiosCall(UINT_8 call_number, UINT_32 query_mode, SVGA* svga)
 			r.cx = 0x0118;
 			r.es = SEG(vbe_mode_info_ptr);
 			r.di = OFF(vbe_mode_info_ptr);
+			
 			__LiBOS_BiosCall(call_number, &r);
 			if (r.ax != 0x004F)
 			{
 				printk("getting svga vbe mode info failed from bios call\n");
 				return FALSE;
 			}
+			
 			svga->vbe_mode_info  = *vbe_mode_info;
 			svga->bytes_per_line = vbe_mode_info->pitch;
 			svga->width          = vbe_mode_info->width;
 			svga->height         = vbe_mode_info->height;
 			svga->bits_per_pixel = vbe_mode_info->bpp;
 			svga->LFB            = (UINT_8*)((void*)vbe_mode_info->framebuffer);
-			
+
 			return TRUE;
 			
 		case LIBOS_SET_MODE:
 			r.ax = 0x4F02;
 			r.bx = mode;
+			
 			__LiBOS_BiosCall(call_number, &r);
 			if (r.ax != 0x004F)
 			{
@@ -102,7 +115,6 @@ UINT_32 RegisterSVGA(SVGA* svga)
 	}
 	else
 		svga_report_vbe_info(svga);
-	
 	status = BiosCall(0x10, LIBOS_GET_VBE_MODE_INFO, svga);
 	if(!status)
 	{
@@ -120,7 +132,6 @@ UINT_32 RegisterSVGA(SVGA* svga)
 	}
 	
 	global_svga = svga;
-	
 	return 1;
 }
 

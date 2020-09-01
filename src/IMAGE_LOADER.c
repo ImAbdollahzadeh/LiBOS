@@ -4,6 +4,37 @@
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
+extern void _LiBOS_text_section_size;
+extern void _LiBOS_data_section_size;
+extern void _LiBOS_bss_section_size;
+extern void _LiBOS_text_section_begin;
+extern void _LiBOS_text_section_end;
+extern void _LiBOS_data_section_begin;
+extern void _LiBOS_data_section_end;
+extern void _LiBOS_bss_section_begin;
+extern void _LiBOS_bss_section_end;
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+static void __LiBOS_report_binary_image_sections(void)
+{
+	UINT_32* text_sz = (UINT_32*)(&_LiBOS_text_section_size);
+	UINT_32* data_sz = (UINT_32*)(&_LiBOS_data_section_size);
+	UINT_32* bss_sz  = (UINT_32*)(&_LiBOS_bss_section_size);
+	UINT_32* text_bg = (UINT_32*)(&_LiBOS_text_section_begin);
+	UINT_32* text_en = (UINT_32*)(&_LiBOS_text_section_end);
+	UINT_32* data_bg = (UINT_32*)(&_LiBOS_data_section_begin);
+	UINT_32* data_en = (UINT_32*)(&_LiBOS_data_section_end);
+	UINT_32* bss_bg  = (UINT_32*)(&_LiBOS_bss_section_begin);
+	UINT_32* bss_en  = (UINT_32*)(&_LiBOS_bss_section_end);
+	
+	printk("text begin=^, text end=^, text size=%\n", (UINT_32)text_bg, (UINT_32)text_en, (UINT_32)text_sz);
+	printk("data begin=^, data end=^, data size=%\n", (UINT_32)data_bg, (UINT_32)data_en, (UINT_32)data_sz);
+	printk("bss  begin=^, bss  end=^, bss  size=%\n", (UINT_32)bss_bg,  (UINT_32)bss_en,  (UINT_32)bss_sz);
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
 void load_ext_loader(char* path)
 {
 	/*
