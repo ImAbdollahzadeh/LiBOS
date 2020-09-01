@@ -4,8 +4,8 @@ OUTPUT_ARCH(i386:i386)
 
 MEMORY
 {
-	rom (rx)        : ORIGIN = 0,          LENGTH = 512K
-	ram (!rx)       : ORIGIN = 0x00100000, LENGTH = 13M
+	rom  (rx)  : ORIGIN = 0,          LENGTH = 512K
+	ram  (!rx) : ORIGIN = 0x00100000, LENGTH = 13M
 }
 
 SECTIONS
