@@ -100,10 +100,19 @@ typedef enum _LIBOS_VBE {
 	LIBOS_SET_MODE          = 0xC504
 } LIBOS_VBE;
 
+typedef enum _BIOS_CALL_PAGING {
+	LIBOS_BIOS_CALL_INVALID         = 0x0,
+	LIBOS_BIOS_CALL_PAGING_INACTIVE = 0x1,
+	LIBOS_BIOS_CALL_PAGING_ACTIVE   = 0x2
+} BIOS_CALL_PAGING;
+
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 // main bios call: return to RealMode and gets back to ProtectedMode again
 extern void    __LiBOS_BiosCall          (UINT_8 call_number, SVGA_REGS_16_BIT* register_set);
-
+extern void    __LiBOS_BiosCall_pg       (UINT_8 call_number, SVGA_REGS_16_BIT* register_set);
+extern void    lbcall                    (UINT_32 call_number, SVGA_REGS_16_BIT* register_set);
+extern void    set_paging_tag            (void);
+extern void    clear_paging_tag          (void);
        UINT_32 RegisterSVGA              (SVGA* svga);
        SVGA*   get_svga_instance         (void);
        void    svga_report_vbe_info      (SVGA* svga);

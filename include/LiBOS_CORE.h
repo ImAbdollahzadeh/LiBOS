@@ -1,6 +1,12 @@
 #ifndef LiBOS_CORE__H__
 #define LiBOS_CORE__H__
 
+// ...
+
+#define KILO_BYTE(__X__) ((__X__)*1024)
+#define MEGA_BYTE(__X__) ((__X__)*1024*1024)
+#define GIGA_BYTE(__X__) ((__X__)*1024*1024*1024)
+
 // core LiBOS types
 typedef char               INT_8;
 typedef short              INT_16;
