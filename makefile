@@ -2,7 +2,7 @@ GCCPARAMS  = -m32 -Iinclude -nostdlib -fno-builtin -fno-exceptions -fno-leading-
 LDPARAMS   = -melf_i386
 NASMPARAMS = -f elf
 
-objects =                                 \
+objects =	                              \
 		obj/LiBOS_LOADER.o                \
 		obj/PRINT.o                       \
 		obj/GDT.o                         \
@@ -18,7 +18,7 @@ objects =                                 \
 		obj/ISRs_IRQs.o                   \
 		obj/MULTI_PROCESSOR.o             \
 		obj/IMAGE_LOADER.o                \
-	    obj/I_ASM.o                       \
+		obj/I_ASM.o                       \
 		obj/PMODE_BIOS_CALL.o             \
 		obj/_ASM_VIDEO_PLAYER.o           \
 		obj/_ASM_WINDOW.o                 \
