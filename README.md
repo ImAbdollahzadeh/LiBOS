@@ -14,6 +14,8 @@ The goal was primarily to support usb HIDs (mouse and keyboard), but finally I f
 It has always been and still is my primarily goal to learn and start deep thinking of the OS working principles. 
 I would love to implement fast, assembly-optimized graphic applications (from kernel, driver, and graphic adapter point of view). No doubt the best resource is "zen of assembly" and "zen of graphic" by M. Abrash
 ## Multi processor implementation for parallel multithreading
+The legacy PIC was disabled and APIC, instead, enabled to allow waking up of all logical CPUs.
+The concept of paging, threads, and processes were implemented to allow the kernel's scheduler to distribute threads accreoss various logical CPUs.
 ## Contact me:
 iman_ab2013[at]yahoo[DoT]com<br/>Basically I'm always available
 ## Wonderful open and close resources:
