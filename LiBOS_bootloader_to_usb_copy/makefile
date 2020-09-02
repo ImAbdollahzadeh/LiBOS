@@ -4,6 +4,7 @@
 
 GCCPARAMS  = -m32 -Iinclude -nostdlib -fno-builtin -fno-exceptions -fno-leading-underscore -Wno-write-strings -fstrength-reduce -nostdinc -ffreestanding -mno-red-zone -nostartfiles -nodefaultlibs
 
+.PHONY: install.
 install.:
 	@#==========>  FIRST CHECK IF THE USB HAS BEEN MOUNTED BEFORE, IF SO UNMOUNT IT OTHERWISE DO NOTHING <===========   
 	@(mount | grep $(usb_device) > /dev/null) && (sudo umount $(usb_device)) || echo "" > /dev/null
