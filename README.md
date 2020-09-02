@@ -7,7 +7,7 @@ LiBOS: ***Li***la and ***B***ob ***OS***
 # Aims:
 ## learn how an OS services by touching everything from scratch
 It is a 32-bit protected mode OS enabling BIOS calls by switching into real mode and back again to protected mode
-## implementation of USB 3.0 support via xHCI controller
+## Implementation of USB 3.0 support via xHCI controller
 The goal was primarily to support usb HIDs (mouse and keyboard), but finally I fell in love with the whole xHCI implementation.
  Thanks to Ben Lunt
 ## SVGA double buffering implementation for later implementation of custom MoviePlayer based on it
