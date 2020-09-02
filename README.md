@@ -1,5 +1,5 @@
 # LiBOS
-A 32-bit operating system implemented fully in assembly and C languages.<br/>
+A 32-bit operating system implemented fully in Assembly and C languages.<br/>
 Support for multi-processor (logical CPUs) implementation.<br/>
 It is gifted to my beloved gold fishes, Lila and Bob, who made the name of the OS to be originated from.<br/>
 LiBOS: ***Li***la and ***B***ob ***OS***
