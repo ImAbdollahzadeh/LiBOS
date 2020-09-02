@@ -16,9 +16,6 @@ I would love to implement fast, assembly-optimized graphic applications (from ke
 ## Multi processor implementation for parallel multithreading
 The legacy PIC was disabled and APIC, instead, enabled to allow waking up of all logical CPUs.
 The concept of paging, threads, and processes were implemented to allow the kernel's scheduler to distribute threads accreoss various logical CPUs.
-<div class="text-orange-light mb-2">
-  .text-orange-light on white
-</div>
 ## Contact me:
 iman_ab2013[at]yahoo[DoT]com<br/>Basically I'm always available
 ## Wonderful open and close resources:
