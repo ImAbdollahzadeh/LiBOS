@@ -18,7 +18,7 @@ The legacy PIC was disabled and APIC, instead, enabled to allow waking up of all
 The concept of paging, threads, and processes were implemented to allow the kernel's scheduler to distribute threads accreoss various logical CPUs.
 ## Contact me:
 ```diff
--e-mail: iman_ab2013[at]yahoo[DoT]com
+- email: iman_ab2013[at]yahoo[DoT]com
 ```
 <br/>Basically I'm always available
 ## Wonderful open and close resources:
