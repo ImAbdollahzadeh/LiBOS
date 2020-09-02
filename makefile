@@ -56,6 +56,7 @@ run_qemu:
 	#qemu-system-i386 -device nec-usb-xhci,p2=8,p3=8,id=xhci -device usb-tablet,bus=xhci.0 -kernel ./bin/LiBOS.bin 
 	qemu-system-i386 -m 3000M -kernel ./bin/LiBOS.bin 
 
+.PHONY: run
 run: 
 	@make LiBOS_LOADER.o
 	@make MULTI_PROCESSOR.o
