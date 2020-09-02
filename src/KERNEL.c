@@ -41,7 +41,7 @@ void KERNEL_MAIN_ENTRY(void)
 	status = RegisterGDT(&gdt);
 	if(!status)
 	{
-		panic( "GDT registration failed\n" );
+		panic( "kernel GDT registration failed\n" );
 		return;
 	}
 	//printk("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
@@ -49,7 +49,7 @@ void KERNEL_MAIN_ENTRY(void)
 	status = RegisterIDT();
 	if(!status)
 	{
-		panic( "IDT registration failed\n" );
+		panic( "kernel IDT registration failed\n" );
 		return;
 	}
 	//printk("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
@@ -58,7 +58,7 @@ void KERNEL_MAIN_ENTRY(void)
 	status = RegisterTimer(&timer, OS_DEFAULT_TIMER_TICK);
 	if(!status)
 	{
-		panic( "TIMER registration failed\n" );
+		panic( "kernel timer registration failed\n" );
 		return;
 	}
 	//printk("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
@@ -67,7 +67,7 @@ void KERNEL_MAIN_ENTRY(void)
 	status = RegisterKeyboard(&keyboard);
 	if(!status)
 	{
-		panic( "KEYBOARD registration failed\n" );
+		panic( "kernel keyboard registration failed\n" );
 		return;
 	}
 	
@@ -86,9 +86,18 @@ void KERNEL_MAIN_ENTRY(void)
 	/* start paging with the entire 4GB address space as identity mapping */
 	if( !start_paging() )
 	{
-		panic( "paging initiation failed\n" );
+		panic( "kernel paging initiation failed\n" );
 		return;
 	}
+	
+	if( !initialize_process() )
+	{
+		panic( "kernel process initiation failed\n" );
+		return;
+	}
+	
+	// ~> create_process( PHYSICAL_ADDRESS(&test) );
+	//printk("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
 	
 	//.RSDP_Descriptor_2_0 rsdp;
 	//.if( query_rsdp(&rsdp) )
@@ -99,75 +108,75 @@ void KERNEL_MAIN_ENTRY(void)
 	//.		printk("FADT:^\n", fadt);
 	//.}
 
-	PCI  pci;
-	SATA sata;
-	EHCI ehci;
-	XHCI x;
-	status = RegisterPCI(&pci, &sata, &ehci, &x);
-	if(!status)
-	{
-		panic( "PCI registration failed\n" );
-		return;
-	}
-	//.FILESYSTEM filesystem;
-	//.RegisterFilesystem(&filesystem, &sata);
-	//.if(!status)
-	//.{
-	//.	panic( "FILESYSTEM registration failed\n" );
-	//.	return;
-	//.}
-	
-	//----ect_execution("ECT/__IMG.ect");
-	
-	SVGA svga;
-	status = RegisterSVGA(&svga);
-	if(!status)
-	{
-		panic( "SVGA registration failed\n" );
-		return;
-	}
-	
-	/* go to graphical desktop mode */
-	clear_screen();
-	UINT_8* fb = svga.LFB;
-	
-	init_desktop();
-	
-	WINDOW wnd;
-	POINT wnd_orig = {50, 50};
-	register_window(&wnd, "first_window", 400, 200, &wnd_orig);    
-	const INT_8* test  = "ImanAbdollahzadeh";
-	const INT_8* test2 = "abcdefghijklmnopqrstuvwxyz";
-	draw_string(test,  &wnd, 20, 180, LiBOS_WINDOW_BODY_COLOR);
-	draw_string(test2, &wnd, 20, 160, LiBOS_WINDOW_BODY_COLOR);
-	
-	WINDOW wnd2;
-	POINT wnd_orig2 = {80, 70};
-	register_window(&wnd2, "second_window", 200, 100, &wnd_orig2);
-	WINDOW wnd3;
-	POINT wnd_orig3 = {110, 35};
-	WINDOW_OBJECT obj;
-	obj.object_identifier = OBJECT_BUTTON;
-	register_window(&wnd3, "third_window", 200, 100, &wnd_orig3); 
-	register_object(&wnd3, &obj);
-	WINDOW wnd4;
-	POINT wnd_orig4 = {430, 240};
-	register_window(&wnd4, "fourth_window", 80, 90, &wnd_orig4);
-	
-	draw_window(&wnd , fb);
-	draw_window(&wnd2, fb);
-	draw_window(&wnd3, fb);
-	draw_window(&wnd4, fb);
-	
-	USB_MOUSE usb_mouse;
-	status = RegisterMouse(&usb_mouse);
-	if(!status)
-	{
-		panic( "USB MOUSE registration failed\n" );
-		return;
-	}
-	
-	_activate_sse();
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,PCI  pci;
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SATA sata;
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,EHCI ehci;
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,XHCI x;
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,status = RegisterPCI(&pci, &sata, &ehci, &x);
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,if(!status)
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,{
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,	panic( "PCI registration failed\n" );
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,	return;
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,}
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,//.FILESYSTEM filesystem;
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,//.RegisterFilesystem(&filesystem, &sata);
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,//.if(!status)
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,//.{
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,//.	panic( "FILESYSTEM registration failed\n" );
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,//.	return;
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,//.}
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,//----ect_execution("ECT/__IMG.ect");
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SVGA svga;
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,status = RegisterSVGA(&svga);
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,if(!status)
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,{
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,	panic( "SVGA registration failed\n" );
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,	return;
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,}
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,/* go to graphical desktop mode */
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,clear_screen();
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,UINT_8* fb = svga.LFB;
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,init_desktop();
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,WINDOW wnd;
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,POINT wnd_orig = {50, 50};
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,register_window(&wnd, "first_window", 400, 200, &wnd_orig);    
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,const INT_8* test  = "ImanAbdollahzadeh";
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,const INT_8* test2 = "abcdefghijklmnopqrstuvwxyz";
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,draw_string(test,  &wnd, 20, 180, LiBOS_WINDOW_BODY_COLOR);
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,draw_string(test2, &wnd, 20, 160, LiBOS_WINDOW_BODY_COLOR);
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,WINDOW wnd2;
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,POINT wnd_orig2 = {80, 70};
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,register_window(&wnd2, "second_window", 200, 100, &wnd_orig2);
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,WINDOW wnd3;
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,POINT wnd_orig3 = {110, 35};
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,WINDOW_OBJECT obj;
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,obj.object_identifier = OBJECT_BUTTON;
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,register_window(&wnd3, "third_window", 200, 100, &wnd_orig3); 
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,register_object(&wnd3, &obj);
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,WINDOW wnd4;
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,POINT wnd_orig4 = {430, 240};
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,register_window(&wnd4, "fourth_window", 80, 90, &wnd_orig4);
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,draw_window(&wnd , fb);
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,draw_window(&wnd2, fb);
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,draw_window(&wnd3, fb);
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,draw_window(&wnd4, fb);
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,USB_MOUSE usb_mouse;
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,status = RegisterMouse(&usb_mouse);
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,if(!status)
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,{
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,	panic( "USB MOUSE registration failed\n" );
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,	return;
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,}
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,_activate_sse();
 	
 	_STI();
 	
