@@ -20,6 +20,7 @@ The concept of paging, threads, and processes were implemented to allow the kern
 ```diff
 - email: iman_ab2013[at]yahoo[DoT]com
 ```
+or find me [here](https://forum.osdev.org/memberlist.php?mode=viewprofile&u=19122) in OSDev.rog
 <br/>Basically I'm always available
 ## Wonderful open and close resources:
 1. Zen of assembly language<br/>
