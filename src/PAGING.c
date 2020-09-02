@@ -3,28 +3,44 @@
 #include "../include/MEMORY.h"
 #include "../include/IDT.h"
 
+/*
+                     directory index                                             page table index                                                    offset into page
+ <-------------------10 bit---------------------------------> <-------------------10 bit--------------------------------> <-------------------12 bit--------------------------------------------->
+ 
+   31    30    29    28    27    26    25    24    23    22    21   20    19    18    17    16    15    14    13    12    11    10     9     8     7     6     5     4     3     2     1     0
+  ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- -----
+ |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |
+  ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- -----
+  
+ex. ((virtual_address >> 22) & 0x3FF) ~> directory index 
+ex. ((virtual_address >> 12) & 0x3FF) ~> page table index 
+ex. (virtual_address & 0xFFF)         ~> offset into page
+
+bits 12...31 of a page table entry is physical frame address of a page(4KB aligned)
+ex. (page table entry & ~0xFFF)       ~> physical frame address of a page
+
+bits 12...31 of a page directory entry is physical frame address of a page table (4KB aligned)
+ex. (page directory entry & ~0xFFF)   ~> physical frame address of a page table
+
+ */
+
+
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ GLOBAL AND STATIC VARIABLES
 
-#define PAGE_DIRECTORY_INDEX(x)     (((x) >> 22) & 0x3ff)
-#define PAGE_TABLE_INDEX(x)         (((x) >> 12) & 0x3ff)
-#define PAGE_GET_PHYSICAL_ADDRESS(x) (*x & ~0xfff)
-
-/* ------------------------------------------------ temp */
-#define MEM_BASE 0x10000000
-static UINT_32 current_frame = 0;
-/* ----------------------------------------------------- */
        UINT_32 current_pdbr                         = 0;
 static BOOL paging                                  = FALSE;
 static PAGE_DIRECTORY* libos_initial_page_directory = 0;
-UINT_32* table1 = 0, *table2 = 0, *table3 = 0;
+
+#define LiBOS_PAGE_SIZE             0x1000                
+#define PAGE_DIRECTORY_INDEX(x)     (((x) >> 22) & 0x3FF)
+#define PAGE_TABLE_INDEX(x)         (((x) >> 12) & 0x3FF)
+#define PAGE_GET_PHYSICAL_ADDRESS(x) (*x & ~0xFFF)
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 UINT_32 alloc_physical_block(void)
 {
-	//UINT_32 cur_ptr = MEM_BASE + current_frame * 0x1000;
-	//current_frame++;
-	return (UINT_32)Alloc(4096, 4096, 4096);
+	return (UINT_32)Alloc(LiBOS_PAGE_SIZE, LiBOS_PAGE_SIZE, LiBOS_PAGE_SIZE);
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -62,7 +78,7 @@ BOOL start_paging(void)
 	{
 		table = (PAGE_TABLE*)alloc_physical_block();
 		for(j = 0; j < 1024; j++)
-			table->entries[j] = (MEGA_BYTE(4*i) + j * 0x1000) | (I86_PTE_WRITABLE | I86_PTE_PRESENT);
+			table->entries[j] = (MEGA_BYTE(4*i) + j * LiBOS_PAGE_SIZE) | (I86_PTE_WRITABLE | I86_PTE_PRESENT);
 		
 		libos_initial_page_directory->entries[i] = PHYSICAL_ADDRESS(table) | (I86_PDE_WRITABLE | I86_PDE_PRESENT);
 	}
@@ -78,6 +94,46 @@ BOOL start_paging(void)
 	
 	paging = TRUE;
 	return TRUE;
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+BOOL create_page_table(PAGE_DIRECTORY* dir, UINT_32 virt, UINT_32 flags)
+{
+	UINT_32* pagedir = dir->entries;
+	if ( pagedir[virt >> 22] == 0 )
+	{
+		void* block = alloc_physical_block();
+		if (!block)
+			return FALSE; 
+		
+		pagedir[virt >> 22] = ((UINT_32) block) | flags;
+		__LiBOS_MemZero((void*)(pagedir[virt >> 22]), LiBOS_PAGE_SIZE);
+
+		/* map page table into directory */
+		map_physical_address(dir, (UINT_32) block, (UINT_32) block, flags);
+	}
+	return TRUE;
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+void map_physical_address(PAGE_DIRECTORY* dir, UINT_32 virt, UINT_32 phys, UINT_32 flags)
+{
+	UINT_32* pagedir = dir->entries;
+	if ( pagedir[virt >> 22] == 0 )
+		create_page_table (dir, virt, flags);
+	((UINT_32*) (pagedir[virt >> 22] & ~0xFFF))[virt << 10 >> 10 >> 12] = phys | flags;
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+void* get_physical_address(PAGE_DIRECTORY* dir, UINT_32 virt)
+{
+	UINT_32* pagedir = dir->entries;
+	if ( pagedir[virt >> 22] == 0 )
+		return 0;
+	return (void*)((UINT_32*)(pagedir[virt >> 22] & ~0xFFF))[virt << 10 >> 10 >> 12];
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
