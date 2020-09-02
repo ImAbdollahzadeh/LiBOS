@@ -17,7 +17,7 @@ I would love to implement fast, assembly-optimized graphic applications (from ke
 The legacy PIC was disabled and APIC, instead, enabled to allow waking up of all logical CPUs.
 The concept of paging, threads, and processes were implemented to allow the kernel's scheduler to distribute threads accreoss various logical CPUs.
 ```diff
-- text in red
+text in red
 ```
 ## Contact me:
 iman_ab2013[at]yahoo[DoT]com<br/>Basically I'm always available
