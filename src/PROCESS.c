@@ -106,7 +106,7 @@ BOOL create_process(UINT_32 function_address)
 	main_thread->stack_limit   = (void*)((UINT_32)main_thread->initial_stack + PROCESS_DEFAULT_PAGE_SIZE); // default: 4KB
 	__LiBOS_MemZero(&main_thread->frame, sizeof(TRAP_FRAME));
 	main_thread->frame.eip     = function_address;
-	main_thread->frame.flags   = 0x200;
+	main_thread->frame.flags   = INTERRUPT_ENABLE_FLAG;
 
 	/* map page into address space */
 	map_physical_address(address_space, PROCESS_BEGIN_VIRTUAL_ADDRESS, (UINT_32)memory, I86_PTE_PRESENT|I86_PTE_WRITABLE);
