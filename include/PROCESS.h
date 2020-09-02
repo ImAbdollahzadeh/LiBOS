@@ -7,12 +7,38 @@
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ CONSTANTS
 
+#define BIT(X) (1 << X)
+
 #define PROCESS_STATE_SLEEP  0
 #define PROCESS_STATE_ACTIVE 1
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ ENUMS
 
-
+typedef enum _TRAP_FRAME_FLAG_REGISTER {
+	CARRY_FLAG                         = BIT(0),
+	RESVD1_FLAG                        = BIT(1),
+	PARITY_FLAG                        = BIT(2),
+	RESVD2_FLAG                        = BIT(3),
+	ADJUST_FLAG                        = BIT(4),
+	RESVD3_FLAG                        = BIT(5),
+	ZERO_FLAG                          = BIT(6),
+	SIGN_FLAG                          = BIT(7),
+	TRAP_FLAG                          = BIT(8),
+	INTERRUPT_ENABLE_FLAG              = BIT(9),
+	DIRECTION_FLAG                     = BIT(10),
+	OVERFLOW_FLAG                      = BIT(11),
+	IO_PRIVILAGE_LEVEL1_FLAG           = BIT(12),
+	IO_PRIVILAGE_LEVEL2_FLAG           = BIT(13),
+	NESTED_TASK_FLAG                   = BIT(14),
+	RESVD4_FLAG                        = BIT(15),
+	RESUME_FLAG                        = BIT(16),
+	VIRTUAL_8086_MODE_FLAG             = BIT(17),
+	ALIGNMENT_CHECK_FLAG               = BIT(18),
+	VIRTUAL_INTERRUPT_FLAG             = BIT(19),
+	VIRTUAL_INTERRUPT_PENDING_FLAG     = BIT(20),
+	ABLE_TO_USE_CPUID_INSTRUCTION_FLAG = BIT(21),
+	/* bits 22...31 all are reserved */
+} TRAP_FRAME_FLAG_REGISTER;
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ DATA STRUCTURES
 
