@@ -57,7 +57,10 @@ extern UINT_32 get_pdbr             (void);
        void    free_physical_block  (void* ptr);
        BOOL    paging_is_activate   (void);
        BOOL    start_paging         (void);
-
+       BOOL    create_page_table    (PAGE_DIRECTORY* dir, UINT_32 virt, UINT_32 flags);
+       void    map_physical_address (PAGE_DIRECTORY* dir, UINT_32 virt, UINT_32 phys, UINT_32 flags);
+       void*   get_physical_address (PAGE_DIRECTORY* dir, UINT_32 virt);
+     
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 #endif //! PAGING__H__
