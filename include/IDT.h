@@ -43,7 +43,7 @@ extern void      set_MSR               (UINT_32 base_addr, UINT_32 phys_addr_lo,
 extern void      get_MSR               (UINT_32 base_addr, UINT_32* addr_lo, UINT_32* addr_hi);
 extern UINT_32   IDTLoad               (void);
 extern void      set_irq_0x10_to_0xff  (UINT_8 irq);
-
+extern void      query_cr2             (UINT_32* cr2);
 extern void ISR_DEFAULT();
 extern void ISR1();
 extern void ISR2();
