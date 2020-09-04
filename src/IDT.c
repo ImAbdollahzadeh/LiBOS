@@ -419,6 +419,14 @@ void FAULT_HANDLER(REGS* r)
 		printk("eip:^, cs:^, ss:^, eflags:^\n", r->eip, r->cs, r->ss, r->eflags);
 		printk("err_code:^\n", r->err_code);
 		
+		/* if page_fault, query cr2 register */
+		if(r->int_no == 14)
+		{
+			UINT_32 cr2 = 0;
+			query_cr2(&cr2);
+			printk("CR2 = ^\n", cr2);
+		}
+		
 		/* for INT 0x03 (a.k.a. DEBUG_HANDLER) we need a keyboard code to continue */
 		if (r->int_no == 0x03)
 		{

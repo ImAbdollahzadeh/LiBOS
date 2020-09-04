@@ -25,7 +25,12 @@
 #include "../include/MP.h"
 #include "../include/SSE.h"
 #include "../include/PAGING.h"
+#include "../include/PROCESS.h"
 
+void test(void)
+{
+	printk("during executing process\n");
+}
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ START OF KERNEL
 
 void KERNEL_MAIN_ENTRY(void)
@@ -96,8 +101,12 @@ void KERNEL_MAIN_ENTRY(void)
 		return;
 	}
 	
-	// ~> create_process( PHYSICAL_ADDRESS(&test) );
-	//printk("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
+	printk("address function:^\n", PHYSICAL_ADDRESS(&test));
+	
+	PROCESS* process = create_process( PHYSICAL_ADDRESS(&test) );
+	if(process)
+		execute_process(process);
+	printk("after executing process\n");
 	
 	//.RSDP_Descriptor_2_0 rsdp;
 	//.if( query_rsdp(&rsdp) )

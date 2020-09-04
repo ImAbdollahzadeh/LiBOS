@@ -53,7 +53,7 @@ BOOL initialize_process(void)
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-BOOL create_process(UINT_32 function_address)
+PROCESS* create_process(UINT_32 function_address)
 {
 	PAGE_DIRECTORY* address_space;
 	PROCESS*        process;
@@ -63,7 +63,7 @@ BOOL create_process(UINT_32 function_address)
 	if (!function_address)
 	{
 	    panic("provided process's function address is invalid\n");
-	    return FALSE;
+	    return 0;
 	}
 	
 	/* get process virtual address space */
@@ -71,21 +71,18 @@ BOOL create_process(UINT_32 function_address)
 	if (!address_space)
 	{
 	    printk("process with function address ^ failed to create a virtual address space\n", function_address);
-	    return FALSE;
+	    return 0;
 	}
 	
 	main_thread = (THREAD*)Alloc(sizeof(THREAD), 1, 1);
 	__LiBOS_MemZero(main_thread, sizeof(THREAD));
 	
-	/* rgister main_thread into process's list of threads */
-	process->thread_list[0] = *main_thread;
-		
 	/* assign one physical frame */
 	memory = alloc_physical_block();
 	
-	/* map kernel space into process address space (i.e. address 0 to 16MB) */
+	/* map kernel space into process address space (i.e. address 0 to xx MB) */
 	UINT_32 i;
-	for(i = 0; i < 4; i++)
+	for(i = 0; i < 10; i++)
 		process_memcopy(&(LiBOS_main_page_directory->entries[i]), &(address_space->entries[i]), sizeof(UINT_32));
 	
 	/* create PCB */
@@ -123,21 +120,10 @@ BOOL create_process(UINT_32 function_address)
 	main_thread->frame.esp     = (UINT_32)main_thread->initial_stack;
 	main_thread->frame.ebp     = main_thread->frame.esp;
 	
-	return TRUE;
-}
-
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-void execute_process(PROCESS* process)
-{
-
-}
-
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-void terminate_process(PROCESS* process)
-{
-
+	/* rgister main_thread into process's list of threads */
+	process->thread_list[0] = *main_thread;
+	
+	return process;
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -145,6 +131,68 @@ void terminate_process(PROCESS* process)
 THREAD* create_thread(PROCESS* process)
 {
 
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+void execute_process(PROCESS* process)
+{
+	if (process->pid == PROC_INVALID_ID)
+		return;
+	if (!process->page_directory)
+		return;
+	
+	/* get esp and eip of main thread */
+	UINT_32 entry_point   = process->thread_list[0].frame.eip;
+	UINT_32 process_stack = process->thread_list[0].frame.esp;
+	
+	/* switch to process address space */
+	_CLI();
+	set_pdbr(process->page_directory);
+	//_STI();
+	
+	/* execute process in kernel mode */
+	execute_kernel_mode_process(process_stack, entry_point);
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+void terminate_process(PROCESS* process) 
+{
+	if (process->pid == PROC_INVALID_ID)
+		return;
+
+	/* release threads */
+	UINT_8 i = 0;
+	THREAD* thread = &(process->thread_list[i]);
+
+	/* get physical address of stack */
+	void* stack_frame = get_physical_address(process->page_directory, (UINT_32)thread->initial_stack); 
+
+	/* unmap and release stack memory */
+	unmap_physical_address(process->page_directory, (UINT_32)thread->initial_stack);
+	free_physical_block(stack_frame);
+
+	/* unmap and release image memory */
+	UINT_32 page;
+	for(UINT_32 page = 0; page < 1 /* by default, we assumed no process larger than 4KB */; page++)
+	{
+		UINT_32 phys = 0;
+		UINT_32 virt = 0;
+	
+		/* get virtual address of page */
+		//--------------virt = thread->imageBase + (page * PAGE_SIZE);
+
+		/* get physical address of page */
+		phys = (UINT_32)get_physical_address(process->page_directory, virt);
+
+		/* unmap and release page */
+		unmap_physical_address(process->page_directory, virt);
+		free_physical_block((void*)phys);
+	}
+
+	/* restore kernel selectors */
+	restore_kernel_after_process_termination();
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

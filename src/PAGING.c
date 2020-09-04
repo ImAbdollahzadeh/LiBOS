@@ -137,3 +137,29 @@ void* get_physical_address(PAGE_DIRECTORY* dir, UINT_32 virt)
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+void unmap_page_table (PAGE_DIRECTORY* dir, UINT_32 virt)
+{
+	UINT_32* pagedir = dir->entries;
+	if (pagedir[virt >> 22] != 0)
+	{
+		/* get mapped frame */
+		void* frame = (void*)(pagedir[virt >> 22] & 0x7FFFF000);
+	
+		/* unmap frame */
+		free_physical_block(frame);
+		pagedir[virt >> 22] = 0;
+	}
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+void unmap_physical_address(PAGE_DIRECTORY* dir, UINT_32 virt)
+{
+	UINT_32* pagedir = dir->entries;
+	if (pagedir[virt >> 22] != 0)
+		unmap_page_table (dir, virt);
+	((UINT_32*)(pagedir[virt >> 22] & ~0xFFF))[virt << 10 >> 10 >> 12] = 0;
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
