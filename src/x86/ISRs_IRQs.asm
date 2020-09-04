@@ -13,7 +13,8 @@ section .text
 	global _execute_ect
 	global _LiBOSASM_load_ext_image
 	global execute_IRA
-	
+	global query_cr2
+
 	global IDTLoad
 	global GDTLoad
 	extern idt_pointer
@@ -1849,4 +1850,16 @@ execute_IRA:
 	pop  ebp
 	ret
 
+;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ void query_cr2(UINT_32* cr2);
 
+query_cr2:
+	push ebp 
+	mov  ebp, esp
+	mov  ecx, DWORD[ebp + 0x8] ; get pointer to the return UINT_32 as CR2
+	mov  eax, cr2
+	mov  DWORD[ecx], eax
+	mov  esp, ebp
+	pop  ebp
+	ret
+
+;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
