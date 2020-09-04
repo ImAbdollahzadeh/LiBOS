@@ -11,6 +11,7 @@
 
 #define PROCESS_STATE_SLEEP  0
 #define PROCESS_STATE_ACTIVE 1
+#define PROC_INVALID_ID     -1
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ ENUMS
 
@@ -77,11 +78,13 @@ typedef struct _PROCESS {
 } __attribute__ ((packed)) PROCESS;
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ FUNCTIONS PRORTOTYPE
-
-BOOL            initialize_process     (void);
-BOOL            create_process         (UINT_32 function_address);
-void            execute_process        (PROCESS* process);
-void            terminate_process      (PROCESS* process);
-THREAD*         create_thread          (PROCESS* process);
+extern void     execute_kernel_mode_process              (UINT_32 process_stack, UINT_32 entry_point);
+extern void     execute_user_mode_process                (UINT_32 process_stack, UINT_32 entry_point);
+extern void     restore_kernel_after_process_termination (void);
+       BOOL     initialize_process                       (void);
+       PROCESS* create_process                           (UINT_32 function_address);
+       void     execute_process                          (PROCESS* process);
+       void     terminate_process                        (PROCESS* process);
+       THREAD*  create_thread                            (PROCESS* process);
 
 #endif //! PROCESS__H__
