@@ -10,6 +10,11 @@ global get_trampoline_start
 global get_trampoline_end
 global get_mp_32_start
 global get_mp_32_end
+global set_cpu_id
+
+extern cpu_1_process_zone
+extern cpu_2_process_zone
+extern cpu_3_process_zone
 
 ;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ it will be copied at PHYSICAL_ADDRESS 0x7000 (a.k.a. [ORG 0x7000])
 
@@ -89,6 +94,33 @@ mp_32_start:
 	mov     eax, printk
 	call    eax           ; 'call printk' is relative to this assembly code (don't want it since this code will have been reloacated)
 	                      ; instead I want to call the exact physical address of printk label (therefore use it in a Reg/Mem).
+	
+	xor     eax, eax
+	mov     al, BYTE[_idd_]
+	cmp     eax, 1
+	jne     cpu_2_zone
+cpu_1_zone:
+	mov     eax, cpu_1_process_zone
+	;push    esp
+	call    eax
+	;pop     esp
+	jmp     @HLT
+cpu_2_zone:
+	cmp     eax, 2
+	jne     cpu_3_zone
+	mov     eax, cpu_2_process_zone
+	;push    esp
+	call    eax
+	;pop     esp
+	jmp     @HLT
+cpu_3_zone:
+	cmp     eax, 3
+	jne     @HLT
+	mov     eax, cpu_3_process_zone
+	;push    esp
+	call    eax
+	;pop     esp
+@HLT:
 	hlt                   ; AP CPU stays here for ever until gets intterupted or commanded to jump or call by threads
 mp_32_end:
 
@@ -136,6 +168,17 @@ get_mp_32_end:
 	pop  ebp
 	ret
 
+;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ void set_cpu_id(UINT_32 id);
+
+set_cpu_id:
+	push ebp 
+	mov  ebp, esp
+	mov  eax, DWORD [ebp + 8]
+	mov  BYTE[_idd_], al
+	mov  esp, ebp
+	pop  ebp
+	ret
+
 ;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 section .bss
@@ -146,5 +189,6 @@ section .bss
 
 section .data
 	message: db "AP CPU woke up and ready to be used", 0x0A, 0x00
+	_idd_:   db 0x00
 
 ;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
