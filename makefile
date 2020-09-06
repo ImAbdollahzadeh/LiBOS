@@ -24,6 +24,7 @@ objects =		                          \
 		obj/_ASM_WINDOW.o                 \
 		obj/_ASM_FONT.o                   \
 		obj/_ASM_SSE.o                    \
+		obj/_ASM_PROCESS.o                \
 		obj/FONT.o                        \
 		obj/VIDEO_PLAYER.o                \
 		obj/WINDOW.o                      \
@@ -54,7 +55,7 @@ copy_to_boot: ./bin/LiBOS.bin
 
 run_qemu:
 	#qemu-system-i386 -device nec-usb-xhci,p2=8,p3=8,id=xhci -device usb-tablet,bus=xhci.0 -kernel ./bin/LiBOS.bin 
-	qemu-system-i386 -m 3000M -kernel ./bin/LiBOS.bin 
+	qemu-system-i386 -m 3000M -smp 4 -kernel ./bin/LiBOS.bin 
 
 .PHONY: run
 run: 
@@ -77,6 +78,7 @@ run:
 	@make _ASM_WINDOW.o
 	@make _ASM_FONT.o
 	@make _ASM_SSE.o
+	@make _ASM_PROCESS.o
 	@make VIDEO_PLAYER.o
 	@make WINDOW.o
 	@make FONT.o
