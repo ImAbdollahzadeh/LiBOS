@@ -43,6 +43,11 @@ static UINT_32 number_of_enabled_cpus = 0;
 static LiBOS_CPUs    libos_cpus;
 static LiBOS_IOAPICs libos_ioapics;
 
+/* we assume hard-coded 3 AP CPUs */
+void (*cpu_1_running_code) (void);
+void (*cpu_2_running_code) (void);
+void (*cpu_3_running_code) (void);
+
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 void bsp_lapic_timer(REGS* r) 
@@ -58,7 +63,7 @@ static void multiprocessor_memcopy(void* src, void* trg, UINT_32 bytes)
 	UINT_32 i;
 	INT_8* ssrc = (INT_8*)src;
 	INT_8* ttrg = (INT_8*)trg;
-	for(i = 0; i< bytes; i++)
+	for(i = 0; i < bytes; i++)
 		ttrg[i] = ssrc[i];
 }
 
@@ -509,6 +514,8 @@ BOOL bsp_initialize_ap(LiBOS_LOGICAL_CPU* cpu)
 
 void start_multiprocessing(void)
 {
+	initilalize_cpu_zones();
+	
 	/* first the BSP cpu must enable its lapic */
 	UINT_8 i = 0;
 	LiBOS_LOGICAL_CPU* cpu = 0;
@@ -549,11 +556,13 @@ FOUND_BSP:
 	i   = 0;
 	cpu = 0;
 	number_of_avaialable_cpus = libos_cpus.number_of_logical_cpus;
-	while(number_of_avaialable_cpus--)
+	while(i < number_of_avaialable_cpus)
 	{
 		cpu = &libos_cpus.cpus[i];
 		if(!cpu->BSP_or_AP) // accept only AP cpus
 		{
+			set_cpu_id(i);
+			
 			if( !bsp_initialize_ap(cpu) )
 			{
 				panic("AP cpu initialization by BSP cpu failed\n");
@@ -584,3 +593,44 @@ BOOL apic_mode(void)
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+
+void __initial_LiBOS_process_zone(void)
+{ ; }
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+void initilalize_cpu_zones(void)
+{
+	cpu_1_running_code = &__initial_LiBOS_process_zone;
+	cpu_2_running_code = &__initial_LiBOS_process_zone;
+	cpu_3_running_code = &__initial_LiBOS_process_zone;
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+void cpu_1_process_zone(void)
+{
+	while(1)
+		cpu_1_running_code();
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+void cpu_2_process_zone(void)
+{
+	while(1)
+		cpu_2_running_code();
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+void cpu_3_process_zone(void)
+{
+	while(1)
+		cpu_3_running_code();
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+

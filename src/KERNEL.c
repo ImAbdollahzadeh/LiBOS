@@ -29,7 +29,8 @@
 
 void test(void)
 {
-	printk("during executing process\n");
+	UINT_32 tmp = 652;
+	printk("during executing process with number %\n", tmp);
 }
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ START OF KERNEL
 
@@ -76,37 +77,37 @@ void KERNEL_MAIN_ENTRY(void)
 		return;
 	}
 	
-	//MP_FLOATING_POINTER mpfp;
-	//if( query_multiprocessing(&mpfp) )
-	//{
-	//	__LiBOS_ChrDump (mpfp.signature, 4);
-	//	printk("MP_features_1=^\n", mpfp.mp_features_1);
-	//	printk("MP_config_pointer=^\n", mpfp.mp_config_pointer);
-	//	MP_configuration_table(&mpfp);
-	//	query_libos_cpus();
-	//	query_libos_ioapics();
-	//	start_multiprocessing();
-	//}
+	MP_FLOATING_POINTER mpfp;
+	if( query_multiprocessing(&mpfp) )
+	{
+		__LiBOS_ChrDump (mpfp.signature, 4);
+		printk("MP_features_1=^\n", mpfp.mp_features_1);
+		printk("MP_config_pointer=^\n", mpfp.mp_config_pointer);
+		MP_configuration_table(&mpfp);
+		query_libos_cpus();
+		query_libos_ioapics();
+		start_multiprocessing();
+	}
 
-	/* start paging with the entire 4GB address space as identity mapping */
-	if( !start_paging() )
-	{
-		panic( "kernel paging initiation failed\n" );
-		return;
-	}
-	
-	if( !initialize_process() )
-	{
-		panic( "kernel process initiation failed\n" );
-		return;
-	}
-	
-	printk("address function:^\n", PHYSICAL_ADDRESS(&test));
-	
-	PROCESS* process = create_process( PHYSICAL_ADDRESS(&test) );
-	if(process)
-		execute_process(process);
-	printk("after executing process\n");
+	//../* start paging with the entire 4GB address space as identity mapping */
+	//..if( !start_paging() )
+	//..{
+	//..	panic( "kernel paging initiation failed\n" );
+	//..	return;
+	//..}
+	//..
+	//..if( !initialize_process() )
+	//..{
+	//..	panic( "kernel process initiation failed\n" );
+	//..	return;
+	//..}
+	//..
+	//..PROCESS* process = create_process( PHYSICAL_ADDRESS(&test) );
+	//..if(process)
+	//..{
+	//..	execute_process(process);
+	//..	terminate_process(process); 
+	//..}
 	
 	//.RSDP_Descriptor_2_0 rsdp;
 	//.if( query_rsdp(&rsdp) )
