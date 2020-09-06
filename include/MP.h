@@ -200,11 +200,14 @@ typedef struct _LOCAL_INTTERUPT_ASSIGNMENT_ENTRY {
 /* TRUE if we are in APIC mode . FALSE if in IC mode               */  BOOL    apic_mode                            (void);
 /* TRUE if the target AP cpu activated, FALSE if not activated     */  BOOL    bsp_initialize_ap                    (LiBOS_LOGICAL_CPU* cpu);
 
-extern void get_trampoline_start(UINT_32*);
-extern void get_trampoline_end(UINT_32*);
-
-extern void get_mp_32_start(UINT_32*);
-extern void get_mp_32_end(UINT_32*);
+       void cpu_1_process_zone   (void);
+       void cpu_2_process_zone   (void);
+       void cpu_3_process_zone   (void);
+extern void get_trampoline_start (UINT_32*);
+extern void get_trampoline_end   (UINT_32*);
+extern void get_mp_32_start      (UINT_32*);
+extern void get_mp_32_end        (UINT_32*);
+extern void set_cpu_id           (UINT_32 id);
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 	
