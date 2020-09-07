@@ -4,6 +4,8 @@ Support for multi-processor (logical CPUs) implementation.<br/>
 It is gifted to my beloved gold fishes, Lila and Bob, who made the name of the OS to be originated from.<br/>
 LiBOS: ***Li***la and ***B***ob ***OS***
 
+start date: October 2018
+
 # Aims:
 ## learn how an OS services by touching everything from scratch
 It is a 32-bit protected mode OS enabling BIOS calls by switching into real mode and back again to protected mode
