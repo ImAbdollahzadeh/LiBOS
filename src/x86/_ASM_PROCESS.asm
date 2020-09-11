@@ -6,6 +6,7 @@ global execute_kernel_mode_process
 global execute_user_mode_process
 global restore_kernel_after_process_termination
 extern printk
+
 ;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ void execute_kernel_mode_process(UINT_32 process_stack, UINT_32 entry_point);
 
 execute_kernel_mode_process:
