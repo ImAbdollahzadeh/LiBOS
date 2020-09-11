@@ -187,6 +187,12 @@ typedef struct _LOCAL_INTTERUPT_ASSIGNMENT_ENTRY {
     UINT_8 destination_lapic_lintin; // 0 or 1
 } __LiBOS_PACKED__ LOCAL_INTTERUPT_ASSIGNMENT_ENTRY;
 
+typedef struct _CPU_THREAD_LOAD {
+	LiBOS_LOGICAL_CPU* logical_cpu;
+	UINT_32            number_of_loads;
+	struct THREAD*     thread_list;
+} __LiBOS_PACKED__ CPU_THREAD_LOAD;
+
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ FUNCTION DECLARATIONS
 
 /* finds mpfp by searching memory                                  */  BOOL    query_multiprocessing                (MP_FLOATING_POINTER* mpfp);
@@ -200,14 +206,15 @@ typedef struct _LOCAL_INTTERUPT_ASSIGNMENT_ENTRY {
 /* TRUE if we are in APIC mode . FALSE if in IC mode               */  BOOL    apic_mode                            (void);
 /* TRUE if the target AP cpu activated, FALSE if not activated     */  BOOL    bsp_initialize_ap                    (LiBOS_LOGICAL_CPU* cpu);
 
-       void cpu_1_process_zone   (void);
-       void cpu_2_process_zone   (void);
-       void cpu_3_process_zone   (void);
-extern void get_trampoline_start (UINT_32*);
-extern void get_trampoline_end   (UINT_32*);
-extern void get_mp_32_start      (UINT_32*);
-extern void get_mp_32_end        (UINT_32*);
-extern void set_cpu_id           (UINT_32 id);
+       void cpu_1_process_zone     (void);
+       void cpu_2_process_zone     (void);
+       void cpu_3_process_zone     (void);
+extern void get_trampoline_start   (UINT_32*);
+extern void get_trampoline_end     (UINT_32*);
+extern void get_mp_32_start        (UINT_32*);
+extern void get_mp_32_end          (UINT_32*);
+extern void set_cpu_id             (UINT_32 id);
+       BOOL register_thread_to_cpu (struct THREAD* thread);
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 	

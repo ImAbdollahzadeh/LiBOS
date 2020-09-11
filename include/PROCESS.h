@@ -78,6 +78,7 @@ typedef struct _PROCESS {
 } __attribute__ ((packed)) PROCESS;
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ FUNCTIONS PRORTOTYPE
+
 extern void     execute_kernel_mode_process              (UINT_32 process_stack, UINT_32 entry_point);
 extern void     execute_user_mode_process                (UINT_32 process_stack, UINT_32 entry_point);
 extern void     restore_kernel_after_process_termination (void);
