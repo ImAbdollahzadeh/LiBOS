@@ -13,6 +13,7 @@ objects =		                          \
 		obj/PORT.o                        \
 		obj/PAGING.o                      \
 		obj/PROCESS.o                     \
+		obj/USER_MODE.o                   \
 		obj/_ASM_PAGING.o                 \
 		obj/IDT.o                         \
 		obj/ISRs_IRQs.o                   \
@@ -25,6 +26,7 @@ objects =		                          \
 		obj/_ASM_FONT.o                   \
 		obj/_ASM_SSE.o                    \
 		obj/_ASM_PROCESS.o                \
+		obj/_ASM_USER_MODE.o              \
 		obj/FONT.o                        \
 		obj/VIDEO_PLAYER.o                \
 		obj/WINDOW.o                      \
@@ -69,11 +71,13 @@ run:
 	@make PORT.o
 	@make PAGING.o
 	@make PROCESS.o
+	@make USER_MODE.o
 	@make _ASM_PAGING.o
 	@make MULTI_PROCESSOR.o
 	@make PMODE_BIOS_CALL.o
 	@make ACPI.o
 	@make MP.o
+	@make _ASM_USER_MODE.o
 	@make _ASM_VIDEO_PLAYER.o
 	@make _ASM_WINDOW.o
 	@make _ASM_FONT.o
