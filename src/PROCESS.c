@@ -4,7 +4,7 @@
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ GLOBAL AND STATIC VARIABLES
 
-#define PROCESS_BEGIN_VIRTUAL_ADDRESS 0x1000000
+#define PROCESS_BEGIN_VIRTUAL_ADDRESS 0x40000000 // at address 1GB
 #define PROCESS_DEFAULT_PAGE_SIZE     0x1000
 
 PAGE_DIRECTORY* LiBOS_main_page_directory = 0; /* VERY IMPORTANT */
@@ -66,7 +66,8 @@ PROCESS* create_process(UINT_32 function_address)
 	}
 	
 	/* get process virtual address space */
-	address_space = create_address_space();
+	address_space = (PAGE_DIRECTORY*)create_address_space();
+	__LiBOS_MemZero(address_space, sizeof(PAGE_DIRECTORY));
 	if (!address_space)
 	{
 	    printk("process with function address ^ failed to create a virtual address space\n", function_address);
@@ -76,10 +77,14 @@ PROCESS* create_process(UINT_32 function_address)
 	main_thread = (THREAD*)Alloc(sizeof(THREAD), 1, 1);
 	__LiBOS_MemZero(main_thread, sizeof(THREAD));
 	
-	/* map kernel space into process address space (i.e. address 0 to xx MB) */
+	/* map kernel space into process address space (i.e. address 0 to 1GB) */
 	UINT_32 i;
-	for(i = 0; i < 100; i++)
+	for(i = 0; i < 256; i++)
 		process_memcopy(&(LiBOS_main_page_directory->entries[i]), &(address_space->entries[i]), sizeof(UINT_32));
+	
+	/* map system space into process address space (i.e. address 3GB to 4GB) */
+	for(i = 0; i < 256; i++)
+		process_memcopy(&(LiBOS_main_page_directory->entries[768 + i]), &(address_space->entries[768 + i]), sizeof(UINT_32));
 	
 	/* create PCB */
 	process                 = (PROCESS*)Alloc(sizeof(PROCESS), 1, 1);
@@ -91,13 +96,10 @@ PROCESS* create_process(UINT_32 function_address)
 	process->ioapic         = 0 /* for now BSP cpu */;
 	
 	/* create thread descriptor */
-	main_thread->kernel_stack  = 0;
+	__LiBOS_MemZero(&main_thread->frame, sizeof(TRAP_FRAME));
 	main_thread->parent        = process;
 	main_thread->priority      = 1;
 	main_thread->state         = PROCESS_STATE_ACTIVE;
-	main_thread->initial_stack = 0;
-	main_thread->stack_limit   = (void*)((UINT_32)main_thread->initial_stack + PROCESS_DEFAULT_PAGE_SIZE); // default: 4KB
-	__LiBOS_MemZero(&main_thread->frame, sizeof(TRAP_FRAME));
 	main_thread->frame.eip     = function_address;
 	main_thread->frame.flags   = INTERRUPT_ENABLE_FLAG;
 	
@@ -110,8 +112,9 @@ PROCESS* create_process(UINT_32 function_address)
 	
 	/* final initialization */
 	main_thread->initial_stack = stack;
-	main_thread->frame.esp     = (UINT_32)main_thread->initial_stack;
-	main_thread->frame.ebp     = main_thread->frame.esp;
+	main_thread->stack_limit   = (void*  )(stack + PROCESS_DEFAULT_PAGE_SIZE); // default: 4KB
+	main_thread->frame.esp     = (UINT_32) stack;
+	main_thread->frame.ebp     = (UINT_32) stack;
 	
 	/* rgister main_thread into process's list of threads */
 	process->thread_list[0] = *main_thread;
@@ -146,43 +149,48 @@ void execute_process(PROCESS* process)
 	
 	/* execute process in kernel mode */
 	execute_kernel_mode_process(process_stack, entry_point);
+	
+	/* switch back to kernel address space */
+	_CLI();
+	set_pdbr(LiBOS_main_page_directory->entries);
+	_STI();
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 void terminate_process(PROCESS* process) 
 {
-	//----if (process->pid == PROC_INVALID_ID)
-	//----	return;
-	//----
-	//----/* release threads */
-	//----UINT_8 i = 0;
-	//----THREAD* thread = &(process->thread_list[i]);
-	//----
-	//----/* get physical address of stack */
-	//----void* stack_frame = get_physical_address(process->page_directory, (UINT_32)thread->initial_stack); 
-	//----
-	//----/* unmap and release stack memory */
-	//----unmap_physical_address(process->page_directory, (UINT_32)thread->initial_stack);
-	//----//-------------free_physical_block(stack_frame); // ALREADY DONE ?!
-	//----
-	//----/* unmap and release image memory */
-	//----UINT_32 page;
-	//----for(UINT_32 page = 0; page < 1 /* by default, we assumed no process larger than 4KB */; page++)
-	//----{
-	//----	UINT_32 phys = 0;
-	//----	UINT_32 virt = 0;
-	//----
-	//----	/* get virtual address of page */
-	//----	//--------------virt = thread->imageBase + (page * PAGE_SIZE);
-	//----
-	//----	/* get physical address of page */
-	//----	phys = (UINT_32)get_physical_address(process->page_directory, virt);
-	//----
-	//----	/* unmap and release page */
-	//----	unmap_physical_address(process->page_directory, virt);
-	//----	free_physical_block((void*)phys);
-	//----}
+	if (process->pid == PROC_INVALID_ID)
+		return;
+	
+	/* release threads */
+	UINT_8 i = 0;
+	THREAD* thread = &(process->thread_list[i]);
+	
+	/* get physical address of stack */
+	void* stack_frame = get_physical_address(process->page_directory, (UINT_32)thread->initial_stack); 
+	
+	/* unmap and release stack memory */
+	unmap_physical_address(process->page_directory, (UINT_32)thread->initial_stack);
+	//-------------free_physical_block(stack_frame); // ALREADY DONE ?!
+	
+	/* unmap and release image memory */
+	UINT_32 page;
+	for(UINT_32 page = 0; page < 1 /* by default, we assumed no process larger than 4KB */; page++)
+	{
+		UINT_32 phys = 0;
+		UINT_32 virt = 0;
+	
+		/* get virtual address of page */
+		//--------------virt = thread->imageBase + (page * PAGE_SIZE);
+	
+		/* get physical address of page */
+		phys = (UINT_32)get_physical_address(process->page_directory, virt);
+	
+		/* unmap and release page */
+		unmap_physical_address(process->page_directory, virt);
+		//----free_physical_block((void*)phys);
+	}
 
 	/* restore kernel selectors */
 	restore_kernel_after_process_termination();

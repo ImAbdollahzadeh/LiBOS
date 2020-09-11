@@ -26,6 +26,8 @@
 #include "../include/SSE.h"
 #include "../include/PAGING.h"
 #include "../include/PROCESS.h"
+#include "../include/USER_MODE.h"
+
 
 void test(void)
 {
@@ -51,7 +53,7 @@ void KERNEL_MAIN_ENTRY(void)
 		return;
 	}
 	//printk("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
-
+	
 	status = RegisterIDT();
 	if(!status)
 	{
@@ -59,7 +61,7 @@ void KERNEL_MAIN_ENTRY(void)
 		return;
 	}
 	//printk("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
-
+	
 	TIMER timer;
 	status = RegisterTimer(&timer, OS_DEFAULT_TIMER_TICK);
 	if(!status)
@@ -77,37 +79,43 @@ void KERNEL_MAIN_ENTRY(void)
 		return;
 	}
 	
-	MP_FLOATING_POINTER mpfp;
-	if( query_multiprocessing(&mpfp) )
-	{
-		__LiBOS_ChrDump (mpfp.signature, 4);
-		printk("MP_features_1=^\n", mpfp.mp_features_1);
-		printk("MP_config_pointer=^\n", mpfp.mp_config_pointer);
-		MP_configuration_table(&mpfp);
-		query_libos_cpus();
-		query_libos_ioapics();
-		start_multiprocessing();
-	}
+	//----MP_FLOATING_POINTER mpfp;
+	//----if( query_multiprocessing(&mpfp) )
+	//----{
+	//----	__LiBOS_ChrDump (mpfp.signature, 4);
+	//----	printk("MP_features_1=^\n", mpfp.mp_features_1);
+	//----	printk("MP_config_pointer=^\n", mpfp.mp_config_pointer);
+	//----	MP_configuration_table(&mpfp);
+	//----	query_libos_cpus();
+	//----	query_libos_ioapics();
+	//----	start_multiprocessing();
+	//----}
 
-	//../* start paging with the entire 4GB address space as identity mapping */
-	//..if( !start_paging() )
-	//..{
-	//..	panic( "kernel paging initiation failed\n" );
-	//..	return;
-	//..}
-	//..
-	//..if( !initialize_process() )
-	//..{
-	//..	panic( "kernel process initiation failed\n" );
-	//..	return;
-	//..}
-	//..
-	//..PROCESS* process = create_process( PHYSICAL_ADDRESS(&test) );
-	//..if(process)
-	//..{
-	//..	execute_process(process);
-	//..	terminate_process(process); 
-	//..}
+	/* start paging with the entire 4GB address space as identity mapping */
+	if( !start_paging() )
+	{
+		panic( "kernel paging initiation failed\n" );
+		return;
+	}
+	
+	//.if( !initialize_process() )
+	//.{
+	//.	panic( "kernel process initiation failed\n" );
+	//.	return;
+	//.}
+	//.
+	//.PROCESS* process = create_process( PHYSICAL_ADDRESS(&test) );
+	//.if(process)
+	//.{
+	//.	execute_process(process);
+	//.	terminate_process(process); 
+	//.}
+	
+	/* enter user mode */
+	initiate_usermode();
+	// ----  FROM NOW ON WE ARE IN USERMODE -> NO PRIVILEGE INSTRUCTION CAN BE ISSUED ANYMORE ! ----
+	
+	
 	
 	//.RSDP_Descriptor_2_0 rsdp;
 	//.if( query_rsdp(&rsdp) )
@@ -188,7 +196,7 @@ void KERNEL_MAIN_ENTRY(void)
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,_activate_sse();
 	
-	_STI();
+	//_STI();
 	
 	//.VIDEO_PLAYER video_player;
 	//.

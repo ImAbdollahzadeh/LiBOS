@@ -13,10 +13,7 @@
  ****************************************************************************************************************************/
 
 
-void*   __LiBOS_Heap             = (void*)  ( /*0x01000000*/0x10000000 );
-UINT_32 __LiBOS_Heap_size        = (UINT_32)( 0xC0000000 - 0x01000000 - 1); // ~3 GiB
-void*   __LiBOS_Urgent_Heap      = (void*)  ( 0x00100000 );
-UINT_32 __LiBOS_Urgent_Heap_size = (UINT_32)( 0x00F00000 - 0x00100000 - 1); // 14 MiB
+void* __LiBOS_Heap = (void*)( /*0x01000000*/0x40000000 );
 
 #define SWAP_HOLE_ENTRIES(ENT1,ENT2) do { FREE_HOLE tmp; tmp = *ENT1; *ENT1 = *ENT2; *ENT2 = tmp; } while(0)
 #define MEMBLOCKSIZE (sizeof(MEM_BLOCK_PRECEDENTIAL) + sizeof(MEM_BLOCK_TERMINATION))

@@ -6,6 +6,7 @@
 #include "../include/TIMER.h"
 #include "../include/PORT.h"
 #include "../include/KEYBOARD.h"
+#include "../include/PROCESS.h"
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ GLOBAL AND STATIC VARIABLES
 
@@ -48,6 +49,9 @@ void (*cpu_1_running_code) (void);
 void (*cpu_2_running_code) (void);
 void (*cpu_3_running_code) (void);
 
+/* list of cpus with loads */
+static CPU_THREAD_LOAD cpus_loads[/* hard coded 4 CPUs */4];
+        
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 void bsp_lapic_timer(REGS* r) 
@@ -514,6 +518,16 @@ BOOL bsp_initialize_ap(LiBOS_LOGICAL_CPU* cpu)
 
 void start_multiprocessing(void)
 {
+	/* statically initiate cpus_loads array */
+	UINT_8 j;
+	for(j = 0; j < query_number_of_logical_CPUs() /* we know they are 4 */; j++)
+	{
+		cpus_loads[j].logical_cpu     = &libos_cpus.cpus[j];
+		cpus_loads[j].number_of_loads = 0;
+		cpus_loads[j].thread_list     = 0;
+	}
+	
+	/* define each cpu zone */
 	initilalize_cpu_zones();
 	
 	/* first the BSP cpu must enable its lapic */
@@ -633,4 +647,73 @@ void cpu_3_process_zone(void)
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
+static UINT_8 cpu_list_counter = 0;
+LiBOS_LOGICAL_CPU* cpu_thread_manager(void)
+{
+	/* for our purpose, it would be enough to handle up to 4 processes distributed on 4 different cpus */
+	LiBOS_LOGICAL_CPU* cpu = &(cpus_loads[cpu_list_counter]);
+	cpu_list_counter++;
+	return cpu;
+}
 
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+BOOL register_thread_to_cpu(struct THREAD* thread)
+{
+	UINT_8 which = 0;
+	UINT_32 eip  = 0;
+	
+	/* call cpu<->thread manager to assign a cpu to us */
+	LiBOS_LOGICAL_CPU* cpu = cpu_thread_manager();
+	
+	if(!cpu)
+	{
+		printk("cpu<->thread manager was unable to assign a cpu to tread ^\n", PHYSICAL_ADDRESS(thread));
+		return FALSE;
+	}
+
+	/* get the THREAD pointer from an opaque pointer */
+	THREAD* thr = (THREAD*)thread;
+	
+	/* if cpu is one of the AP cpus, we have to go into its process_zone */
+	if( !cpu->BSP_or_AP ) // i.e. AP cpu
+	{
+		eip = thr->frame.eip;
+	
+		/* which AP cpu is this? */
+		UINT_8 i;
+		for(i = 1; i < number_of_logical_cpus; i++)
+		{
+			if(PHYSICAL_ADDRESS(cpu) == PHYSICAL_ADDRESS(&libos_cpus.cpus[i]))
+			{
+				which = i;
+				goto CONTINUE_WITH_AP;
+			}
+		}
+	}
+	else // i.e. BSP cpu
+		goto CONTINUE_WITH_BSP;
+	
+CONTINUE_WITH_AP:
+	if( !which )
+	{
+		printk("error with a faulty AP cpu\n");
+		return FALSE;
+	}
+	if(which == 1)
+		cpu_1_running_code = eip;
+	else if(which == 2)
+		cpu_2_running_code = eip;
+	else if(which == 3)
+		cpu_3_running_code = eip;
+	else
+	{
+		printk("error with AP cpu greater than supported number of AP cpus\n");
+		return FALSE;
+	}
+	goto CONTINUE_WITH_BSP;
+CONTINUE_WITH_BSP:
+	return TRUE;
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

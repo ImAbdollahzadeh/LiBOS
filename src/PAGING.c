@@ -73,14 +73,15 @@ BOOL start_paging(void)
 	/* clear out all pages */
 	__LiBOS_MemZero(libos_initial_page_directory, sizeof(PAGE_DIRECTORY));
 	
+	/* complete 4GB address space identity map */
 	UINT_32 i, j;
 	for(i = 0; i < 1024; i++)
 	{
 		table = (PAGE_TABLE*)alloc_physical_block();
 		for(j = 0; j < 1024; j++)
-			table->entries[j] = (MEGA_BYTE(4*i) + j * LiBOS_PAGE_SIZE) | (I86_PTE_WRITABLE | I86_PTE_PRESENT);
+			table->entries[j] = (MEGA_BYTE(4*i) + j * LiBOS_PAGE_SIZE) | (I86_PTE_WRITABLE | I86_PTE_PRESENT | I86_PTE_USER);
 		
-		libos_initial_page_directory->entries[i] = PHYSICAL_ADDRESS(table) | (I86_PDE_WRITABLE | I86_PDE_PRESENT);
+		libos_initial_page_directory->entries[i] = PHYSICAL_ADDRESS(table) | (I86_PDE_WRITABLE | I86_PDE_PRESENT | I86_PDE_USER);
 	}
 	
 	/* disable interrupts */
@@ -145,7 +146,7 @@ void unmap_page_table (PAGE_DIRECTORY* dir, UINT_32 virt)
 	{
 		/* get mapped frame */
 		void* frame = (void*)(pagedir[virt >> 22] & 0x7FFFF000);
-	
+		
 		/* unmap frame */
 		free_physical_block(frame);
 		pagedir[virt >> 22] = 0;
