@@ -28,12 +28,6 @@
 #include "../include/PROCESS.h"
 #include "../include/USER_MODE.h"
 
-
-void test(void)
-{
-	UINT_32 tmp = 652;
-	printk("during executing process with number %\n", tmp);
-}
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ START OF KERNEL
 
 void KERNEL_MAIN_ENTRY(void)
@@ -98,18 +92,11 @@ void KERNEL_MAIN_ENTRY(void)
 		return;
 	}
 	
-	//.if( !initialize_process() )
-	//.{
-	//.	panic( "kernel process initiation failed\n" );
-	//.	return;
-	//.}
-	//.
-	//.PROCESS* process = create_process( PHYSICAL_ADDRESS(&test) );
-	//.if(process)
-	//.{
-	//.	execute_process(process);
-	//.	terminate_process(process); 
-	//.}
+	if( !initialize_process() )
+	{
+		panic( "kernel process initiation failed\n" );
+		return;
+	}
 	
 	/* enter user mode */
 	initiate_usermode();

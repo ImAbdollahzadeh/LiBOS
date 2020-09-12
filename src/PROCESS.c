@@ -7,8 +7,6 @@
 #define PROCESS_BEGIN_VIRTUAL_ADDRESS 0x40000000 // at address 1GB
 #define PROCESS_DEFAULT_PAGE_SIZE     0x1000
 
-PAGE_DIRECTORY* LiBOS_main_page_directory = 0; /* VERY IMPORTANT */
-
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 static void process_memcopy(void* src, void* trg, UINT_32 bytes)
@@ -41,8 +39,8 @@ BOOL initialize_process(void)
 		return FALSE;
 	}
 	
-	LiBOS_main_page_directory = (PAGE_DIRECTORY*)(get_pdbr());
-	if( !LiBOS_main_page_directory )
+	PAGE_DIRECTORY* pd = (PAGE_DIRECTORY*)(get_pdbr());
+	if( !pd )
 	{
 		panic("LiBOS has no initialized PDBR\n");
 		return FALSE;
@@ -67,6 +65,7 @@ PROCESS* create_process(UINT_32 function_address)
 	
 	/* get process virtual address space */
 	address_space = (PAGE_DIRECTORY*)create_address_space();
+	
 	__LiBOS_MemZero(address_space, sizeof(PAGE_DIRECTORY));
 	if (!address_space)
 	{
@@ -77,14 +76,15 @@ PROCESS* create_process(UINT_32 function_address)
 	main_thread = (THREAD*)Alloc(sizeof(THREAD), 1, 1);
 	__LiBOS_MemZero(main_thread, sizeof(THREAD));
 	
-	/* map kernel space into process address space (i.e. address 0 to 1GB) */
+	/* map kernel space into process address space (i.e. address 0 to 1GB) and
+	   map system space into process address space (i.e. address 3GB to 4GB) */
 	UINT_32 i;
+	PAGE_DIRECTORY* mpgd = get_libos_main_page_directory();
 	for(i = 0; i < 256; i++)
-		process_memcopy(&(LiBOS_main_page_directory->entries[i]), &(address_space->entries[i]), sizeof(UINT_32));
-	
-	/* map system space into process address space (i.e. address 3GB to 4GB) */
-	for(i = 0; i < 256; i++)
-		process_memcopy(&(LiBOS_main_page_directory->entries[768 + i]), &(address_space->entries[768 + i]), sizeof(UINT_32));
+	{
+		process_memcopy(&(mpgd->entries[i      ]), &(address_space->entries[i      ]), sizeof(UINT_32));
+		process_memcopy(&(mpgd->entries[768 + i]), &(address_space->entries[768 + i]), sizeof(UINT_32));
+	}
 	
 	/* create PCB */
 	process                 = (PROCESS*)Alloc(sizeof(PROCESS), 1, 1);
@@ -106,9 +106,9 @@ PROCESS* create_process(UINT_32 function_address)
 	/* Create stack */
 	void* stack      = (void*)(PROCESS_BEGIN_VIRTUAL_ADDRESS + PROCESS_DEFAULT_PAGE_SIZE);
 	void* stack_phys = (void*)alloc_physical_block();
-
+	
 	/* map process's stack space */
-	map_physical_address(address_space, (UINT_32)stack, (UINT_32)stack_phys, I86_PTE_PRESENT|I86_PTE_WRITABLE);
+	map_physical_address(address_space, (UINT_32)stack, (UINT_32)stack_phys, I86_PTE_PRESENT|I86_PTE_WRITABLE | I86_PTE_USER);
 	
 	/* final initialization */
 	main_thread->initial_stack = stack;
@@ -144,15 +144,15 @@ void execute_process(PROCESS* process)
 	
 	/* switch to process address space */
 	_CLI();
-	set_pdbr(process->page_directory);
-	//_STI();
+	set_pdbr(process->page_directory); 
 	
 	/* execute process in kernel mode */
 	execute_kernel_mode_process(process_stack, entry_point);
 	
 	/* switch back to kernel address space */
+	PAGE_DIRECTORY* mpgd = get_libos_main_page_directory();
 	_CLI();
-	set_pdbr(LiBOS_main_page_directory->entries);
+	set_pdbr(mpgd->entries);
 	_STI();
 }
 
@@ -193,7 +193,7 @@ void terminate_process(PROCESS* process)
 	}
 
 	/* restore kernel selectors */
-	restore_kernel_after_process_termination();
+	//------------------restore_kernel_after_process_termination();
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

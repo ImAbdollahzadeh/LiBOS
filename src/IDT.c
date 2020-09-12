@@ -17,7 +17,6 @@ void (*handler)(REGS* r);
 void LiBOS_DEFAULT_HANLER (REGS* r)
 { ; }
 
-
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 void SetIDTEntry(UINT_8 Interrupt, UINT_32 HandlerAddress, UINT_16 CodeSegmentSelectorOffset, UINT_8 flags)
@@ -26,7 +25,7 @@ void SetIDTEntry(UINT_8 Interrupt, UINT_32 HandlerAddress, UINT_16 CodeSegmentSe
 	idt[Interrupt].handlerAddressHighBits  = (((UINT_32)HandlerAddress) >> 16) & 0xFFFF;
 	idt[Interrupt].gdt_codeSegmentSelector = CodeSegmentSelectorOffset;
 	idt[Interrupt].reserved                = 0;
-	idt[Interrupt].access                  = flags;
+	idt[Interrupt].access                  = flags | 0x60;
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
