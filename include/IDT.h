@@ -44,21 +44,22 @@ typedef struct _IDTPOINTER {
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-       void      irq_set_mask          (UINT_8 irq_line);
-       void      irq_clear_mask        (UINT_8 irq_line);
-       void      go_to_reset           (void);
-       void      SetIDTEntry           (UINT_8 Interrupt, UINT_32 HandlerAddress, UINT_16 CodeSegmentSelectorOffset, UINT_8 flags);
-       UINT_32   RegisterIDT           (void);
-       void      FAULT_HANDLER         (REGS* r);
-       void      IRQ_HANDLER           (REGS* r);
-       void      irq_install_handler   (INT_32 irq, void (*handler)(REGS* r));
-       void      irq_uninstall_handler (INT_32 irq);
-       void      irq_remap             (void);
-extern void      set_MSR               (UINT_32 base_addr, UINT_32 phys_addr_lo, UINT_32 phys_addr_hi);
-extern void      get_MSR               (UINT_32 base_addr, UINT_32* addr_lo, UINT_32* addr_hi);
-extern UINT_32   IDTLoad               (void);
-extern void      set_irq_0x10_to_0xff  (UINT_8 irq);
-extern void      query_cr2             (UINT_32* cr2);
+       void      irq_set_mask             (UINT_8 irq_line);
+       void      irq_clear_mask           (UINT_8 irq_line);
+       void      go_to_reset              (void);
+       void      SetIDTEntry              (UINT_8 Interrupt, UINT_32 HandlerAddress, UINT_16 CodeSegmentSelectorOffset, UINT_8 flags);
+       UINT_32   RegisterIDT              (void);
+       void      FAULT_HANDLER            (REGS* r);
+       void      IRQ_HANDLER              (REGS* r);
+       void      irq_install_handler      (INT_32 irq, void (*handler)(REGS* r));
+       void      irq_install_user_handler (void (*handler)(REGS* r)); // only 0x80 reserved for usermode
+       void      irq_uninstall_handler    (INT_32 irq);
+       void      irq_remap                (void);
+extern void      set_MSR                  (UINT_32 base_addr, UINT_32 phys_addr_lo, UINT_32 phys_addr_hi);
+extern void      get_MSR                  (UINT_32 base_addr, UINT_32* addr_lo, UINT_32* addr_hi);
+extern UINT_32   IDTLoad                  (void);
+extern void      set_irq_0x10_to_0xff     (UINT_8 irq);
+extern void      query_cr2                (UINT_32* cr2);
 extern void      ISR_DEFAULT           (void);
 extern void      ISR1                  (void);
 extern void      ISR2                  (void);

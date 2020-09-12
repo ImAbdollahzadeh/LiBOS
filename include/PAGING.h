@@ -49,18 +49,19 @@ typedef struct _PAGE_DIRECTORY {
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ FUNCTIONS PROTOTYPE
 
-extern void    paging_enable        (void);
-extern void    paging_disable       (void);
-extern void    set_pdbr             (UINT_32 pdbr);
-extern UINT_32 get_pdbr             (void);
-       UINT_32 alloc_physical_block (void);
-       void    free_physical_block  (void* ptr);
-       BOOL    paging_is_activate   (void);
-       BOOL    start_paging         (void);
-       BOOL    create_page_table    (PAGE_DIRECTORY* dir, UINT_32 virt, UINT_32 flags);
-       void    map_physical_address (PAGE_DIRECTORY* dir, UINT_32 virt, UINT_32 phys, UINT_32 flags);
-       void*   get_physical_address (PAGE_DIRECTORY* dir, UINT_32 virt);
-     
+extern void            paging_enable                 (void);
+extern void            paging_disable                (void);
+extern void            set_pdbr                      (UINT_32 pdbr);
+extern UINT_32         get_pdbr                      (void);
+       UINT_32         alloc_physical_block          (void);
+       void            free_physical_block           (void* ptr);
+       BOOL            paging_is_activate            (void);
+       BOOL            start_paging                  (void);
+       BOOL            create_page_table             (PAGE_DIRECTORY* dir, UINT_32 virt, UINT_32 flags);
+       void            map_physical_address          (PAGE_DIRECTORY* dir, UINT_32 virt, UINT_32 phys, UINT_32 flags);
+       void*           get_physical_address          (PAGE_DIRECTORY* dir, UINT_32 virt);
+       PAGE_DIRECTORY* get_libos_main_page_directory (void);
+   
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 #endif //! PAGING__H__
