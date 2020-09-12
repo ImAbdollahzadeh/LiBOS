@@ -4,6 +4,22 @@
 
 global enter_user_mode
 extern set_TSS_esp
+global asm_user_int_0x80
+global asm_user_iretd
+
+;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ void asm_user_int_0x80(UINT_32 eax, UINT_32 ebx, UINT_32 ecx);
+
+asm_user_int_0x80:
+	mov eax, DWORD[esp + 4]
+	mov ebx, DWORD[esp + 8]
+	mov ecx, DWORD[esp + 12]
+	int 0x80
+	ret
+
+;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ void asm_user_iretd(void);
+
+asm_user_iretd:
+	iret
 
 ;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ void enter_user_mode(UINT_32 usermode_entry_point);
 
