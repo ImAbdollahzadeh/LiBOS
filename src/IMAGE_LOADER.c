@@ -16,7 +16,7 @@ extern void _LiBOS_bss_section_end;
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-static void __LiBOS_report_binary_image_sections(void)
+void __LiBOS_report_binary_image_sections(void)
 {
 	UINT_32* text_sz = (UINT_32*)(&_LiBOS_text_section_size);
 	UINT_32* data_sz = (UINT_32*)(&_LiBOS_data_section_size);

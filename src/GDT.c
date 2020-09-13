@@ -45,24 +45,41 @@ static void install_all_TSSs(GDT* gdt)
 	tss0.fs   = 0x13;
 	tss0.gs   = 0x13;
 	
-	//----/* ----  AND THE SAME FOR ALL AP CPUS ---- */
-	//----base  = PHYSICAL_ADDRESS(&tss1);
-	//----__LiBOS_MemZero(&tss1, sizeof(TSS));
-	//----tss1.ss0  = 0x10;
-	//----tss1.esp0 = __LiBOS_Main_Kernel_Stack;
-	//----gdt->TSS_AP1 = __RegisterSegmentDescriptor(base, limit, 0xE9, 0x40);
-	//----
-	//----base  = PHYSICAL_ADDRESS(&tss2);
-	//----__LiBOS_MemZero(&tss2, sizeof(TSS));
-	//----tss2.ss0  = 0x10;
-	//----tss2.esp0 = __LiBOS_Main_Kernel_Stack;
-	//----gdt->TSS_AP2 = __RegisterSegmentDescriptor(base, limit, 0xE9, 0x40);
-	//----
-	//----base  = PHYSICAL_ADDRESS(&tss3);
-	//----__LiBOS_MemZero(&tss3, sizeof(TSS));
-	//----tss3.ss0  = 0x10;
-	//----tss3.esp0 = __LiBOS_Main_Kernel_Stack;
-	//----gdt->TSS_AP3 = __RegisterSegmentDescriptor(base, limit, 0xE9, 0x40);
+	base         = PHYSICAL_ADDRESS(&tss1);
+	gdt->TSS_AP1 = __RegisterSegmentDescriptor(base, base + limit, 0xE9, 0x0);
+	__LiBOS_MemZero(&tss1, sizeof(TSS));
+	tss1.ss0  = 0x10;
+	tss1.esp0 = 0;
+	tss1.cs   = 0x0B;
+	tss1.ss   = 0x13;
+	tss1.es   = 0x13;
+	tss1.ds   = 0x13;
+	tss1.fs   = 0x13;
+	tss1.gs   = 0x13;
+	
+	base         = PHYSICAL_ADDRESS(&tss2);
+	gdt->TSS_AP2 = __RegisterSegmentDescriptor(base, base + limit, 0xE9, 0x0);
+	__LiBOS_MemZero(&tss2, sizeof(TSS));
+	tss2.ss0  = 0x10;
+	tss2.esp0 = 0;
+	tss2.cs   = 0x0B;
+	tss2.ss   = 0x13;
+	tss2.es   = 0x13;
+	tss2.ds   = 0x13;
+	tss2.fs   = 0x13;
+	tss2.gs   = 0x13;
+	
+	base         = PHYSICAL_ADDRESS(&tss3);
+	gdt->TSS_AP3 = __RegisterSegmentDescriptor(base, base + limit, 0xE9, 0x0);
+	__LiBOS_MemZero(&tss3, sizeof(TSS));
+	tss3.ss0  = 0x10;
+	tss3.esp0 = 0;
+	tss3.cs   = 0x0B;
+	tss3.ss   = 0x13;
+	tss3.es   = 0x13;
+	tss3.ds   = 0x13;
+	tss3.fs   = 0x13;
+	tss3.gs   = 0x13;
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -98,7 +115,7 @@ UINT_32 RegisterGDT(GDT* gdt)
 	/* install 4 TSS entries for 4 CPUs of LiBOS */
 	install_all_TSSs(gdt);
 	
-	gdt_pointer.size = (sizeof(SEGMENTDESCRIPTOR) * 8 /* actually 11 */) - 1;
+	gdt_pointer.size = (sizeof(SEGMENTDESCRIPTOR) * 11) - 1;
 	gdt_pointer.base = (UINT_32)((void*)gdt);
 	
 	if(!gdt_pointer.size || !gdt_pointer.base)

@@ -30,8 +30,9 @@
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ START OF KERNEL
 
-void KERNEL_MAIN_ENTRY(void)
+void LiBOS_kernel_main(void)
 {
+	/* start LiBOS kernel */
 	UINT_32 status; 
 	clear_screen();
 	printk("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
@@ -39,6 +40,7 @@ void KERNEL_MAIN_ENTRY(void)
 	printk("       Written by Iman Abdollahzadeh        \n");
 	printk("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
 
+	/* start LiBOS GDT and TSS for BSP CPU */
 	GDT gdt;
 	status = RegisterGDT(&gdt);
 	if(!status)
@@ -46,16 +48,16 @@ void KERNEL_MAIN_ENTRY(void)
 		panic( "kernel GDT registration failed\n" );
 		return;
 	}
-	//printk("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
 	
+	/* start LiBOS IDT, interrupt vectors, and usermode setup */
 	status = RegisterIDT();
 	if(!status)
 	{
 		panic( "kernel IDT registration failed\n" );
 		return;
 	}
-	//printk("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
 	
+	/* enable PIT as the LiBOS main timer for all logical CPUs */
 	TIMER timer;
 	status = RegisterTimer(&timer, OS_DEFAULT_TIMER_TICK);
 	if(!status)
@@ -63,8 +65,8 @@ void KERNEL_MAIN_ENTRY(void)
 		panic( "kernel timer registration failed\n" );
 		return;
 	}
-	//printk("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
 	
+	/* enable keyboard for all logical CPUs */
 	KEYBOARD keyboard;
 	status = RegisterKeyboard(&keyboard);
 	if(!status)
@@ -73,37 +75,35 @@ void KERNEL_MAIN_ENTRY(void)
 		return;
 	}
 	
-	//----MP_FLOATING_POINTER mpfp;
-	//----if( query_multiprocessing(&mpfp) )
-	//----{
-	//----	__LiBOS_ChrDump (mpfp.signature, 4);
-	//----	printk("MP_features_1=^\n", mpfp.mp_features_1);
-	//----	printk("MP_config_pointer=^\n", mpfp.mp_config_pointer);
-	//----	MP_configuration_table(&mpfp);
-	//----	query_libos_cpus();
-	//----	query_libos_ioapics();
-	//----	start_multiprocessing();
-	//----}
-
-	/* start paging with the entire 4GB address space as identity mapping */
+	/* start paging with the entire 4GB address space as identity mapping 
+	   and setting the iBOS main page directory available for all logical CPUs */
 	if( !start_paging() )
 	{
 		panic( "kernel paging initiation failed\n" );
 		return;
 	}
 	
+	/* enable all AP CPUs and bring them on halt state waiting for threads to run */
+	MP_FLOATING_POINTER mpfp;
+	if( query_multiprocessing(&mpfp) )
+	{
+		//-__LiBOS_ChrDump (mpfp.signature, 4);
+		//-printk("MP_features_1=^\n", mpfp.mp_features_1);
+		//-printk("MP_config_pointer=^\n", mpfp.mp_config_pointer);
+		MP_configuration_table(&mpfp);
+		query_libos_cpus();
+		query_libos_ioapics();
+		start_multiprocessing();
+	}
+	
+	/* start process and threads (i.e. tasks) to be distributed accross all logical CPUs */
 	if( !initialize_process() )
 	{
 		panic( "kernel process initiation failed\n" );
 		return;
 	}
 	
-	/* enter user mode */
-	initiate_usermode();
-	// ----  FROM NOW ON WE ARE IN USERMODE -> NO PRIVILEGE INSTRUCTION CAN BE ISSUED ANYMORE ! ----
-	
-	
-	
+	/* start acpi configuration (if any) */
 	//.RSDP_Descriptor_2_0 rsdp;
 	//.if( query_rsdp(&rsdp) )
 	//.{
@@ -113,6 +113,7 @@ void KERNEL_MAIN_ENTRY(void)
 	//.		printk("FADT:^\n", fadt);
 	//.}
 
+	/* start pci configuration, detecting sata, ehci, and xhci */
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,PCI  pci;
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SATA sata;
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,EHCI ehci;
@@ -123,6 +124,8 @@ void KERNEL_MAIN_ENTRY(void)
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,	panic( "PCI registration failed\n" );
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,	return;
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,}
+	
+	/* start FAT32 filesystem and files on sata */
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,//.FILESYSTEM filesystem;
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,//.RegisterFilesystem(&filesystem, &sata);
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,//.if(!status)
@@ -132,7 +135,8 @@ void KERNEL_MAIN_ENTRY(void)
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,//.}
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,//----ect_execution("ECT/__IMG.ect");
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+	
+	/* start svga and enabling PMODE_BIOS_CALLs for all logical CPUs */
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SVGA svga;
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,status = RegisterSVGA(&svga);
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,if(!status)
@@ -141,12 +145,13 @@ void KERNEL_MAIN_ENTRY(void)
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,	return;
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,}
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,/* go to graphical desktop mode */
+	/* start the graphical desktop mode and leaving the debug, consule mode */
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,clear_screen();
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,UINT_8* fb = svga.LFB;
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,init_desktop();
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+	
+	/* start the windows */
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,WINDOW wnd;
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,POINT wnd_orig = {50, 50};
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,register_window(&wnd, "first_window", 400, 200, &wnd_orig);    
@@ -172,7 +177,8 @@ void KERNEL_MAIN_ENTRY(void)
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,draw_window(&wnd2, fb);
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,draw_window(&wnd3, fb);
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,draw_window(&wnd4, fb);
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+	
+	/* start communication with xhci-driven USB mouse */
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,USB_MOUSE usb_mouse;
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,status = RegisterMouse(&usb_mouse);
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,if(!status)
@@ -180,11 +186,13 @@ void KERNEL_MAIN_ENTRY(void)
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,	panic( "USB MOUSE registration failed\n" );
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,	return;
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,}
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+	
+	/* start activation of SSE and AVX on all logical CPUs */
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,_activate_sse();
 	
 	//_STI();
 	
+	/* start activation of SSE and AVX on all logical CPUs */
 	//.VIDEO_PLAYER video_player;
 	//.
 	//.status = regiser_video_player(&video_player, 0);//*/fb);
@@ -220,7 +228,11 @@ void KERNEL_MAIN_ENTRY(void)
 	//....
 	//....
 	//....debug();
-
+	
+	/* enter user mode as the no-go destination */
+	initiate_usermode();
+	/* FROM NOW ON WE ARE IN USERMODE -> NO PRIVILEGE INSTRUCTION CAN BE ISSUED ANYMORE */
+	
 	while(1);
 }
 

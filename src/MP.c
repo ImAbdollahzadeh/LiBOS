@@ -7,6 +7,7 @@
 #include "../include/PORT.h"
 #include "../include/KEYBOARD.h"
 #include "../include/PROCESS.h"
+#include "../include/PAGING.h"
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ GLOBAL AND STATIC VARIABLES
 
@@ -510,7 +511,12 @@ BOOL bsp_initialize_ap(LiBOS_LOGICAL_CPU* cpu)
 		panic("SIPI_IPI failed\n");
 		return FALSE;
 	}
-	WaitMiliSecond(10);
+	
+	/* there is a call to printk inside trampoline code which takes long time to finish
+	   if we only wait short (e.g. 10 ms), the BSP CPU takes over the control and interfere with the operating AP CPU
+	   therefore, we'll set a timer sleep much further than the required printk call
+	*/
+	WaitMiliSecond(500);
 	return TRUE;
 }
 
@@ -552,6 +558,10 @@ FOUND_BSP:
 	ready_cpu_for_threads |= BIT(i);
 	enable_ioapic(&libos_ioapics.ioapics[0], cpu);
 
+	/* query and register libos_main_page_directory to trampoline code */
+	PAGE_DIRECTORY* pd = get_libos_main_page_directory();
+	set_libos_main_page_directory( PHYSICAL_ADDRESS(pd) );
+	
 	/* copy trampoline code (real mode @ 0x7000 and protected mode @ 0x8000) */
 	UINT_32 start_real_mode      = 0;
 	UINT_32 end_real_mode        = 0;
@@ -570,6 +580,7 @@ FOUND_BSP:
 	i   = 0;
 	cpu = 0;
 	number_of_avaialable_cpus = libos_cpus.number_of_logical_cpus;
+	
 	while(i < number_of_avaialable_cpus)
 	{
 		cpu = &libos_cpus.cpus[i];
@@ -668,7 +679,7 @@ BOOL register_thread_to_cpu(struct THREAD* thread)
 	
 	if(!cpu)
 	{
-		printk("cpu<->thread manager was unable to assign a cpu to tread ^\n", PHYSICAL_ADDRESS(thread));
+		printk("cpu<->thread manager was unable to assign a cpu to thread ^\n", PHYSICAL_ADDRESS(thread));
 		return FALSE;
 	}
 
