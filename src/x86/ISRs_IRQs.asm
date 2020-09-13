@@ -1847,14 +1847,17 @@ activate_tss0:
 	ltr ax
 	ret
 activate_tss1:
+	cli
 	mov ax, 0x43     
 	ltr ax      
 	ret
 activate_tss2:
+	cli
 	mov ax, 0x4B     
 	ltr ax      
 	ret
 activate_tss3:
+	cli
 	mov ax, 0x53     
 	ltr ax      
 	ret

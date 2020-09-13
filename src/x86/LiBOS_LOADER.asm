@@ -3,7 +3,7 @@
 ;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 section .text
-	extern KERNEL_MAIN_ENTRY
+	extern LiBOS_kernel_main
 	global LOADER
 	global get_kernel_stack
 
@@ -11,7 +11,7 @@ section .text
 
 LOADER:
 	mov  esp, @kernel_stack     ; This points the stack to our new stack area
-	call KERNEL_MAIN_ENTRY
+	call LiBOS_kernel_main
    	jmp  stublet
 
 ;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

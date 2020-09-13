@@ -1,3 +1,4 @@
+
 %define REBASE16(ADDR) (ADDR - ap_cpu_trampoline_code + 0x7000)
 %define REBASE32(ADDR) (ADDR - mp_32_start + 0x8000)
 
@@ -11,10 +12,7 @@ global get_trampoline_end
 global get_mp_32_start
 global get_mp_32_end
 global set_cpu_id
-
-extern cpu_1_process_zone
-extern cpu_2_process_zone
-extern cpu_3_process_zone
+global set_libos_main_page_directory
 
 ;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ it will be copied at PHYSICAL_ADDRESS 0x7000 (a.k.a. [ORG 0x7000])
 
@@ -68,60 +66,65 @@ idt16_ptr:                                 ; IDT table pointer for 16bit access
 trampoline_end:
 ;;---------------------------------------------------------------------------------------- it will be copied at PHYSICAL_ADDRESS 0x8000
 mp_32_start:
-	jmp 0x08:REBASE32(.LiBOS_GDT_IDT_LEVEL1)
+	jmp 0x08:REBASE32(.LiBOS_GDT_IDT_PAGING_TSS_set)
 [BITS 32]
-.LiBOS_GDT_IDT_LEVEL1:
+.LiBOS_GDT_IDT_PAGING_TSS_set:
 	cli
-	mov     esp, @mp_stack ;most important thing before loading any IDT or GDT pointer
+; most important thing before loading any IDT or GDT pointer ~> stack
+; assign separate stacks to each AP CPU
+	mov     esp, @startup_stack
 	mov     ax, 0x10
 	mov     ds, ax
 	mov     es, ax
 	mov     fs, ax
 	mov     gs, ax
 	mov     ss, ax
-	lgdt    [gdt_pointer] ; every time using LGDT, will set DS and CS registers set to 0
-	                      ; don't forget to set them correctly later on
-	mov     ax, 0x10
-	mov     ds, ax
-	mov     es, ax
-	mov     fs, ax
-	mov     gs, ax
-	mov     ss, ax
-	jmp     0x08:REBASE32(.LiBOS_GDT_IDT_LEVEL2)
-.LiBOS_GDT_IDT_LEVEL2:
+	lgdt    [gdt_pointer]
 	lidt    [idt_pointer]
+; activate paging on this AP CPU
+	mov     eax, DWORD[libos_mpd]
+	mov     cr3, eax
+	mov     eax, cr0
+	or      eax, 0x80000000 ; paging is active
+	mov     cr0, eax
+; create each AP CPU, its own stack
+	xor     eax, eax
+	mov     al, BYTE[_idd_]
+	mov     ebx, @mp_stack
+	mov     edx, 3
+	sub     edx, eax
+	imul    edx, 4096
+	sub     ebx, edx
+	mov     esp, ebx
+; print out the welcome message (it takes a long time to finish. Therefore set an appropriate timer sleep in SIPI)
 	push    message        
 	mov     eax, printk
 	call    eax           ; 'call printk' is relative to this assembly code (don't want it since this code will have been reloacated)
 	                      ; instead I want to call the exact physical address of printk label (therefore use it in a Reg/Mem).
-	
+	add     esp, 4
 	xor     eax, eax
 	mov     al, BYTE[_idd_]
 	cmp     eax, 1
-	jne     cpu_2_zone
-cpu_1_zone:
-	mov     eax, cpu_1_process_zone
-	;push    esp
-	call    eax
-	;pop     esp
-	jmp     @HLT
-cpu_2_zone:
+	jne     __2
+__1:
+	cli
+	mov     ax, 0x43
+	ltr     ax
+	jmp      hang_forever
+__2:
 	cmp     eax, 2
-	jne     cpu_3_zone
-	mov     eax, cpu_2_process_zone
-	;push    esp
-	call    eax
-	;pop     esp
-	jmp     @HLT
-cpu_3_zone:
-	cmp     eax, 3
-	jne     @HLT
-	mov     eax, cpu_3_process_zone
-	;push    esp
-	call    eax
-	;pop     esp
-@HLT:
-	hlt                   ; AP CPU stays here for ever until gets intterupted or commanded to jump or call by threads
+	jne     __3
+	cli
+	mov     ax, 0x4B
+	ltr     ax
+	jmp      hang_forever
+__3:
+	cli
+	mov     ax, 0x53
+	ltr     ax
+	jmp      hang_forever
+hang_forever:
+	jmp hang_forever
 mp_32_end:
 
 ;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ void get_trampoline_start(UINT_32*);
@@ -179,16 +182,35 @@ set_cpu_id:
 	pop  ebp
 	ret
 
+;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ void set_libos_main_page_directory (UINT_32);
+
+set_libos_main_page_directory:
+	push ebp
+	mov  ebp, esp
+	mov  eax, DWORD[ebp + 8]
+	mov  DWORD[libos_mpd], eax
+	mov  esp, ebp
+	pop  ebp
+	ret
+
 ;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 section .bss
-	space resb 4096
+
+; startup stack
+	resb 4096
+@startup_stack:
+
+; our main AP CPUs stacks (each 4KB)
+	resb 3 * 4096
 @mp_stack:
 
 ;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 section .data
-	message: db "AP CPU woke up and ready to be used", 0x0A, 0x00
-	_idd_:   db 0x00
-
+	message:   db "AP CPU woke up and ready to be used", 0x0A, 0x00
+	_idd_:     db 0x00
+	libos_mpd: dd 0x00000000
+	
 ;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+

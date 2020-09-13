@@ -73,4 +73,5 @@ section .data
 	kernel_esp: dd 0x00000000
 	kernel_eip: dd 0x00000000
 	string: db "ESP:^", 0xa, 0
+
 ;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
