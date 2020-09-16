@@ -14,6 +14,12 @@ global get_mp_32_end
 global set_cpu_id
 global set_libos_main_page_directory
 
+extern ap_cpu_1_main
+extern ap_cpu_2_main
+extern ap_cpu_3_main
+
+extern enable_ap_lapic
+
 ;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ it will be copied at PHYSICAL_ADDRESS 0x7000 (a.k.a. [ORG 0x7000])
 
 ap_cpu_trampoline_code:
@@ -87,6 +93,9 @@ mp_32_start:
 	mov     eax, cr0
 	or      eax, 0x80000000 ; paging is active
 	mov     cr0, eax
+; activate the lapic for this AP cpu
+	mov     edi, enable_ap_lapic
+	call    edi
 ; create each AP CPU, its own stack
 	xor     eax, eax
 	mov     al, BYTE[_idd_]
@@ -110,21 +119,22 @@ __1:
 	cli
 	mov     ax, 0x43
 	ltr     ax
-	jmp      hang_forever
+	mov     edx, ap_cpu_1_main
+	jmp     edx
 __2:
 	cmp     eax, 2
 	jne     __3
 	cli
 	mov     ax, 0x4B
 	ltr     ax
-	jmp      hang_forever
+	mov     edx, ap_cpu_2_main
+	jmp     edx
 __3:
 	cli
 	mov     ax, 0x53
 	ltr     ax
-	jmp      hang_forever
-hang_forever:
-	jmp hang_forever
+	mov     edx, ap_cpu_3_main
+	jmp     edx
 mp_32_end:
 
 ;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ void get_trampoline_start(UINT_32*);
