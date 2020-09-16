@@ -45,10 +45,14 @@ static UINT_32 number_of_enabled_cpus = 0;
 static LiBOS_CPUs    libos_cpus;
 static LiBOS_IOAPICs libos_ioapics;
 
-/* we assume hard-coded 3 AP CPUs */
-void (*cpu_1_running_code) (void);
-void (*cpu_2_running_code) (void);
-void (*cpu_3_running_code) (void);
+/* we assume 3 ap cpus */
+void(*ap_cpu_1_handler)(void);
+void(*ap_cpu_2_handler)(void);
+void(*ap_cpu_3_handler)(void);
+
+BOOL ap_cpu_1_load_registered = FALSE;
+BOOL ap_cpu_2_load_registered = FALSE;
+BOOL ap_cpu_3_load_registered = FALSE;
 
 /* list of cpus with loads */
 static CPU_THREAD_LOAD cpus_loads[/* hard coded 4 CPUs */4];
@@ -416,12 +420,47 @@ static void enable_bsp_lapic(LiBOS_LOGICAL_CPU* cpu)
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-static void enable_ap_lapic(LiBOS_LOGICAL_CPU* cpu)
+void enable_ap_lapic(void)
 {
-	_CLI();
-
-	/* set the logical cpu state as LAPIC_CONFIGURED */
-	cpu->cpu_state |= LAPIC_CONFIGURED;
+	/* set AP lapic */
+	UINT_32 activation = 0x00000000 | BIT(8) | BIT(11) | (47 + 32);
+	lapic_write(Spurious_Interrupt_Vector_Register, activation);
+	
+	lapic_write(Destination_Format_Register, 0xFFFFFFFF);                                                          
+	lapic_write(Logical_Destination_Register, (lapic_read(Logical_Destination_Register) & 0x00FFFFFF) | 1);        
+	UINT_32 logical_apicid = lapic_read(LAPIC_ID_Register);
+	lapic_write(Logical_Destination_Register, (lapic_read(Logical_Destination_Register) | (logical_apicid << 24)));
+	
+	/* local timer setting */
+	irq_install_handler(70, &bsp_lapic_timer);
+	lapic_write(Timer_Divide_Configuration_Register, 0x0000000B);
+	UINT_32 clock_activation = 0x00020000 | (32 + 70);
+	lapic_write(Local_Vector_Table_TIMER, clock_activation);
+	lapic_write(Initial_Count_Register, 10000000);
+	
+	lapic_write(Task_Priority_Register, 0);  
+	
+	/* local INT0 and INT1 */
+	lapic_write(Local_Vector_Table_LINT0, (BIT(8) | BIT(9) | BIT(10))); // ExtInt
+	lapic_write(Local_Vector_Table_LINT1, BIT(10)); // NMI
+	
+	/* set an error handler */
+	lapic_write(Local_Vector_Table_Error, (32 + 16));
+	
+	/* Clear error status register (requires back-to-back writes) */
+	lapic_write(Error_Status_Register, 0);
+	lapic_write(Error_Status_Register, 0);
+	
+	/* sanity: if there is any non-acknowledged interrupt */
+	lapic_write(EOI_Register, 0);
+	
+	/* Send an Init Level De-Assert to synchronise arbitration ID's */
+	lapic_write(Interrupt_Command_HI_Register, 0);
+	lapic_write(Interrupt_Command_LOW_Register, 0x00080000 | 0x00000500 | 0x00008000);
+	while( (lapic_read(Interrupt_Command_LOW_Register) & 0x00001000) );
+	
+	/* Enable interrupts on the APIC (but not on the processor) */
+	lapic_write(Task_Priority_Register, 0);
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -517,6 +556,9 @@ BOOL bsp_initialize_ap(LiBOS_LOGICAL_CPU* cpu)
 	   therefore, we'll set a timer sleep much further than the required printk call
 	*/
 	WaitMiliSecond(500);
+	
+	/* set the logical cpu state as LAPIC_CONFIGURED */
+	cpu->cpu_state |= LAPIC_CONFIGURED;
 	return TRUE;
 }
 
@@ -532,9 +574,6 @@ void start_multiprocessing(void)
 		cpus_loads[j].number_of_loads = 0;
 		cpus_loads[j].thread_list     = 0;
 	}
-	
-	/* define each cpu zone */
-	initilalize_cpu_zones();
 	
 	/* first the BSP cpu must enable its lapic */
 	UINT_8 i = 0;
@@ -557,7 +596,7 @@ FOUND_BSP:
 	enable_bsp_lapic(cpu);
 	ready_cpu_for_threads |= BIT(i);
 	enable_ioapic(&libos_ioapics.ioapics[0], cpu);
-
+	
 	/* query and register libos_main_page_directory to trampoline code */
 	PAGE_DIRECTORY* pd = get_libos_main_page_directory();
 	set_libos_main_page_directory( PHYSICAL_ADDRESS(pd) );
@@ -617,46 +656,7 @@ BOOL apic_mode(void)
 	return apic_or_pic;
 }
 
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-
-void __initial_LiBOS_process_zone(void)
-{ ; }
-
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-void initilalize_cpu_zones(void)
-{
-	cpu_1_running_code = &__initial_LiBOS_process_zone;
-	cpu_2_running_code = &__initial_LiBOS_process_zone;
-	cpu_3_running_code = &__initial_LiBOS_process_zone;
-}
-
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-void cpu_1_process_zone(void)
-{
-	while(1)
-		cpu_1_running_code();
-}
-
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-void cpu_2_process_zone(void)
-{
-	while(1)
-		cpu_2_running_code();
-}
-
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-void cpu_3_process_zone(void)
-{
-	while(1)
-		cpu_3_running_code();
-}
-
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 
 static UINT_8 cpu_list_counter = 0;
 LiBOS_LOGICAL_CPU* cpu_thread_manager(void)
@@ -711,20 +711,96 @@ CONTINUE_WITH_AP:
 		printk("error with a faulty AP cpu\n");
 		return FALSE;
 	}
-	if(which == 1)
-		cpu_1_running_code = eip;
-	else if(which == 2)
-		cpu_2_running_code = eip;
-	else if(which == 3)
-		cpu_3_running_code = eip;
-	else
-	{
-		printk("error with AP cpu greater than supported number of AP cpus\n");
-		return FALSE;
-	}
+	//----if(which == 1)
+	//----	cpu_1_running_code = eip;
+	//----else if(which == 2)
+	//----	cpu_2_running_code = eip;
+	//----else if(which == 3)
+	//----	cpu_3_running_code = eip;
+	//----else
+	//----{
+	//----	printk("error with AP cpu greater than supported number of AP cpus\n");
+	//----	return FALSE;
+	//----}
 	goto CONTINUE_WITH_BSP;
 CONTINUE_WITH_BSP:
 	return TRUE;
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+void ap_cpu_1_main(void)
+{
+	while(1)
+	{    
+		if( ap_cpu_1_load_registered )
+		{
+			ap_cpu_1_handler();
+			ap_cpu_1_load_registered = FALSE;
+			ap_cpu_1_handler = 0;
+		}
+	}
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+void ap_cpu_2_main(void)
+{
+	while(1)
+	{    
+		if( ap_cpu_2_load_registered )
+		{
+			ap_cpu_2_handler();
+			ap_cpu_2_load_registered = FALSE;
+			ap_cpu_2_handler = 0;
+		}
+	}
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+void ap_cpu_3_main(void)
+{
+	while(1)
+	{    
+		if( ap_cpu_3_load_registered )
+		{
+			ap_cpu_3_handler();
+			ap_cpu_3_load_registered = FALSE;
+			ap_cpu_3_handler = 0;
+		}
+	}
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+void register_function_to_ap_cpu(UINT_32 apcpu_id, UINT_32 function_address)
+{
+	switch(apcpu_id)
+	{
+		case 1:
+			ap_cpu_1_handler = (void(*)(void))function_address;
+			ap_cpu_1_load_registered = TRUE;
+			break;
+		case 2:
+			ap_cpu_2_handler = (void(*)(void))function_address;
+			ap_cpu_2_load_registered = TRUE;
+			break;
+		case 3:
+			ap_cpu_3_handler = (void(*)(void))function_address;
+			ap_cpu_3_load_registered = TRUE;
+			break;
+	}
+}
+
+//----------------------------------------------------------
+
+/* example: multithreading in parallel loaded on 3 ap cpus
+
+register_function_to_ap_cpu(1, PHYSICAL_ADDRESS(process->thread[0]->frame.eip));
+register_function_to_ap_cpu(2, PHYSICAL_ADDRESS(process->thread[1]->frame.eip));
+register_function_to_ap_cpu(3, PHYSICAL_ADDRESS(process->thread[2]->frame.eip));
+
+*/
+
+//----------------------------------------------------------
