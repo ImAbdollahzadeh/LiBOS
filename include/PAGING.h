@@ -61,7 +61,8 @@ extern UINT_32         get_pdbr                      (void);
        void            map_physical_address          (PAGE_DIRECTORY* dir, UINT_32 virt, UINT_32 phys, UINT_32 flags);
        void*           get_physical_address          (PAGE_DIRECTORY* dir, UINT_32 virt);
        PAGE_DIRECTORY* get_libos_main_page_directory (void);
-   
+       BOOL            ask_for_page                  (UINT_32 physical_address);
+
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 #endif //! PAGING__H__

@@ -205,10 +205,10 @@ typedef struct _CPU_THREAD_LOAD {
 /* EOI in multi-processing space                                   */  void    mp_send_eoi                          (void);
 /* TRUE if we are in APIC mode . FALSE if in IC mode               */  BOOL    apic_mode                            (void);
 /* TRUE if the target AP cpu activated, FALSE if not activated     */  BOOL    bsp_initialize_ap                    (LiBOS_LOGICAL_CPU* cpu);
-
-       void cpu_1_process_zone            (void);
-       void cpu_2_process_zone            (void);
-       void cpu_3_process_zone            (void);
+       void enable_ap_lapic               (void);
+       void ap_cpu_1_main                 (void);
+       void ap_cpu_2_main                 (void);
+       void ap_cpu_3_main                 (void);
 extern void get_trampoline_start          (UINT_32*);
 extern void get_trampoline_end            (UINT_32*);
 extern void get_mp_32_start               (UINT_32*);
@@ -216,6 +216,7 @@ extern void get_mp_32_end                 (UINT_32*);
 extern void set_cpu_id                    (UINT_32 id);
 extern void set_libos_main_page_directory (UINT_32);
        BOOL register_thread_to_cpu        (struct THREAD* thread);
+       void register_function_to_ap_cpu   (UINT_32 apcpu_id, UINT_32 function_address);
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 	

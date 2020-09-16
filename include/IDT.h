@@ -49,8 +49,8 @@ typedef struct _IDTPOINTER {
        void      go_to_reset              (void);
        void      SetIDTEntry              (UINT_8 Interrupt, UINT_32 HandlerAddress, UINT_16 CodeSegmentSelectorOffset, UINT_8 flags);
        UINT_32   RegisterIDT              (void);
-       void      FAULT_HANDLER            (REGS* r);
-       void      IRQ_HANDLER              (REGS* r);
+       void      LiBOS_fault_handler      (REGS* r);
+       void      LiBOS_irq_handler        (REGS* r);
        void      irq_install_handler      (INT_32 irq, void (*handler)(REGS* r));
        void      irq_install_user_handler (void (*handler)(REGS* r)); // only 0x80 reserved for usermode
        void      irq_uninstall_handler    (INT_32 irq);
