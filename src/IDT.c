@@ -5,11 +5,18 @@
 #include "../include/XHCI.h"
 #include "../include/KEYBOARD.h"
 #include "../include/MP.h"
+#include "../include/PAGING.h"
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ GLOBAL AND STATIC VARIABLES
 
-void*      __irq_routines[256];
+#define PIC1_CMD     0x20  //MASTER
+#define PIC1_DATA    0x21  //MASTER
+#define PIC2_CMD     0xA0  //SLAVE
+#define PIC2_DATA    0xA1  //SLAVE
+#define PIC_READ_IRR 0x0a
+#define PIC_READ_ISR 0x0b
 
+void*      __irq_routines[256];
 IDTPOINTER idt_pointer;
 
 void (*handler)(REGS* r);
@@ -371,16 +378,19 @@ INT_8* __exception_messages[32] =
 	"Reserved"
 };
 
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ LiBOS actual_page_fault_handling
 
-#define PIC1_CMD     0x20  //MASTER
-#define PIC1_DATA    0x21  //MASTER
-#define PIC2_CMD     0xA0  //SLAVE
-#define PIC2_DATA    0xA1  //SLAVE
-#define PIC_READ_IRR 0x0a
-#define PIC_READ_ISR 0x0b
+/* this function takes the physical address where a page fault happened
+   and passes the address to PAGING routines */
+static BOOL actual_page_fault_handling(UINT_32 virtual_address)
+{
+	BOOL status = FALSE; 
+	if( !(status = ask_for_page(virtual_address)) )
+		panic("LiBOS could not get a valid page\n");
+	return status;
+}
 
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ PIC functions
 
 static UINT_16 pic_get_irq_reg(INT_32 ocw3)
 {
@@ -405,9 +415,9 @@ UINT_16 pic_get_isr(void)
 	return pic_get_irq_reg(PIC_READ_ISR);
 }
 
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ LiBOS fault handler
 
-void FAULT_HANDLER(REGS* r)
+void LiBOS_fault_handler(REGS* r)
 {
 	if (r->int_no < 32)
 	{
@@ -424,6 +434,11 @@ void FAULT_HANDLER(REGS* r)
 			UINT_32 cr2 = 0;
 			query_cr2(&cr2);
 			printk("CR2 = ^\n", cr2);
+			
+			/* handle the page fault and safely return */
+			if( !actual_page_fault_handling(cr2) )
+				goto hang_forever;
+			return;
 		}
 		
 		/* for INT 0x03 (a.k.a. DEBUG_HANDLER) we need a keyboard code to continue */
@@ -433,14 +448,14 @@ void FAULT_HANDLER(REGS* r)
 			getch(' ');
 			return;
 		}
-		
+hang_forever:
 		while(1);
     }
 }
 
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ LiBOS irq handler
 
-void IRQ_HANDLER(REGS* r)
+void LiBOS_irq_handler(REGS* r)
 {
 	PORT_8 p;
 	Port_8_Register(&p);

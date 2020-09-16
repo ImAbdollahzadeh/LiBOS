@@ -77,13 +77,15 @@ PROCESS* create_process(UINT_32 function_address)
 	__LiBOS_MemZero(main_thread, sizeof(THREAD));
 	
 	/* map kernel space into process address space (i.e. address 0 to 1GB) and
-	   map system space into process address space (i.e. address 3GB to 4GB) */
+	   map system space into process address space (i.e. address 2GB to 4GB) */
 	UINT_32 i;
 	PAGE_DIRECTORY* mpgd = get_libos_main_page_directory();
 	for(i = 0; i < 256; i++)
 	{
-		process_memcopy(&(mpgd->entries[i      ]), &(address_space->entries[i      ]), sizeof(UINT_32));
-		process_memcopy(&(mpgd->entries[768 + i]), &(address_space->entries[768 + i]), sizeof(UINT_32));
+		process_memcopy(&(mpgd->entries[i      ]), &(address_space->entries[i      ]), sizeof(UINT_32)); /* 0GB - 1GB ~> for kernel */
+		                                                                                                 /* 1GB - 2GB ~> for user   */
+		process_memcopy(&(mpgd->entries[512 + i]), &(address_space->entries[512 + i]), sizeof(UINT_32)); /* 2GB - 3GB ~> for system */
+		process_memcopy(&(mpgd->entries[768 + i]), &(address_space->entries[768 + i]), sizeof(UINT_32)); /* 3GB - 4GB ~> for system */
 	}
 	
 	/* create PCB */
@@ -104,17 +106,17 @@ PROCESS* create_process(UINT_32 function_address)
 	main_thread->frame.flags   = INTERRUPT_ENABLE_FLAG;
 	
 	/* Create stack */
-	void* stack      = (void*)(PROCESS_BEGIN_VIRTUAL_ADDRESS + PROCESS_DEFAULT_PAGE_SIZE);
+	void* stack      = (void*)PROCESS_BEGIN_VIRTUAL_ADDRESS;
 	void* stack_phys = (void*)alloc_physical_block();
 	
 	/* map process's stack space */
-	map_physical_address(address_space, (UINT_32)stack, (UINT_32)stack_phys, I86_PTE_PRESENT|I86_PTE_WRITABLE | I86_PTE_USER);
+	map_physical_address(address_space, (UINT_32)stack, (UINT_32)stack_phys, I86_PTE_PRESENT | I86_PTE_WRITABLE | I86_PTE_USER);
 	
 	/* final initialization */
-	main_thread->initial_stack = stack;
-	main_thread->stack_limit   = (void*  )(stack + PROCESS_DEFAULT_PAGE_SIZE); // default: 4KB
-	main_thread->frame.esp     = (UINT_32) stack;
-	main_thread->frame.ebp     = (UINT_32) stack;
+	main_thread->initial_stack = stack + PROCESS_DEFAULT_PAGE_SIZE;
+	main_thread->stack_limit   = (void*)stack; // default: 4KB
+	main_thread->frame.esp     = (UINT_32)main_thread->initial_stack;
+	main_thread->frame.ebp     = (UINT_32)main_thread->initial_stack;
 	
 	/* rgister main_thread into process's list of threads */
 	process->thread_list[0] = *main_thread;

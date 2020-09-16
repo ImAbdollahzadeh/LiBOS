@@ -97,7 +97,7 @@ BOOL start_paging(void)
 	return TRUE;
 }
 
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ creates a page_table in page_directory
 
 BOOL create_page_table(PAGE_DIRECTORY* dir, UINT_32 virt, UINT_32 flags)
 {
@@ -110,14 +110,14 @@ BOOL create_page_table(PAGE_DIRECTORY* dir, UINT_32 virt, UINT_32 flags)
 		
 		pagedir[virt >> 22] = ((UINT_32) block) | flags;
 		__LiBOS_MemZero((void*)(pagedir[virt >> 22]), LiBOS_PAGE_SIZE);
-
+		
 		/* map page table into directory */
-		map_physical_address(dir, (UINT_32) block, (UINT_32) block, flags);
+		map_physical_address(dir, (UINT_32) virt, (UINT_32) block, flags);
 	}
 	return TRUE;
 }
 
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ creates a page in page_table
 
 void map_physical_address(PAGE_DIRECTORY* dir, UINT_32 virt, UINT_32 phys, UINT_32 flags)
 {
@@ -168,6 +168,25 @@ void unmap_physical_address(PAGE_DIRECTORY* dir, UINT_32 virt)
 PAGE_DIRECTORY* get_libos_main_page_directory(void)
 {
 	return libos_initial_page_directory;
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+BOOL ask_for_page(UINT_32 virtual_address)
+{
+	/* first, find the responsive page_directory */
+	PAGE_DIRECTORY* dir = (PAGE_DIRECTORY*)( get_pdbr() );
+	if(!dir)
+	{
+		panic("PDBR is invalid\n");
+		return FALSE;
+	}
+	
+	/* we assume a user task got a page fault, not a kernel task */
+	void* physical_page = alloc_physical_block();
+	map_physical_address(dir, virtual_address, physical_page, (I86_PTE_PRESENT | I86_PTE_WRITABLE | I86_PTE_USER));
+	
+	return TRUE;
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

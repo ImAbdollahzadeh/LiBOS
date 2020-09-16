@@ -10,6 +10,13 @@ void __process_test(void)
 {
 	UINT_32 tmp = 652;
 	printk("during executing process with number %\n", tmp);
+	
+	/* create a page fault to see the handling */
+	void* addr = (void*)0x40009F00;
+	*(UINT_32*)addr = 42;
+	*(UINT_32*)addr = 475;
+	addr = (void*)0x40009000;
+	*(UINT_32*)addr = 12;
 }
 
 
@@ -79,7 +86,6 @@ void __LiBOS_user_mode_start(void)
 	
 	/* start the user space processes */
 	PROCESS* process = create_process( PHYSICAL_ADDRESS(&__process_test) );
-	
 	if(process)
 	{
 		/* execute process */

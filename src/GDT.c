@@ -87,6 +87,9 @@ static void install_all_TSSs(GDT* gdt)
 void set_TSS_esp(UINT_32 esp)
 {
 	tss0.esp0 = esp;
+	tss1.esp0 = esp;
+	tss2.esp0 = esp;
+	tss3.esp0 = esp;
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
