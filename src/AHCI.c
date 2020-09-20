@@ -202,9 +202,9 @@ int read(HBA_PORT* port, UINT_32 startl, UINT_32 starth, UINT_32 count, UINT_8* 
 void ProbePort(HBA_MEM* abar, int* which_port)
 {
 	UINT_32 pi = abar->pi;
-	int i=0, j=0;
+	UINT_32 i=0, j=0;
 	UINT_8 main_buffer[40000];
-	int status = 0;
+	UINT_32 status = 0;
 	__LiBOS_MemZero(main_buffer, 40000);
 	while (i<32)
 	{
@@ -213,7 +213,7 @@ void ProbePort(HBA_MEM* abar, int* which_port)
 			int dt = CheckType(&abar->ports[i]);
 			if (dt == AHCI_DEV_SATA)
 			{
-				printk("SATA drive found at port ^\n", i);
+				printk("SATA drive - at port ^\n", i);
 				PortRebase(&abar->ports[i], cmdlist, cmdtbls, &fisstorage);
 				*which_port = i;
 				//status = read(&abar->ports[i], 0x13E857F8, 0, 8, main_buffer);
@@ -228,13 +228,13 @@ void ProbePort(HBA_MEM* abar, int* which_port)
 				//}
 			}
 			else if (dt == AHCI_DEV_SATAPI)
-				printk("SATAPI drive found at port ^\n", i);
+				printk("SATAPI drive - at port ^\n", i);
 			else if (dt == AHCI_DEV_SEMB)
-				printk("SEMB drive found at port ^\n", i);
+				printk("SEMB drive - at port ^\n", i);
 			else if (dt == AHCI_DEV_PM)
-				printk("PM drive found at port ^\n", i);
+				printk("PM drive - at port ^\n", i);
 			else
-				printk("No drive found at port ^\n", i);
+				printk("No drive - at port ^\n", i);
 		}
 		pi >>= 1;
 		i++;

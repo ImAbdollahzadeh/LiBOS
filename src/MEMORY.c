@@ -1,6 +1,8 @@
 #include "../include/MEMORY.h"
 #include "../include/PRINT.h"
 #include "../include/IDT.h"
+#include "../include/USER_MODE.h"
+#include "../include/PAGING.h"
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ GLOBAL AND STATIC VARIABLES
 
@@ -12,16 +14,14 @@
              0xC0000000    0xFFFFFFFF	0x40000000 (1 GiB)    various             Mmapped PCI, PnP, APIC, BIOS 
  ****************************************************************************************************************************/
 
+/* 750 MB, i.e. 192000 pages each 4KB, i.e. 6000 UINT_32 */
+static UINT_32 mem_block_allocator_bitmap[6000];
 
-void* __LiBOS_Heap = (void*)( /*0x01000000*/0x40000000 );
+#define BLOCK_ALLOCATOR_HEAP     0x80000000
+#define NON_BLOCK_ALLOCATOR_HEAP 0xB0000000
 
-#define SWAP_HOLE_ENTRIES(ENT1,ENT2) do { FREE_HOLE tmp; tmp = *ENT1; *ENT1 = *ENT2; *ENT2 = tmp; } while(0)
-#define MEMBLOCKSIZE (sizeof(MEM_BLOCK_PRECEDENTIAL) + sizeof(MEM_BLOCK_TERMINATION))
-#define HEAP 1
-#define HOLE 0
-
-static FREE_HOLE __free_hole[1024];
-static UINT_32   __free_hole_counter = 0;
+void* non_block_allocator_heap = (void*)NON_BLOCK_ALLOCATOR_HEAP;
+void* current_pointer          = (void*)NON_BLOCK_ALLOCATOR_HEAP;
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
@@ -32,41 +32,13 @@ extern void CHECK_FS(UINT_32* fs);
 
 static void* __LiBOS_retrive_alloc_ptr(UINT_32 bytes, UINT_32 alignment, UINT_32 boundary, UINT_32* hole_or_heap, INT_32* entry)
 {
-	UINT_32 i = 0;
-	UINT_32 size = 0;
-
-	for (i = 0; i< __free_hole_counter; i++)
-	{
-		void* ptr    = __free_hole[i].ptr;
-		void* pptr   = (void*)((UINT_32)ptr + MEMBLOCKSIZE);
-		UINT_32 algn = ((UINT_32)(pptr)+(alignment - 1)) & (~(alignment - 1));
-		UINT_32 bond = ((UINT_32)(pptr)+(boundary - 1)) & (~(boundary - 1));
-		size = (algn - (UINT_32)ptr) + bytes;
-
-		// the boundary must be confined in the free hole entry limitation
-		if (bond < ((UINT_32)ptr + __free_hole[i].size))
-			continue;
-
-		if (size <= __free_hole[i].size)
-		{
-			*hole_or_heap = HOLE;
-			*entry = i;
-			return ptr;
-		}
-	}
-
-	*entry = -1;
-	*hole_or_heap = HEAP;
-	return __LiBOS_Heap;
+	return 0;
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 static void __LiBOS_Remove_Entry(UINT_32 entry)
 {
-	int i;
-	for (i = entry; i < __free_hole_counter; i++)
-		__free_hole[i] = __free_hole[i + 1];
 	return;
 }
 
@@ -74,161 +46,32 @@ static void __LiBOS_Remove_Entry(UINT_32 entry)
 
 static void __LiBOS_SortFreeList(void)
 {
-	int i = 0, j = 0;
-
-	while (j<__free_hole_counter)
-	{
-		for (i = 0; i<__free_hole_counter - 1; i++)
-			if (__free_hole[i].ptr > __free_hole[i + 1].ptr)
-				SWAP_HOLE_ENTRIES(&__free_hole[i], &__free_hole[i + 1]);
-		j++;
-	}
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 static void __LiBOS_MergeFreeListEntries(void)
 {
-	UINT_32 i = 0;
-	UINT_32 j = 0;
-	UINT_32 k = 0;
-	FREE_HOLE*   tmp = 0;
-
-	if (!__free_hole_counter)
-		return;
-
-	while (i < __free_hole_counter - 1)
-	{
-		j = i + 1;
-		tmp = &__free_hole[j];
-		while (__free_hole[i].next == tmp->ptr)
-		{
-			tmp->tag = 0xFB018ADA; //deleting tag
-			k = tmp->size;
-			__free_hole[i].next = tmp->next;
-			__free_hole[i].size += k;
-			j++;
-			tmp = &__free_hole[j];
-		}
-		i += j;
-		k = 0;
-	}
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 static void __LiBOS_RemoveTaggedEntries(void)
 {
-	UINT_32 tagged = 0, i, j, ii;
-
-	if (!__free_hole_counter)
-		return;
-
-	for (i = 0; i<__free_hole_counter; i++)
-		if (__free_hole[i].tag == 0xFB018ADA)
-			tagged++;
-
-	for (ii = 0; ii<tagged; ii++)
-	{
-		i = 0;
-		while (i<__free_hole_counter - 1)
-		{
-			if (__free_hole[i].tag == 0xFB018ADA)
-			{
-				for (j = i; j<__free_hole_counter - 1; j++)
-					__free_hole[j] = __free_hole[j + 1];
-				__free_hole_counter--;
-				//printk("deleted @ %\n", i);
-				i = 0;
-				break;
-			}
-			i++;
-		}
-	}
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 void* Alloc(UINT_32 bytes, UINT_32 alignment, UINT_32 boundary)
 {
-	UINT_32 i                 = 0;
-	UINT_32 tmp               = 0;
-	void*   current_alloc_ptr = 0;
-	UINT_32 got_from_hole     = 0;
-	int     hole_entry        = -1024;
-
-	MEM_BLOCK_PRECEDENTIAL blk1;
-	MEM_BLOCK_TERMINATION  blk2;
-
-	current_alloc_ptr = __LiBOS_retrive_alloc_ptr(bytes, alignment, boundary, &got_from_hole, &hole_entry); // either alloc_ptr or zeroth of an empty hole
-	current_alloc_ptr = (void*)((UINT_32)current_alloc_ptr + MEMBLOCKSIZE);
-
-	UINT_32 pointer_for_alignment = ((UINT_32)(current_alloc_ptr)+(alignment - 1)) & (~(alignment - 1));
-	UINT_32 pointer_for_boundary  = ((UINT_32)(current_alloc_ptr)+(boundary  - 1)) & (~(boundary  - 1));
-
-	if ((pointer_for_alignment + bytes) > pointer_for_boundary)
-		pointer_for_alignment = pointer_for_boundary;
-
-	tmp = pointer_for_alignment - (UINT_32)current_alloc_ptr;
-
-	blk1.zeroth_ptr = (void*)((UINT_32)current_alloc_ptr - (MEMBLOCKSIZE));
-	blk1.alignment_bound_space = tmp;
-
-	blk1.start_ptr = (void*)((UINT_32)current_alloc_ptr + blk1.alignment_bound_space);
-	blk1.end_ptr = (void*)((UINT_32)blk1.start_ptr + bytes);
-	blk1.actual_allocated_bytes = bytes;
-	blk1.from_heap_or_hole = ((got_from_hole) ? HEAP : HOLE);
-
-	current_alloc_ptr = blk1.zeroth_ptr;
-	*(MEM_BLOCK_PRECEDENTIAL*)current_alloc_ptr = blk1;
-
-	blk2.alignment_bound_space = blk1.alignment_bound_space;
-	*(MEM_BLOCK_TERMINATION*)((void*)(((UINT_32)current_alloc_ptr + sizeof(MEM_BLOCK_PRECEDENTIAL) + blk1.alignment_bound_space))) = blk2;
-
-	if (blk1.from_heap_or_hole == HEAP)
-		__LiBOS_Heap = (void*)(((UINT_32)current_alloc_ptr + MEMBLOCKSIZE + blk1.alignment_bound_space + blk1.actual_allocated_bytes));
-	else
-	{
-		//.printk("allocated from hole not heap ");
-		if(hole_entry != -1)
-			__LiBOS_Remove_Entry(hole_entry);
-	}
-
-	//.printk("ZE = ^. S = ^. E = ^\n", (UINT_32)blk1.zeroth_ptr, (UINT_32)blk1.start_ptr, (UINT_32)blk1.end_ptr);
-
-	//UINT_8* ttmp = (UINT_8*)blk1.start_ptr;
-	//for (int j = 0; j < blk1.actual_allocated_bytes; j++)
-	//	ttmp[j] = '+';
-
-	return blk1.start_ptr;
+	return 0;
 }
 
 void Free(void* ptr)
 {
-	MEM_BLOCK_PRECEDENTIAL* blk1 = 0;
-	MEM_BLOCK_TERMINATION*  blk2 = 0;
-
-	blk2 = (MEM_BLOCK_TERMINATION* )((void*)((UINT_32)ptr - sizeof(MEM_BLOCK_TERMINATION)));
-	blk1 = (MEM_BLOCK_PRECEDENTIAL*)((void*)((UINT_32)ptr - (MEMBLOCKSIZE)-blk2->alignment_bound_space));
-
-	__free_hole[__free_hole_counter].ptr  = blk1->zeroth_ptr;
-	__free_hole[__free_hole_counter].size = MEMBLOCKSIZE + blk1->alignment_bound_space + blk1->actual_allocated_bytes;
-	__free_hole[__free_hole_counter].next = (void*)((UINT_32)(blk1->zeroth_ptr) + __free_hole[__free_hole_counter].size);
-
-	if (blk1->from_heap_or_hole == HEAP) //it it have been already from hole, there is no need to increment the hole counter
-		__free_hole_counter++;
-
-	__LiBOS_SortFreeList();
-	__LiBOS_MergeFreeListEntries();
-	__LiBOS_RemoveTaggedEntries();
-
-	//UINT_8* ttmp = (UINT_8*)blk1->zeroth_ptr;
-	//UINT_32 count = MEMBLOCKSIZE + blk1->alignment_bound_space + blk1->actual_allocated_bytes;
-	//for (int j = 0; j < count; j++)
-	//	ttmp[j] = '-';
-
-	return;
 }
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 void mwrite(const UINT_32 base, const UINT_32 offset, const UINT_32 value)
 {
@@ -262,6 +105,8 @@ void mwrite(const UINT_32 base, const UINT_32 offset, const UINT_32 value)
 	*(volatile UINT_32*)target = value;
 }
 
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
 UINT_32 mread(const UINT_32 base, const UINT_32 offset)
 {
 	UINT_32 ds, es, gs, fs;
@@ -292,6 +137,218 @@ UINT_32 mread(const UINT_32 base, const UINT_32 offset)
 	UINT_32 target_pointer = base + offset;
 	void* target = (void*)target_pointer;
 	return *(volatile UINT_32*)target;
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+void* physical_page_alloc(void)
+{
+	/* find the first clear page */
+	UINT_32 counter   = 0;
+	UINT_32 clear_bit = 0;
+	while(counter < 6000)
+	{
+		if( mem_block_allocator_bitmap[counter] != 0xFFFFFFFF ) // there is at least a bit 0 inside
+		{
+			/* find the first 0 bit */
+			UINT_32 bit = 0;
+			while(bit < 32)
+			{
+				if( (mem_block_allocator_bitmap[counter] & (1 << bit)) == 0 )
+				{
+					clear_bit = bit;
+					goto FOUND_CLEAR_BIT;
+				}
+				bit++;
+			}
+		}
+		else
+			counter++;
+	}
+	
+	/* if it reaches here, there is no page available */
+	panic("there is no memmory page available anymore\n");
+	return 0;
+	
+FOUND_CLEAR_BIT:
+	/* label the bitmap as dirty */
+	mem_block_allocator_bitmap[counter] |= (1 << clear_bit);
+	
+	/* return its address */
+	UINT_32 page = BLOCK_ALLOCATOR_HEAP + ((32 * counter + clear_bit) * 0x1000);
+	return (void*)page;
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+void physical_page_free(void* page)
+{
+	/* calculate the corresponding bit */
+	UINT_32 global_bit = ((UINT_32)page - BLOCK_ALLOCATOR_HEAP) / 0x1000;
+	UINT_32 index      = global_bit / 32;
+	UINT_32 bit        = global_bit - index;
+	
+	/* label the bitmap as clear */
+	mem_block_allocator_bitmap[index] &= ~(1 << bit);
+	
+	return;
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+void initialize_page_allocator(void)
+{
+	/* make all pages as clear (a.k.a. non-allocated) */
+	__LiBOS_MemZero(mem_block_allocator_bitmap, 6000*sizeof(UINT_32));
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+void initialize_non_page_allocator(void)
+{
+	/* make all memory space clear (a.k.a. non-allocated) */
+	__LiBOS_MemZero(non_block_allocator_heap, 0x10000000 /* 256 MB */);
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+static void* LiBOS_non_page_alloc(UINT_32 bytes, UINT_32 alignment, UINT_32 boundary, UINT_32 user_or_kernel)
+{
+	UINT_32 process_pdbr = 0;
+	
+	/* very important: switch to LiBOS main PDBR to be able to dig into memory space */
+	if(user_or_kernel == USER_MODE_PROCESS)
+	{
+		/* invoke int 0x80 */
+		PAGE_DIRECTORY* libos_pd = get_libos_main_page_directory();
+		asm_user_int_0x80(4, &process_pdbr, 0);
+		asm_user_int_0x80(3, libos_pd, 0);
+	}
+	else { ; }
+	
+	/* now search for clear space, non-allocated-before, and big enough for the allocation */
+	UINT_32 i = 0;
+	LIBOS_MEMORY_DESCRIPTOR* md = 0;
+	while(i < 0x10000000)
+	{
+		md = (LIBOS_MEMORY_DESCRIPTOR*)(PHYSICAL_ADDRESS(non_block_allocator_heap) + i);
+		if( md->descriptor_id == 0 )
+		{
+			/* a free space found. calculate the needed space */
+			UINT_32 begin         = PHYSICAL_ADDRESS(md) + sizeof(LIBOS_MEMORY_DESCRIPTOR);
+			UINT_32 begin_aligned = (begin + (alignment - 1)) &~ (alignment - 1);
+			UINT_32 actual_bytes  = begin_aligned - begin + bytes;
+			
+			/*  */
+			UINT_32 space = 0;
+			UINT_8* p = (UINT_8*)md;
+			while( *p == 0 )
+			{
+				space++;
+				p++;
+				
+				/* you shouldn't pass HEAP_MEM */
+				if(space >= actual_bytes)
+					break;
+			}
+			
+			//--if(actual_bytes > boundary)
+			//--{
+			//--	/* look for further non-allocated space */
+			//--	i += ( PHYSICAL_ADDRESS(md->end) - PHYSICAL_ADDRESS(non_block_allocator_heap) ); 
+			//--	space = 0; // a trick to jump over the next block
+			//--}
+			
+			/* check if the space is big enough */
+			if(actual_bytes <= space)
+			{
+				md->descriptor_id = MAGIC_MEMORY_DESCROPTOR;
+				md->start = (void*)( begin_aligned );
+				md->end   = (void*)( begin_aligned + bytes );
+				goto ALLOC_FINAL_SETTINGS;
+			}
+		}
+		else
+			i += ( PHYSICAL_ADDRESS(md->end) - PHYSICAL_ADDRESS(non_block_allocator_heap) ); 
+	}
+	
+	/* take care of paging switching back to the user or kernel process */
+ALLOC_FINAL_SETTINGS:
+	if(user_or_kernel == USER_MODE_PROCESS)
+		asm_user_int_0x80(3, process_pdbr, 0);
+	else { ; }
+	
+	/* return the allocated pointer */
+	return (void*)(md->start);
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+void LiBOS_non_page_free(void* ptr, UINT_32 user_or_kernel)
+{
+	UINT_32            space_to_clear = 0;
+	LIBOS_MEMORY_DESCRIPTOR* md             = (LIBOS_MEMORY_DESCRIPTOR*)(PHYSICAL_ADDRESS(ptr) - sizeof(LIBOS_MEMORY_DESCRIPTOR));
+	
+	/* very important: switch off paging to be able to dig into memory space */
+	if(user_or_kernel == USER_MODE_PROCESS)
+	{
+		/* invoke int 0x80 for paging_off {eax = 1, ebx = ecx = 0 } */
+		asm_user_int_0x80(1, 0, 0);
+	}
+	else
+	{ ; }
+	
+	/* sanity check */
+	if(md->descriptor_id != MAGIC_MEMORY_DESCROPTOR)
+	{
+		panic("provided address to free is invalid\n");
+		goto FREE_FINAL_SETTING;
+	}
+	
+	/* get the space and zero it */
+	__LiBOS_MemZero(md, PHYSICAL_ADDRESS(md->end));
+	
+FREE_FINAL_SETTING:
+	if(user_or_kernel == USER_MODE_PROCESS)
+	{
+		/* invoke int 0x80 for paging_on {eax = 2, ebx = ecx = 0 } */
+		/* invoke int 0x80 for paging_off {eax = 1, ebx = ecx = 0 } */
+		//asm_user_int_0x80(1, 0, 0);
+		PAGE_DIRECTORY* pd = get_libos_main_page_directory();
+		UINT_32 pdbr = 0;
+		asm_user_int_0x80(4, &pdbr, 0);
+		asm_user_int_0x80(3, pd, 0);
+	}
+	else
+	{ ; }
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+void* kernel_alloc(UINT_32 bytes, UINT_32 alignment, UINT_32 boundary)
+{
+	return LiBOS_non_page_alloc(bytes, alignment, boundary, KERNEL_MODE_PROCESS);
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+void* user_alloc(UINT_32 bytes, UINT_32 alignment)
+{
+	return LiBOS_non_page_alloc(bytes, alignment, 0xFFFFFFFF, USER_MODE_PROCESS);
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+void kernel_free(void* pointer)
+{
+	return LiBOS_non_page_free(pointer, KERNEL_MODE_PROCESS);
+}
+
+//--+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+void user_free(void* pointer)
+{
+	return LiBOS_non_page_free(pointer, USER_MODE_PROCESS);
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

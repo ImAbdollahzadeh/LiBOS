@@ -479,7 +479,7 @@ void init_desktop(void)
 	desktop.how_many_children = 0;
 	desktop.title_bar         = 0;
 	desktop.border_frame      = 0;
-	desktop.buffer            = (UINT_8*)( Alloc((3145728), 1, 1 ));
+	desktop.buffer            = (UINT_8*)( kernel_alloc((3145728), 1, 0xFFFFFFFF ));
 	
 	UINT_32 i = 0;
 	for(i=0; i < 3145728; i += 4)

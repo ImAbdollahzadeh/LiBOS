@@ -75,6 +75,9 @@ void LiBOS_kernel_main(void)
 		return;
 	}
 	
+	/* initialize the non-paged physical memory allocator (for SYS space devices) */
+	initialize_non_page_allocator();
+	
 	/* start paging with the entire 4GB address space as identity mapping 
 	   and setting the iBOS main page directory available for all logical CPUs */
 	if( !start_paging() )
@@ -83,17 +86,38 @@ void LiBOS_kernel_main(void)
 		return;
 	}
 	
+	/* start svga and enabling PMODE_BIOS_CALLs for all logical CPUs */
+	SVGA svga;
+	status = RegisterSVGA(&svga);
+	if(!status)
+	{
+		panic( "SVGA registration failed\n" );
+		return;
+	}
+	
 	/* enable all AP CPUs and bring them on halt state waiting for threads to run */
 	MP_FLOATING_POINTER mpfp;
 	if( query_multiprocessing(&mpfp) )
 	{
 		//-__LiBOS_ChrDump (mpfp.signature, 4);
-		//-printk("MP_features_1=^\n", mpfp.mp_features_1);
-		//-printk("MP_config_pointer=^\n", mpfp.mp_config_pointer);
+		//-printk("MP features 1=^\n", mpfp.mp_features_1);
+		//-printk("MP config pointer=^\n", mpfp.mp_config_pointer);
 		MP_configuration_table(&mpfp);
 		query_libos_cpus();
 		query_libos_ioapics();
 		start_multiprocessing();
+	}
+	
+	/* start pci configuration, detecting sata, ehci, and xhci */
+	PCI  pci;
+	SATA sata;
+	EHCI ehci;
+	XHCI x;
+	status = RegisterPCI(&pci, &sata, &ehci, &x);
+	if(!status)
+	{
+		panic( "PCI registration failed\n" );
+		return;
 	}
 	
 	/* start process and threads (i.e. tasks) to be distributed accross all logical CPUs */
@@ -102,6 +126,7 @@ void LiBOS_kernel_main(void)
 		panic( "kernel process initiation failed\n" );
 		return;
 	}
+	
 	
 	/* start acpi configuration (if any) */
 	//.RSDP_Descriptor_2_0 rsdp;
@@ -112,80 +137,59 @@ void LiBOS_kernel_main(void)
 	//.	if(fadt)
 	//.		printk("FADT:^\n", fadt);
 	//.}
-
-	/* start pci configuration, detecting sata, ehci, and xhci */
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,PCI  pci;
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SATA sata;
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,EHCI ehci;
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,XHCI x;
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,status = RegisterPCI(&pci, &sata, &ehci, &x);
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,if(!status)
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,{
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,	panic( "PCI registration failed\n" );
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,	return;
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,}
 	
 	/* start FAT32 filesystem and files on sata */
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,//.FILESYSTEM filesystem;
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,//.RegisterFilesystem(&filesystem, &sata);
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,//.if(!status)
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,//.{
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,//.	panic( "FILESYSTEM registration failed\n" );
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,//.	return;
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,//.}
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+	//FILESYSTEM filesystem;
+	//RegisterFilesystem(&filesystem, &sata);
+	//------if(!status)
+	//------{
+	//------	panic( "FILESYSTEM registration failed\n" );
+	//------	return;
+	//------}
+	
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,//----ect_execution("ECT/__IMG.ect");
 	
-	/* start svga and enabling PMODE_BIOS_CALLs for all logical CPUs */
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,SVGA svga;
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,status = RegisterSVGA(&svga);
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,if(!status)
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,{
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,	panic( "SVGA registration failed\n" );
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,	return;
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,}
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 	/* start the graphical desktop mode and leaving the debug, consule mode */
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,clear_screen();
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,UINT_8* fb = svga.LFB;
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,init_desktop();
+	//-clear_screen();
 	
-	/* start the windows */
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,WINDOW wnd;
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,POINT wnd_orig = {50, 50};
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,register_window(&wnd, "first_window", 400, 200, &wnd_orig);    
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,const INT_8* test  = "ImanAbdollahzadeh";
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,const INT_8* test2 = "abcdefghijklmnopqrstuvwxyz";
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,draw_string(test,  &wnd, 20, 180, LiBOS_WINDOW_BODY_COLOR);
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,draw_string(test2, &wnd, 20, 160, LiBOS_WINDOW_BODY_COLOR);
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,WINDOW wnd2;
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,POINT wnd_orig2 = {80, 70};
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,register_window(&wnd2, "second_window", 200, 100, &wnd_orig2);
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,WINDOW wnd3;
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,POINT wnd_orig3 = {110, 35};
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,WINDOW_OBJECT obj;
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,obj.object_identifier = OBJECT_BUTTON;
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,register_window(&wnd3, "third_window", 200, 100, &wnd_orig3); 
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,register_object(&wnd3, &obj);
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,WINDOW wnd4;
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,POINT wnd_orig4 = {430, 240};
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,register_window(&wnd4, "fourth_window", 80, 90, &wnd_orig4);
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,draw_window(&wnd , fb);
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,draw_window(&wnd2, fb);
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,draw_window(&wnd3, fb);
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,draw_window(&wnd4, fb);
+	//.UINT_8* fb = svga.LFB;
+	//.init_desktop();
+	//.
+	//./* start the windows */
+	//.WINDOW wnd;
+	//.POINT wnd_orig = {50, 50};
+	//.register_window(&wnd, "first_window", 400, 200, &wnd_orig);    
+	//.const INT_8* test  = "ImanAbdollahzadeh";
+	//.const INT_8* test2 = "abcdefghijklmnopqrstuvwxyz";
+	//.draw_string(test,  &wnd, 20, 180, LiBOS_WINDOW_BODY_COLOR);
+	//.draw_string(test2, &wnd, 20, 160, LiBOS_WINDOW_BODY_COLOR);
+	//.
+	//.WINDOW wnd2;
+	//.POINT wnd_orig2 = {80, 70};
+	//.register_window(&wnd2, "second_window", 200, 100, &wnd_orig2);
+	//.WINDOW wnd3;
+	//.POINT wnd_orig3 = {110, 35};
+	//.WINDOW_OBJECT obj;
+	//.obj.object_identifier = OBJECT_BUTTON;
+	//.register_window(&wnd3, "third_window", 200, 100, &wnd_orig3); 
+	//.register_object(&wnd3, &obj);
+	//.WINDOW wnd4;
+	//.POINT wnd_orig4 = {430, 240};
+	//.register_window(&wnd4, "fourth_window", 80, 90, &wnd_orig4);
+	//.
+	//.draw_window(&wnd , fb);
+	//.draw_window(&wnd2, fb);
+	//.draw_window(&wnd3, fb);
+	//.draw_window(&wnd4, fb);
 	
-	/* start communication with xhci-driven USB mouse */
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,USB_MOUSE usb_mouse;
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,status = RegisterMouse(&usb_mouse);
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,if(!status)
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,{
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,	panic( "USB MOUSE registration failed\n" );
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,	return;
-	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,}
+	//-/* start communication with xhci-driven USB mouse */
+	//-USB_MOUSE usb_mouse;
+	//-status = RegisterMouse(&usb_mouse);
+	//-if(!status)
+	//-{
+	//-	panic( "USB MOUSE registration failed\n" );
+	//-	return;
+	//-}
 	
 	/* start activation of SSE and AVX on all logical CPUs */
 	//,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,_activate_sse();
@@ -201,7 +205,7 @@ void LiBOS_kernel_main(void)
 	//.	panic( "VIDEO_PLAYER registration failed\n" );
 	//.	return;
 	//.}
-
+	
 	//.UINT_32 l = 0;
 	//.UINT_32 h = 0;
 	//.start_user_timer();
@@ -230,9 +234,9 @@ void LiBOS_kernel_main(void)
 	//....debug();
 	
 	/* enter user mode as the no-go destination */
-	initiate_usermode();
+	//----------initiate_usermode();
 	/* FROM NOW ON WE ARE IN USERMODE -> NO PRIVILEGE INSTRUCTION CAN BE ISSUED ANYMORE */
-	
+	_STI();
 	while(1);
 }
 

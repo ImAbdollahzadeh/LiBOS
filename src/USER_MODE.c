@@ -14,9 +14,13 @@ void __process_test(void)
 	/* create a page fault to see the handling */
 	void* addr = (void*)0x40009F00;
 	*(UINT_32*)addr = 42;
-	*(UINT_32*)addr = 475;
-	addr = (void*)0x40009000;
-	*(UINT_32*)addr = 12;
+	printk("value: % at address ^\n", *(UINT_32*)addr, addr);
+	addr = (void*)0x40009F80;
+	*(UINT_32*)addr = 4231;
+	
+	
+	void* mem = user_alloc(100, 8);
+	printk("mem:^\n", mem);
 }
 
 
@@ -27,17 +31,22 @@ void printu(UINT_32 string_address_to_print)
 	printk(string_address_to_print);
 }
 
-void enter_critical_section(void)
+void paging_off(UINT_32 unused)
 { ; }
 
-void leave_critical_section(void)
+void paging_on(UINT_32 unused)
 { ; }
 
-void user_set_pdbr(void)
-{ ; }
+void user_set_pdbr(UINT_32 pdbr)
+{ 
+	_CLI();
+	set_pdbr(pdbr);
+}
 
-void user_get_pdbr(void)
-{ ; }
+void user_get_pdbr(UINT_32* ret)
+{ 
+	*ret = get_pdbr();
+}
 
 void user_mode_execute_process(UINT_32 pointer_to_process)
 {
@@ -50,8 +59,8 @@ void user_mode_execute_process(UINT_32 pointer_to_process)
 void* LiBOS_system_calls[] = 
 {
 	&printu,
-	&enter_critical_section,
-	&leave_critical_section,
+	&paging_off,
+	&paging_on,
 	&user_set_pdbr,
 	&user_get_pdbr,
 	&user_mode_execute_process,

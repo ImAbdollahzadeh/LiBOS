@@ -19,9 +19,13 @@
 */
 
 #define MULTI_PROCESSOR_DEBUG FALSE
+#define IOIAE_DEBUG FALSE
+#define BUS_DEBUG FALSE
 
 static BOOL apic_or_pic              = FALSE; // pic mode
 static UINT_16 ready_cpu_for_threads = 0;     // support for up to 16 logical cpu
+static PCI_IRQ pci_irqs[1024];                // we accept up to 1024 pci irqs
+static UINT_32 pci_irqs_counter      = 0;
 
 #define BIT(X) (1<<(X))
 
@@ -63,17 +67,6 @@ void bsp_lapic_timer(REGS* r)
 { 
 	/* so far no plan */
 	return;      
-}
-
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-static void multiprocessor_memcopy(void* src, void* trg, UINT_32 bytes)
-{
-	UINT_32 i;
-	INT_8* ssrc = (INT_8*)src;
-	INT_8* ttrg = (INT_8*)trg;
-	for(i = 0; i < bytes; i++)
-		ttrg[i] = ssrc[i];
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -216,9 +209,9 @@ void IOAPIC_info(IOAPIC_INFO* ioapic)
 
 static void IO_INTTERUPT_ASSIGNMENT_ENTRY_info(IO_INTTERUPT_ASSIGNMENT_ENTRY* ioiae)
 {
-	if(MULTI_PROCESSOR_DEBUG)
+	if(IOIAE_DEBUG)
 	{
-		printk("IO_IAE id=% ",       ioiae->entry_type);
+		//printk("IO_IAE id=% ",       ioiae->entry_type);
 		printk("IOIAE IntType=% ",   ioiae->intterupt_type);
 		printk("pol=% "  ,           GET_POLARITY_BIT(ioiae->polarity_and_trigger_mode));
 		printk("trig=% ",            GET_TRIGGER_BIT(ioiae->polarity_and_trigger_mode));
@@ -227,6 +220,18 @@ static void IO_INTTERUPT_ASSIGNMENT_ENTRY_info(IO_INTTERUPT_ASSIGNMENT_ENTRY* io
 		printk("dstIOapicID=% ",     ioiae->destination_ioapic_id);
 		printk("dstIOapicINTIN=%\n", ioiae->destination_ioapic_intin);
 	}
+	
+	/* I know source bus id 3, is for ISA */
+	if(ioiae->source_bus_id == 3)
+		return;
+	
+	UINT_32 cnt = pci_irqs_counter;
+	pci_irqs[cnt].INT               = (ioiae->source_bus_irq & 3); // bits 0 and 1
+	pci_irqs[cnt].pci_device_number = (ioiae->source_bus_irq >> 2) & 0x1F; // bits 3, 4, 5, 6
+	pci_irqs[cnt].trig              = (GET_TRIGGER_BIT (ioiae->polarity_and_trigger_mode) == 3) ? LEVEL : EDGE;
+	pci_irqs[cnt].pol               = (GET_POLARITY_BIT(ioiae->polarity_and_trigger_mode) == 3) ? LOW : HIGH;
+	pci_irqs[cnt].dest_intin        = ioiae->destination_ioapic_intin;
+	pci_irqs_counter++;
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -235,7 +240,7 @@ static void LOCAL_INTTERUPT_ASSIGNMENT_ENTRY_info(LOCAL_INTTERUPT_ASSIGNMENT_ENT
 {
 	if(MULTI_PROCESSOR_DEBUG)
 	{
-		printk("LIAE id=% ",         liae->entry_type);
+		//printk("LIAE id=% ",         liae->entry_type);
 		printk("LIAE IntType=% ",    liae->intterupt_type);
 		printk("pol=% ",             GET_POLARITY_BIT(liae->polarity_and_trigger_mode));
 		printk("trig=% ",            GET_TRIGGER_BIT(liae->polarity_and_trigger_mode));
@@ -248,6 +253,35 @@ static void LOCAL_INTTERUPT_ASSIGNMENT_ENTRY_info(LOCAL_INTTERUPT_ASSIGNMENT_ENT
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
+
+static void BUS_ENTRY_info(BUS_ENTRY* bus)
+{
+	if(BUS_DEBUG)
+	{
+		//printk("BUS id=% ",         bus->entry_type);
+		printk("BUS id=% ", bus->bus_id);
+		printk("BUS string=");
+		__LiBOS_ChrDump(bus->string, 6);
+	}
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+static void report_pci_irqs(void)
+{
+	UINT_32 cnt = pci_irqs_counter, i;
+	for(i=0; i<cnt; i++)
+	{
+		printk("INT%, ",          pci_irqs[i].INT);
+		printk("device_no:%, ",   pci_irqs[i].pci_device_number);
+		printk("trig:%, ",        pci_irqs[i].trig);
+		printk("pol:%, ",         pci_irqs[i].pol);
+		printk("dest_INTIN#:%\n", pci_irqs[i].dest_intin);
+	}
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
 void MP_configuration_table(MP_FLOATING_POINTER* mpfp)
 {
 	MP_CONFIGURATION_TABLE* mpct  = (MP_CONFIGURATION_TABLE*)(PHYSICAL_ADDRESS(mpfp->mp_config_pointer));
@@ -255,17 +289,17 @@ void MP_configuration_table(MP_FLOATING_POINTER* mpfp)
 	
 	if(MULTI_PROCESSOR_DEBUG)
 	{
-	printk("    MP_CONFIGURATION_TABLE    \n");
-	__LiBOS_ChrDump (mpct->header.signature, 4);
-	printk("base_table_length=^\n", mpct->header.base_table_length);
-	printk("specification_revision=^\n", mpct->header.specification_revision);
-	__LiBOS_ChrDump (mpct->header.OEM_id, 8);
-	__LiBOS_ChrDump (mpct->header.product_id, 12);
-	printk("OEM_table_pointer=^\n", mpct->header.OEM_table_pointer);
-	printk("OEM_table_size=^\n", mpct->header.OEM_table_size);
-	printk("entry_count=^\n", mpct->header.entry_count);
-	printk("address_of_local_apic=^\n", mpct->header.address_of_local_apic);
-	printk("extended_table_length=^\n", mpct->header.extended_table_length);
+		printk("    MP_CONFIGURATION_TABLE    \n");
+		__LiBOS_ChrDump (mpct->header.signature, 4);
+		printk("base_table_length=^\n", mpct->header.base_table_length);
+		printk("specification_revision=^\n", mpct->header.specification_revision);
+		__LiBOS_ChrDump (mpct->header.OEM_id, 8);
+		__LiBOS_ChrDump (mpct->header.product_id, 12);
+		printk("OEM_table_pointer=^\n", mpct->header.OEM_table_pointer);
+		printk("OEM_table_size=^\n", mpct->header.OEM_table_size);
+		printk("entry_count=^\n", mpct->header.entry_count);
+		printk("address_of_local_apic=^\n", mpct->header.address_of_local_apic);
+		printk("extended_table_length=^\n", mpct->header.extended_table_length);
 	}
 	
 	UINT_32                       entry   = mpct->header.entry_count, i;
@@ -277,6 +311,11 @@ void MP_configuration_table(MP_FLOATING_POINTER* mpfp)
 		{
 			CPU_info((CPU_INFO*)entries);
 			entries = (MP_CONFIGURATION_TABLE_ENTRY*)((INT_8*)entries + 20);
+		}
+		else if(entries->type == 1) // BUS_ENTRY
+		{
+			BUS_ENTRY_info((BUS_ENTRY*)entries);
+			entries = (MP_CONFIGURATION_TABLE_ENTRY*)((INT_8*)entries + 8);
 		}
 		else if(entries->type == 2) // IOAPIC
 		{
@@ -293,11 +332,13 @@ void MP_configuration_table(MP_FLOATING_POINTER* mpfp)
 			LOCAL_INTTERUPT_ASSIGNMENT_ENTRY_info((LOCAL_INTTERUPT_ASSIGNMENT_ENTRY*)entries);
 			entries = (MP_CONFIGURATION_TABLE_ENTRY*)((INT_8*)entries + 8);
 		}
-		else // rest (e.g. BUS)
+		else // rest
 		{
 			entries = (MP_CONFIGURATION_TABLE_ENTRY*)((INT_8*)entries + 8);
 		}
 	}
+	
+	//report_pci_irqs();
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -502,6 +543,19 @@ static void enable_ioapic(LiBOS_LOGICAL_IOAPIC* ioapic, LiBOS_LOGICAL_CPU* cpu)
 	/* I know that IRQ0 mapped to INTIN2 of I/O APIC */
 	ioapic_remap_vector(2, 32, EDGE, HIGH, FALSE, cpu);
 	
+	//./* IRQ9 and 11 are different */
+	//.ioapic_remap_vector(9 , 41, LEVEL, LOW, FALSE, cpu);
+	//.ioapic_remap_vector(11, 43, LEVEL, LOW, FALSE, cpu);
+	
+	//./* now PCI devices */
+	//.UINT_32 cnt = pci_irqs_counter;
+	//.for(i=0; i<cnt; i++)
+	//.{
+	//.	UINT_8 vector = pci_irqs[i].dest_intin;
+	//.	UINT_8 device = pci_irqs[i].pci_device_number;
+	//.	ioapic_remap_vector(vector , device + 32, LEVEL, LOW, FALSE, cpu);
+	//.}
+	
 	apic_or_pic = TRUE;
 	apic_eoi();
 	_STI();
@@ -612,8 +666,8 @@ FOUND_BSP:
 	get_mp_32_start     (&start_protected_mode);
 	get_mp_32_end       (&end_protected_mode);
 	
-	multiprocessor_memcopy((void*)start_real_mode,      (void*)0x7000, end_real_mode - start_real_mode);
-	multiprocessor_memcopy((void*)start_protected_mode, (void*)0x8000, end_protected_mode - start_protected_mode);
+	__LiBOS_MemCopy((void*)start_real_mode,      (void*)0x7000, end_real_mode - start_real_mode);
+	__LiBOS_MemCopy((void*)start_protected_mode, (void*)0x8000, end_protected_mode - start_protected_mode);
 	
 	/* Wake up all AP cpus */
 	i   = 0;

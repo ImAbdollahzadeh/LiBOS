@@ -2,6 +2,7 @@
 #include "../include/PRINT.h"
 #include "../include/MEMORY.h"
 #include "../include/IDT.h"
+#include "../include/PROCESS.h"
 
 /*
                      directory index                                             page table index                                                    offset into page
@@ -38,20 +39,6 @@ static PAGE_DIRECTORY* libos_initial_page_directory = 0;
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-UINT_32 alloc_physical_block(void)
-{
-	return (UINT_32)Alloc(LiBOS_PAGE_SIZE, LiBOS_PAGE_SIZE, LiBOS_PAGE_SIZE);
-}
-
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-void free_physical_block(void* ptr)
-{
-	Free(ptr);
-}
-
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
 BOOL paging_is_activate(void)
 {
 	return paging;
@@ -66,8 +53,12 @@ BOOL start_paging(void)
 		panic("paging has been already activated\n");
 		return FALSE;
 	}
-
-	libos_initial_page_directory = (PAGE_DIRECTORY*)alloc_physical_block();
+	
+	/* initialize the initialize_page_allocator */
+	initialize_page_allocator();
+	
+	/* start with the main LiBOS page directory */
+	libos_initial_page_directory = (PAGE_DIRECTORY*)physical_page_alloc();
 	PAGE_TABLE* table            = 0;
 	
 	/* clear out all pages */
@@ -77,9 +68,10 @@ BOOL start_paging(void)
 	UINT_32 i, j;
 	for(i = 0; i < 1024; i++)
 	{
-		table = (PAGE_TABLE*)alloc_physical_block();
+		table = (PAGE_TABLE*)physical_page_alloc();
+		__LiBOS_MemZero(table, sizeof(PAGE_TABLE));
 		for(j = 0; j < 1024; j++)
-			table->entries[j] = (MEGA_BYTE(4*i) + j * LiBOS_PAGE_SIZE) | (I86_PTE_WRITABLE | I86_PTE_PRESENT | I86_PTE_USER);
+			table->entries[j] = (MEGA_BYTE(4*i) + (j * LiBOS_PAGE_SIZE)) | (I86_PTE_WRITABLE | I86_PTE_PRESENT | I86_PTE_USER);
 		
 		libos_initial_page_directory->entries[i] = PHYSICAL_ADDRESS(table) | (I86_PDE_WRITABLE | I86_PDE_PRESENT | I86_PDE_USER);
 	}
@@ -88,7 +80,7 @@ BOOL start_paging(void)
 	_CLI();
 	
 	/* set pdbr */
-	set_pdbr(libos_initial_page_directory->entries);
+	set_pdbr( PHYSICAL_ADDRESS(libos_initial_page_directory));
 	
 	/* enable paging */
 	paging_enable();
@@ -104,7 +96,7 @@ BOOL create_page_table(PAGE_DIRECTORY* dir, UINT_32 virt, UINT_32 flags)
 	UINT_32* pagedir = dir->entries;
 	if ( pagedir[virt >> 22] == 0 )
 	{
-		void* block = alloc_physical_block();
+		void* block = physical_page_alloc();
 		if (!block)
 			return FALSE; 
 		
@@ -112,7 +104,7 @@ BOOL create_page_table(PAGE_DIRECTORY* dir, UINT_32 virt, UINT_32 flags)
 		__LiBOS_MemZero((void*)(pagedir[virt >> 22]), LiBOS_PAGE_SIZE);
 		
 		/* map page table into directory */
-		map_physical_address(dir, (UINT_32) virt, (UINT_32) block, flags);
+		map_physical_address(dir, (UINT_32) block, (UINT_32) block, flags);
 	}
 	return TRUE;
 }
@@ -148,7 +140,7 @@ void unmap_page_table (PAGE_DIRECTORY* dir, UINT_32 virt)
 		void* frame = (void*)(pagedir[virt >> 22] & 0x7FFFF000);
 		
 		/* unmap frame */
-		free_physical_block(frame);
+		physical_page_free(frame);
 		pagedir[virt >> 22] = 0;
 	}
 }
@@ -183,7 +175,10 @@ BOOL ask_for_page(UINT_32 virtual_address)
 	}
 	
 	/* we assume a user task got a page fault, not a kernel task */
-	void* physical_page = alloc_physical_block();
+	//void* physical_page = alloc_physical_block();
+	//map_physical_address(dir, virtual_address, physical_page, (I86_PTE_PRESENT | I86_PTE_WRITABLE | I86_PTE_USER));
+	
+	void* physical_page = physical_page_alloc();
 	map_physical_address(dir, virtual_address, physical_page, (I86_PTE_PRESENT | I86_PTE_WRITABLE | I86_PTE_USER));
 	
 	return TRUE;

@@ -405,7 +405,7 @@ UINT_32 RegisterFilesystem( FILESYSTEM* filesystem, SATA* sata )
 		return 0;
 	}	
 	
-	printk( "        >>> Filesystem registered successfully <<<\n");
+	//-printk( "        >>> Filesystem registered successfully <<<\n");
 	
 	return 1;
 }

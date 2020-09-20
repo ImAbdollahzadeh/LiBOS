@@ -1,5 +1,6 @@
 #include "../include/KEYBOARD.h"
 #include "../include/PRINT.h"
+#include "../include/SVGA.h"
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ GLOBAL AND STATIC VARIABLES
 
@@ -112,6 +113,9 @@ void keyboard_handler(REGS* r)
         
 		if(global_OS_keyboard.last_registered_key == 27) // ESC pressed for restart
 		{
+			if( graphic_mode() )
+				go_to_reset();
+			
 			clear_screen();
 			go_to_reset();
 		}
@@ -154,6 +158,13 @@ void keyboard_handler(REGS* r)
 			}
 		}
 	}
+	
+	if( graphic_mode() )
+	{
+		handle_key_events_in_graphical_displays(&global_OS_keyboard);
+		return;
+	}
+	
 	__LiBOS_EvaluateArrowKeys();
 }
 
@@ -166,19 +177,11 @@ void getch(UINT_8 keycode_to_break)
 	{
 		if(global_OS_keyboard.last_registered_key == keycode_to_break)
 		{
-		
 			printk("Brocken\n");
 			return;
 		}
 	}
 	_CLI();
-}
-
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-void PM_set_keyboard(void)
-{
-	irq_install_handler(1, &keyboard_handler);
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

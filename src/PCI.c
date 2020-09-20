@@ -5,7 +5,7 @@
 
 #define DATAPORTVALUE    0xCFC
 #define COMMANDPORTVALUE 0xCF8
-#define  pciDEBUG        0
+#define  pciDEBUG        FALSE
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ PCI SPACE PICTURE
 
@@ -50,7 +50,7 @@ UINT_32 RegisterPCI(PCI* pci, SATA* sata, EHCI* ehci, XHCI* x)
 				if(dev.class_id == 0x01 && dev.subclass_id == 0x06)
 				{
 					UINT_32 BAR5 = Read(pci, bus, device, function, FNC_BAR_5);
-					printk("    In PCI: AHCI SATA with Bar 5 = ^ found\n", BAR5);
+					//-printk("    In PCI: AHCI SATA with Bar 5 = ^ found\n", BAR5);
 					
 					sata->valid            = 1;
 					sata->bus              = bus;
@@ -96,7 +96,7 @@ UINT_32 RegisterPCI(PCI* pci, SATA* sata, EHCI* ehci, XHCI* x)
 					
 					UINT_32 headertype = (Read(pci, bus, device, function, 0x0C) & 0x00FF0000) >> 16;
 					if(pciDEBUG)
-						printk("xhci_HeaderType=%\n", headertype);
+						printk("xHCI Header Type=%\n", headertype);
 					
 					x->bus      = bus;
 					x->device   = device;

@@ -4,6 +4,8 @@
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ GLOBAL AND STATIC VARIABLES
 
+#define SVGA_DEBUG FALSE
+
 static SVGA*    global_svga   = 0;
 static BOOL     paging        = FALSE;
        UINT_32  bios_call_tag = LIBOS_BIOS_CALL_INVALID;
@@ -13,11 +15,14 @@ static BOOL     paging        = FALSE;
 //
 static BOOL BiosCall(UINT_8 call_number, UINT_32 query_mode, SVGA* svga)
 {
+	/* SVGA expects things to be called on BIOS calls which cannot be done once in APIC mode */
+	
 	/* check if we had paging or not */
 	paging = paging_is_activate();
 	bios_call_tag = paging ? LIBOS_BIOS_CALL_PAGING_ACTIVE : LIBOS_BIOS_CALL_PAGING_INACTIVE;
 	
 	SVGA_REGS_16_BIT r;
+	__LiBOS_MemZero(&r, sizeof(SVGA_REGS_16_BIT));
 	
 	UINT_16 mode = 0x0118; // 0x0118: 24 bit <8:8:8>   - (1024 x 768)
 	                       // 0x011B: 24 bit <8:8:8>   - (1280 x 1024)
@@ -43,7 +48,6 @@ static BOOL BiosCall(UINT_8 call_number, UINT_32 query_mode, SVGA* svga)
 			r.di = OFF(vbe_info_ptr);
 			
 			__LiBOS_BiosCall(call_number, &r);
-			
 			if (r.ax != 0x004F)
 			{
 				printk("getting svga vbe info failed from bios call\n");
@@ -108,6 +112,7 @@ UINT_32 RegisterSVGA(SVGA* svga)
 	
 	BOOL status = FALSE;
 	status      = BiosCall(0x10, LIBOS_GET_VBE_INFO, svga);
+	
 	if(!status)
 	{
 		printk("get_vba_info failed\n");
@@ -115,7 +120,8 @@ UINT_32 RegisterSVGA(SVGA* svga)
 	}
 	else
 		svga_report_vbe_info(svga);
-	status = BiosCall(0x10, LIBOS_GET_VBE_MODE_INFO, svga);
+	status = BiosCall(0x10, LIBOS_GET_VBE_MODE_INFO, svga); 
+	
 	if(!status)
 	{
 		printk("get_vba_mode_info failed\n");
@@ -125,6 +131,7 @@ UINT_32 RegisterSVGA(SVGA* svga)
 		svga_report_vbe_mode_info(svga);
 	
 	status = BiosCall(0x10, LIBOS_SET_MODE, svga);
+	
 	if(!status)
 	{
 		printk("svga set_mode failed\n");
@@ -132,6 +139,14 @@ UINT_32 RegisterSVGA(SVGA* svga)
 	}
 	
 	global_svga = svga;
+	
+	/* set 2 debuggger displays for the gaphic mode */
+	allocate_graphic_mode_displays();
+	
+	/* set the consule debugger to gaphic mode */
+	extern BOOL LiBOS_graphic_mode;
+	LiBOS_graphic_mode = TRUE;
+	
 	return 1;
 }
 
@@ -142,12 +157,15 @@ UINT_32 RegisterSVGA(SVGA* svga)
 
 void svga_report_vbe_info(SVGA* svga)
 {
-	printk("signature:^ ^ ^ ^\n",          svga->vbe_info.signature[0], svga->vbe_info.signature[1], svga->vbe_info.signature[2], svga->vbe_info.signature[3]);
-	printk("version:^\n",                  svga->vbe_info.version);
-	printk("capabilities bitfield:^\n",    svga->vbe_info.capabilities);
-	printk("pointer to list of modes:^\n", svga->vbe_info.video_modes);
-	printk("video_memory in 64K:^\n",      svga->vbe_info.video_memory);
-	printk("vendor:^\n",                   svga->vbe_info.vendor);
+	if(SVGA_DEBUG)
+	{
+		printk("signature:^ ^ ^ ^\n",          svga->vbe_info.signature[0], svga->vbe_info.signature[1], svga->vbe_info.signature[2], svga->vbe_info.signature[3]);
+		printk("version:^\n",                  svga->vbe_info.version);
+		printk("capabilities bitfield:^\n",    svga->vbe_info.capabilities);
+		printk("pointer to list of modes:^\n", svga->vbe_info.video_modes);
+		printk("video_memory in 64K:^\n",      svga->vbe_info.video_memory);
+		printk("vendor:^\n",                   svga->vbe_info.vendor);
+	}
 	
 	UINT_32 mode_list = PHYSICAL_ADDRESS( svga->vbe_info.video_modes );
 	UINT_16* modes = (UINT_16*)( (void*)((HIGH_WORD(mode_list)*16) + LOW_WORD(mode_list)) );
@@ -155,26 +173,32 @@ void svga_report_vbe_info(SVGA* svga)
 	while(*modes != 0xFFFF)
 	{
 		mode_counts++;
-		printk("mode % = ^\n", mode_counts, *modes);
+		if(SVGA_DEBUG)
+			printk("mode % = ^\n", mode_counts, *modes);
 		modes++;
 	}
-	
 	UINT_32 vendor_pointer = PHYSICAL_ADDRESS( svga->vbe_info.vendor );
 	UINT_8* vendor = (UINT_8*)( (void*)((HIGH_WORD(vendor_pointer)*16) + LOW_WORD(vendor_pointer)) );
-	printk(vendor);
-	printk("\n");
+	if(SVGA_DEBUG)
+	{
+		printk(vendor);
+		printk("\n");
+	}
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 void svga_report_vbe_mode_info(SVGA* svga)
 {
-	printk("pitch->number of bytes per horiz line:^\n",   svga->vbe_mode_info.pitch);
-	printk("width in pixel:^\n",                          svga->vbe_mode_info.width);
-	printk("height in pixel:^\n",                         svga->vbe_mode_info.height);
-	printk("bit per pixel:^\n",                           svga->vbe_mode_info.bpp);
-	printk("linear framebuffer:^\n",                      svga->vbe_mode_info.framebuffer);
-	printk("memsize LFB but not displayed on screen:^\n", svga->vbe_mode_info.off_screen_mem_size);
+	if(SVGA_DEBUG)
+	{
+		printk("pitch->number of bytes per horiz line:^\n",   svga->vbe_mode_info.pitch);
+		printk("width in pixel:^\n",                          svga->vbe_mode_info.width);
+		printk("height in pixel:^\n",                         svga->vbe_mode_info.height);
+		printk("bit per pixel:^\n",                           svga->vbe_mode_info.bpp);
+		printk("linear framebuffer:^\n",                      svga->vbe_mode_info.framebuffer);
+		printk("memsize LFB but not displayed on screen:^\n", svga->vbe_mode_info.off_screen_mem_size);
+	}
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -215,3 +239,4 @@ void page_flip(UINT_32 address)
 	__LiBOS_BiosCall(0x10, &r);
 }
 
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

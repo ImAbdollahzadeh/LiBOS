@@ -9,28 +9,6 @@
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-static void process_memcopy(void* src, void* trg, UINT_32 bytes)
-{
-	UINT_32 i;
-	INT_8* ssrc = (INT_8*)src;
-	INT_8* ttrg = (INT_8*)trg;
-	for(i = 0; i< bytes; i++)
-		ttrg[i] = ssrc[i];
-}
-
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
-static PAGE_DIRECTORY* create_address_space(void)
-{
-	PAGE_DIRECTORY* dir = (PAGE_DIRECTORY*)alloc_physical_block();
-	if (!dir)
-		return 0;
-	__LiBOS_MemZero(dir, sizeof(PAGE_DIRECTORY));
-	return dir;
-}
-
-//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-
 BOOL initialize_process(void)
 {
 	if( !paging_is_activate() )
@@ -57,39 +35,34 @@ PROCESS* create_process(UINT_32 function_address)
 	PROCESS*        process;
 	THREAD*         main_thread;
 	
-	if (!function_address)
-	{
-	    panic("provided process's function address is invalid\n");
-	    return 0;
-	}
-	
-	/* get process virtual address space */
-	address_space = (PAGE_DIRECTORY*)create_address_space();
-	
-	__LiBOS_MemZero(address_space, sizeof(PAGE_DIRECTORY));
+	/* assign the process virtual address space, zero it, and map it to itself (IMPORTANT for later page fault handlings) */
+	address_space = (PAGE_DIRECTORY*)physical_page_alloc();
 	if (!address_space)
 	{
 	    printk("process with function address ^ failed to create a virtual address space\n", function_address);
 	    return 0;
 	}
+	__LiBOS_MemZero(address_space, 4096);
+	map_physical_address(address_space, address_space, address_space, (I86_PTE_PRESENT | I86_PTE_WRITABLE | I86_PTE_USER));
 	
-	main_thread = (THREAD*)Alloc(sizeof(THREAD), 1, 1);
-	__LiBOS_MemZero(main_thread, sizeof(THREAD));
+	/* assign the process main thread, zero it, and map it to the process's page directory */
+	main_thread = (THREAD*)physical_page_alloc();
+	__LiBOS_MemZero(main_thread, 4096);
+	map_physical_address(address_space, main_thread, main_thread, (I86_PTE_PRESENT | I86_PTE_WRITABLE | I86_PTE_USER));
 	
-	/* map kernel space into process address space (i.e. address 0 to 1GB) and
-	   map system space into process address space (i.e. address 2GB to 4GB) */
+	/* map KERN_MEM (address 0 to 1GB) and SYS_MEM into process's address space (address 3GB to 4GB) */
 	UINT_32 i;
 	PAGE_DIRECTORY* mpgd = get_libos_main_page_directory();
 	for(i = 0; i < 256; i++)
 	{
-		process_memcopy(&(mpgd->entries[i      ]), &(address_space->entries[i      ]), sizeof(UINT_32)); /* 0GB - 1GB ~> for kernel */
-		                                                                                                 /* 1GB - 2GB ~> for user   */
-		process_memcopy(&(mpgd->entries[512 + i]), &(address_space->entries[512 + i]), sizeof(UINT_32)); /* 2GB - 3GB ~> for system */
-		process_memcopy(&(mpgd->entries[768 + i]), &(address_space->entries[768 + i]), sizeof(UINT_32)); /* 3GB - 4GB ~> for system */
+		__LiBOS_MemCopy(&(mpgd->entries[i      ]), &(address_space->entries[i      ]), sizeof(UINT_32)); /* 0GB - 1GB ~> for KERN_MEM */
+		__LiBOS_MemCopy(&(mpgd->entries[768 + i]), &(address_space->entries[768 + i]), sizeof(UINT_32)); /* 3GB - 4GB ~> for SYS_MEM  */
 	}
 	
 	/* create PCB */
-	process                 = (PROCESS*)Alloc(sizeof(PROCESS), 1, 1);
+	process                 = (PROCESS*)physical_page_alloc();
+	__LiBOS_MemZero(process, 4096);
+	map_physical_address(address_space, process, process, (I86_PTE_PRESENT | I86_PTE_WRITABLE | I86_PTE_USER));
 	process->pid            = 1;
 	process->page_directory = address_space;
 	process->priority       = 1;
@@ -105,12 +78,11 @@ PROCESS* create_process(UINT_32 function_address)
 	main_thread->frame.eip     = function_address;
 	main_thread->frame.flags   = INTERRUPT_ENABLE_FLAG;
 	
-	/* Create stack */
+	/* Create stack, zero it, and map it to the process's page directory */
 	void* stack      = (void*)PROCESS_BEGIN_VIRTUAL_ADDRESS;
-	void* stack_phys = (void*)alloc_physical_block();
-	
-	/* map process's stack space */
-	map_physical_address(address_space, (UINT_32)stack, (UINT_32)stack_phys, I86_PTE_PRESENT | I86_PTE_WRITABLE | I86_PTE_USER);
+	void* stack_phys = physical_page_alloc();
+	__LiBOS_MemZero(stack_phys, 4096);
+	map_physical_address(address_space, stack, stack_phys, (I86_PTE_PRESENT | I86_PTE_WRITABLE | I86_PTE_USER));
 	
 	/* final initialization */
 	main_thread->initial_stack = stack + PROCESS_DEFAULT_PAGE_SIZE;
@@ -120,7 +92,6 @@ PROCESS* create_process(UINT_32 function_address)
 	
 	/* rgister main_thread into process's list of threads */
 	process->thread_list[0] = *main_thread;
-	
 	return process;
 }
 
@@ -146,7 +117,7 @@ void execute_process(PROCESS* process)
 	
 	/* switch to process address space */
 	_CLI();
-	set_pdbr(process->page_directory); 
+	set_pdbr(process->page_directory);
 	
 	/* execute process in kernel mode */
 	execute_kernel_mode_process(process_stack, entry_point);

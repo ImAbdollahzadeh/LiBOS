@@ -385,8 +385,37 @@ INT_8* __exception_messages[32] =
 static BOOL actual_page_fault_handling(UINT_32 virtual_address)
 {
 	BOOL status = FALSE; 
+	/*
+	4GB +------------------------+
+	    +        SYS_MEM         + <- identity mapped
+	3GB +------------------------+
+	    +        HEAP_MEM        + <- identity mapped
+	2GB +------------------------+
+	    +                        + 
+	1GB +------------------------+
+	    +        KERN_MEM        + <- identity mapped
+	0GB +------------------------+
+	*/
+	if(virtual_address < 0x40000000)
+	{
+	    panic("user cannot access KERN_MEM at range [0-0x40000000]\n");
+	    return status;
+	}
+	//-else if((virtual_address > 0x80000000) && (virtual_address < 0xC0000000))
+	//-{
+	//-    panic("user cannot access HEAP_MEM at range [0x80000000-0xC0000000]\n");
+	//-    return status;
+	//-}
+	else if(virtual_address > 0xC0000000)
+	{
+	    panic("user cannot access SYS_MEM at range [0xC0000000-0xFFFFFFFF]\n");
+	    return status;
+	}
+	
+	/* if it makes until here then continue to page handling */
 	if( !(status = ask_for_page(virtual_address)) )
 		panic("LiBOS could not get a valid page\n");
+	
 	return status;
 }
 
@@ -433,7 +462,7 @@ void LiBOS_fault_handler(REGS* r)
 		{
 			UINT_32 cr2 = 0;
 			query_cr2(&cr2);
-			printk("CR2 = ^\n", cr2);
+			//printk("CR2 = ^\n", cr2);
 			
 			/* handle the page fault and safely return */
 			if( !actual_page_fault_handling(cr2) )
@@ -579,6 +608,10 @@ void go_to_reset(void)
 		since the KILL command has been requested
 		perform a triple fault on purpose by destroying the whole IDT table 
 	*/
+	
+	if( graphic_mode() )
+		goto GRAPHIC_MODE_RESTART;
+	
 	INT_32 i;
 	UINT_8* vid = Disps();
 	for(i =0; i<50*160; i+=2)
@@ -587,9 +620,18 @@ void go_to_reset(void)
 		vid[i+1] = 0;
 	}
 	
+GRAPHIC_MODE_RESTART:
+	if( graphic_mode() )
+	{
+		graphical_reboot();
+		goto END_KILLING;
+	}
+	
 	panic("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
 	panic("                         REBOOT                         \n");
 	panic("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
+	
+END_KILLING:
 	WaitSecond(1);
 	_CLI();
 	idt_pointer.size = 0;
