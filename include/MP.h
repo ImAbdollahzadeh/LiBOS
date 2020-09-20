@@ -165,6 +165,20 @@ typedef struct _LiBOS_IOAPICs {
 	LiBOS_LOGICAL_IOAPIC  ioapics[0x10]; // statically 16 CPU support
 } LiBOS_IOAPICs;
 
+typedef struct _PCI_IRQ {
+    UINT_8 INT;
+    UINT_8 pci_device_number;
+    UINT_8 trig;
+    UINT_8 pol;
+	UINT_8 dest_intin;
+} __LiBOS_PACKED__ PCI_IRQ;
+
+typedef struct _BUS_ENTRY {
+    UINT_8 entry_type; // 0x01
+    UINT_8 bus_id;
+    UINT_8 string[6];
+} __LiBOS_PACKED__ BUS_ENTRY;
+
 typedef struct _IO_INTTERUPT_ASSIGNMENT_ENTRY {
     UINT_8 entry_type; // 0x03
     UINT_8 intterupt_type;

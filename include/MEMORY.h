@@ -3,6 +3,10 @@
 
 #include "LiBOS_CORE.h"
 
+#define MAGIC_MEMORY_DESCROPTOR 0xFEDCBA98
+#define USER_MODE_PROCESS       TRUE
+#define KERNEL_MODE_PROCESS     FALSE
+
 #define FAST_MWRITE(ADDRESS_BASE, ADDRESS_OFFSET, VALUE) do { (*(volatile UINT_32*)((void*)(ADDRESS_BASE + ADDRESS_OFFSET)) = VALUE); } while(0)
 #define FAST_MREAD(ADDRESS_BASE, ADDRESS_OFFSET, RET_POINTER)                          \
 do {                                                                                   \
@@ -39,10 +43,27 @@ typedef struct _MEM_BLOCK_TERMINATION {
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-void*   Alloc ( UINT_32 bytes, UINT_32 alignment, UINT_32 boundary );
-void    Free  ( void* ptr );
-UINT_32 mread (const UINT_32, const UINT_32);
-void    mwrite(const UINT_32, const UINT_32, const UINT_32);
+typedef struct _LIBOS_MEMORY_DESCRIPTOR {
+	UINT_32 descriptor_id;
+	void*   start;
+	void*   end;
+	UINT_8  reserved[4];
+} __attribute__ ((packed)) LIBOS_MEMORY_DESCRIPTOR; // size = 16 bytes
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+UINT_32 mread                         (const UINT_32, const UINT_32); /* memory 4byte read (for SYS_MEM) */
+void    mwrite                        (const UINT_32, const UINT_32, const UINT_32); /* memory 4byte write (for SYS_MEM) */
+void    initialize_page_allocator     (void); /* init allocator (for paging)  */
+void    initialize_non_page_allocator (void); /* init allocator (for kernel devices and user processes)  */
+void*   alloc                         (UINT_32 bytes, UINT_32 alignment, UINT_32 boundary); /* */
+void    free                          (void* ptr); /* */
+void*   physical_page_alloc           (void); /* for paging */
+void    physical_page_free            (void* page); /* for paging*/
+void*   kernel_alloc                  (UINT_32 bytes, UINT_32 alignment, UINT_32 boundary); /* for kernel devices */
+void*   user_alloc                    (UINT_32 bytes, UINT_32 alignment); /* for user processes */
+void    kernel_free                   (void* pointer); /* for kernel devices */
+void    user_free                     (void* pointer); /* for user processes */
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 

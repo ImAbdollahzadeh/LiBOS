@@ -12,12 +12,17 @@
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-extern void    printk       ( INT_8* fmt, ... );
-       void    clear_screen ( void );
-       void    panic        ( INT_8* id );
-       UINT_8* Disps        (void);
-       void __LiBOS_HexDump (void* pointer_to_buffer, UINT_32 bytes, INT_8* begin_message);
-	   void __LiBOS_ChrDump (void* pointer_to_buffer, UINT_32 bytes);
+extern void    printk          ( INT_8* fmt, ... );
+       void    clear_screen    ( void );
+       void    panic           ( INT_8* id );
+       UINT_8* Disps           (void);
+       void __LiBOS_HexDump    (void* pointer_to_buffer, UINT_32 bytes, INT_8* begin_message);
+	   void __LiBOS_ChrDump    (void* pointer_to_buffer, UINT_32 bytes);
+
+       void graphic_print      (const INT_8* str);
+       BOOL graphic_mode       (void);
+       void graphical_reboot   (void);
+       void allocate_graphic_mode_displays(void);
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 

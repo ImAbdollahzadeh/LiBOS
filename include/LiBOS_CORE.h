@@ -70,8 +70,26 @@ static void __LiBOS_MemZero(void* address, UINT_32 bytes)
 	
 	while (remain--) 
 		*ddst++ = 0;
+}
+
+// memcopy function implementation
+static void __LiBOS_MemCopy(void* src, void* trg, UINT_32 bytes)
+{
+	UINT_32  blocks    = bytes >> 3;
+	UINT_8   remain    = bytes & 7;
+	UINT_64* ttrg      = (UINT_64*)trg;
+	UINT_64* ssrc      = (UINT_64*)src;
+	UINT_8*  src_8_bit = 0;
+	UINT_8*  trg_8_bit = 0;
 	
-	return;
+	while (blocks--)
+		*ttrg++ = *ssrc++;
+	
+	trg_8_bit = (UINT_8*)ttrg;	
+	src_8_bit = (UINT_8*)ssrc;	
+	
+	while (remain--)
+		*trg_8_bit++ = *src_8_bit++;
 }
 
 #endif // LiBOS_CORE__H__ !

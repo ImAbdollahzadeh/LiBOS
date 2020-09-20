@@ -55,6 +55,7 @@ typedef struct _IDTPOINTER {
        void      irq_install_user_handler (void (*handler)(REGS* r)); // only 0x80 reserved for usermode
        void      irq_uninstall_handler    (INT_32 irq);
        void      irq_remap                (void);
+       void      disable_pic              (void);
 extern void      set_MSR                  (UINT_32 base_addr, UINT_32 phys_addr_lo, UINT_32 phys_addr_hi);
 extern void      get_MSR                  (UINT_32 base_addr, UINT_32* addr_lo, UINT_32* addr_hi);
 extern UINT_32   IDTLoad                  (void);
