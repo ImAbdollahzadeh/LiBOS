@@ -24,8 +24,8 @@ section .text
 	global GDTLoad
 	extern idt_pointer
 	extern gdt_pointer
-	extern FAULT_HANDLER
-	extern IRQ_HANDLER
+	extern LiBOS_fault_handler
+	extern LiBOS_irq_handler
 	global _CLI
 	global _STI
 	global ISR_DEFAULT
@@ -489,7 +489,7 @@ isr_common_stub:
 	mov   fs, ax
 	mov   gs, ax
 	push  esp            ;; it will create the REGS* r in C function
-	call  FAULT_HANDLER
+	call  LiBOS_fault_handler
 	pop   esp
 	pop   gs
 	pop   fs
@@ -1635,7 +1635,7 @@ irq_common_stub:
 	mov  fs, ax
 	mov  gs, ax
 	push esp
-	call IRQ_HANDLER
+	call LiBOS_irq_handler
 	add  esp, 4
 	pop  gs
 	pop  fs

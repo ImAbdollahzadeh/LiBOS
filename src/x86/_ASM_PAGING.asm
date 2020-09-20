@@ -31,25 +31,17 @@ get_pdbr:
 ;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ void paging_enable(void);
 
 paging_enable:
-    push ebp
-    mov  ebp, esp
     mov  eax, cr0
 	or   eax, 0x80000000 ;set bit 31
 	mov  cr0, eax
-    mov  esp, ebp
-    pop  ebp
     ret
 
 ;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ void paging_disable(void);
 
 paging_disable:
-    push ebp
-    mov  ebp, esp
     mov  eax, cr0
-	or   eax, 0x7FFFFFFF ;clear bit 31
+	or   eax, ~0x80000000 ;clear bit 31
 	mov  cr0, eax
-    mov  esp, ebp
-    pop  ebp
     ret
 
 ;;-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

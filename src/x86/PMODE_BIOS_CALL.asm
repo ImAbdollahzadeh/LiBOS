@@ -23,10 +23,10 @@ extern bios_call_tag
 section .text
 [BITS 32]
 __LiBOS_BiosCall:
-	mov  eax, DWORD[bios_call_tag]
-	cmp  eax, 0
+	mov  ebx, DWORD[bios_call_tag]
+	cmp  ebx, 0
 	je   invalid_tag
-	cmp  eax, 1
+	cmp  ebx, 1
 	je   __LiBOS_BiosCall_without_paging
 	jmp  __LiBOS_BiosCall_with_paging
 invalid_tag:
@@ -126,8 +126,7 @@ int_no:
     mov     edi, DWORD[esp + 0x28] 
     mov     ecx, 0x1A            
     cld                                
-    rep     movsb  
-
+    rep     movsb
 ; now stack cleaning 
     popa
     ret
@@ -225,7 +224,7 @@ r_mode16_with_paging:
     mov     gs, ax  
     mov     fs, ax  
     mov     es, ax  
-    mov     ss, ax;  
+    mov     ss, ax
     lidt    [REBASE_with_paging(idt16_ptr_with_paging)]
     popa
     pop     gs
